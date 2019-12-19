@@ -1,0 +1,31 @@
+
+\chapter*{Acknowledgements}
+
+Thanks to all people, who helped me to realize this package.
+
+
+I would like to thank every people who help me out with source code, 
+patches, program examples, bug tracking, help and documentation writing, 
+financial support, judicious remarks, and so on...   
+
+And here thanks to people, who helped me recently:
+
+
+MQTT-Hyperdash is build on top of many free softwares, and could not exist without 
+them.
+
+MQTT-Hyperdash uses the lodepng code for the PNG bitmap graphics support.
+Copyright (c) 2005-2013 Lode Vandevenne
+
+
+So I would like to thank every people involved in the following projects:
+
+    Linux
+    GCC and all of the GNU tools, of course.
+    The SDL (Simple Direct Media) library.
+    And any other libraries used by MQTT-Hyperdash.
+ 
+Some pieces of code of MQTT-Hyperdash are based on third party software:
+
+    Pictograms for mousecursers and fill patterns are based on TOS / ATARI ST.
+    

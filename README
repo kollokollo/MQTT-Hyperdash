@@ -1,0 +1,34 @@
+Hyper-Dash
+    
+VERSION 1.27
+
+(C) 1997-2019 by Markus Hoffmann
+(kollo@users.sourceforge.net)
+
+Name        : Hyper-Dash
+Version     : 1.27                              Vendor: Markus Hoffmann
+Group       : Development/Languages             License: GPL
+Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
+Summary     : A MQTT Dashbord
+Description :
+
+This is a fast and efficient dashboard (GUI) for the MQTT framework. It ises
+the  SDL library for graphics rendering. Exept for the paho library no other
+special library is needed. The dashbord runs on linux, but a port to other
+operating systems should be easy. 
+
+There are two applications included: 
+
+hyperdash runs a panel/dashboard, which has been defined in a dash file. 
+
+hyperdash-designer is a graphical tool to create the dash files. However 
+this program is still stub and the dash files must be created and edited by 
+a text editor by hand. However we also think of automatically create dash files 
+from topic lists so one has a good starting point to work with. 
+
+hyperdash-autocreate will do this job. 
+
+
+
+The Project is still in alpha phase. Please see the CONTRIBUTING.md how you can
+help to improve the project. 
