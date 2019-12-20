@@ -11,8 +11,10 @@
 #include <string.h>
 #include <stdint.h>
 #include "util.h"
+#include "graphics.h"
 #include "file.h"
 #include "hyperdash.h"
+
 
 
 char *key_value(const char *a, const char *b, const char *def) {
@@ -145,26 +147,40 @@ void i_tnumber(ELEMENT *el,char *pars) {
 }
 
 
-void d_broker(ELEMENT *el) { /*nothing to draw */ }
-void d_panel(ELEMENT *el) {/* draw background */}
-void d_line(ELEMENT *el) {}
-void d_box(ELEMENT *el) {}
-void d_string(ELEMENT *el) {}
+void d_line(ELEMENT *el,WINDOW *win) {
+  lineColor(win->display,el->x,el->y,el->x2,el->y2,win->fcolor);
+  
+}
+void d_box(ELEMENT *el,WINDOW *win) {
+  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->w),win->fcolor);
+}
+void d_pbox(ELEMENT *el,WINDOW *win) {
+  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->w)-1,win->fcolor);
+}
+void d_string(ELEMENT *el,WINDOW *win) {
+  stringColor(win->display,el->x,el->y,el->text,win->fcolor);
+}
 
-void d_tstring(ELEMENT *el) {}
-void u_tstring(ELEMENT *el) {}
+void d_tstring(ELEMENT *el,WINDOW *win) {
+  stringColor(win->display,el->x,el->y,el->topic,win->fcolor);
+}
+void u_tstring(ELEMENT *el,WINDOW *win,char *message) {
+  stringColor(win->display,el->x,el->y,message,win->fcolor);
+}
 
-void d_tnumber(ELEMENT *el) {}
-void u_tnumber(ELEMENT *el) {}
+void d_tnumber(ELEMENT *el,WINDOW *win) {
+  stringColor(win->display,el->x,el->y,el->format,win->fcolor);
+}
+void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {}
 
 
 const ELDEF eltyps[]= {
  {EL_IGNORE,"#",NULL,NULL,NULL},
- {EL_BROKER,"BROKER",i_broker,d_broker,NULL},
- {EL_PANEL, "PANEL",i_panel,d_panel,NULL},
+ {EL_BROKER,"BROKER",i_broker,NULL,NULL},
+ {EL_PANEL, "PANEL",i_panel,NULL,NULL},
  {EL_VISIBLE,"LINE",i_line,d_line,NULL},
  {EL_VISIBLE,"BOX",i_box,d_box,NULL},
- {EL_VISIBLE,"PBOX",NULL,NULL,NULL},
+ {EL_VISIBLE,"PBOX",i_pbox,d_pbox,NULL},
  {EL_VISIBLE,"FRAME",i_frame,NULL,NULL},
  {EL_VISIBLE,"BITMAP",i_bitmap,NULL,NULL},
  {EL_VISIBLE,"ICON",i_icon,NULL,NULL},
@@ -176,13 +192,6 @@ const ELDEF eltyps[]= {
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
-WINDOW *create_window() {
-  return(NULL);
-}
-
-void close_window(WINDOW *win) {
-
-}
 
 
 
@@ -191,8 +200,8 @@ void update_element(ELEMENT *el, WINDOW *win, STRING message) {
 
 }
 void draw_element(ELEMENT *el, WINDOW *win) {
-
-
+  int j=(el->type&0xff);
+  if(eltyps[j].draw) (eltyps[j].draw)(el,win);
 }
 
 void init_dash(DASH *dash) {
@@ -241,7 +250,11 @@ void close_dash(DASH *dash) {
 }
 
 void draw_dash(DASH *dash, WINDOW *win) {
-
+  int i;
+  for(i=0;i<dash->anzelement;i++) {
+    if((dash->tree[i].type&EL_VISIBLE)==EL_VISIBLE) draw_element(&(dash->tree[i]),win); 
+  }
+  SDL_Flip(win->display); 
 }
 void handle_dash(DASH *dash, WINDOW *win) {
 

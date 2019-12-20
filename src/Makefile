@@ -53,7 +53,7 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS)
 
 # these are objects which are compiled to binary
 
-MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o
+MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o
 
 CSRC=    $(MAINOBJS:.o=.c)
 
@@ -61,7 +61,7 @@ DEPSRC=  $(CSRC)
 
 # Headerfiles which should be added to the distribution
 
-HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h
+HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h
 
 # example dash files 
 
@@ -94,8 +94,8 @@ DIR33=$(DIR)-bin
 LINKFLAGS = 
 WINLINKFLAGS = -L./WINDOWS/lib 
 
-LIBS =  -lm  -lasound -lpaho-mqtt3c 
-WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL
+LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx
+WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL -lSDL_gfx
 
 all :    hyperdash
 

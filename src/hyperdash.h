@@ -65,9 +65,6 @@ typedef struct {
 
 
 
-typedef struct {
-  char *dummy;
-} WINDOW;
 
 extern int verbose;
 
@@ -76,13 +73,6 @@ DASH *merge_dash(DASH *dash, const char *fname);
 void free_dash(DASH *dash);
 void init_dash(DASH *dash);
 void close_dash(DASH *dash);
-
-
-WINDOW *create_window();
-void close_window(WINDOW *win);
-
-
-
 
 
 #endif

@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "config.h"
 #include "file.h"
+#include "graphics.h"
 
 #include "hyperdash.h"
 #if defined WINDOWS || defined ANDROID
@@ -79,10 +80,11 @@ int main(int anzahl, char *argumente[]) {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(exist(ifilename)) {
       maindash=load_dash(ifilename);
-      mainwindow=create_window();
+      mainwindow=create_window("Title","Info",0,0,512,512);
       init_dash(maindash);
       draw_dash(maindash,mainwindow);
       handle_dash(maindash,mainwindow);
+      sleep(3);
       close_dash(maindash);
       close_window(mainwindow);
       free_dash(maindash);
