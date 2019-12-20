@@ -24,15 +24,15 @@
 size_t lof(FILE *n) {	
   long position=ftell(n);
   if(position==-1) {
-    io_error(errno,"lof");
+    printf("I/O-Error: %d %s\n",errno,"lof");
     return(0);
   }
   if(fseek(n,0,SEEK_END)==0) {
     long laenge=ftell(n);
-    if(laenge<0) io_error(errno,"ftell");
-    if(fseek(n,position,0)<0) io_error(errno,"fseek"); 
+    if(laenge<0) printf("I/O-Error: %d %s\n",errno,"ftell"); 
+    if(fseek(n,position,0)<0) printf("I/O-Error: %d %s\n",errno,"fseek"); 
     return(laenge);
-  } else io_error(errno,"fseek");
+  } else printf("I/O-Error: %d %s\n",errno,"fseek");
   return(0);
 }
 /* Returns the eof condition of an open file n */

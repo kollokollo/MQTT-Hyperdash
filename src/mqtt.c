@@ -62,3 +62,16 @@ static void mqtt_unsubscribe(char *topic) {
 void mqtt_init() {
   atexit(mqtt_exit);
 }
+void mqtt_exit() {
+  /* free the subscription list */
+//  while(anzsubscription>0) {
+//    anzsubscription--;
+//    free(subscriptions[anzsubscription].topic);
+//  }
+
+//  if(mqtt_isconnected) {
+//    MQTTClient_disconnect(client, 10000);
+//    MQTTClient_destroy(&client);
+//    mqtt_isconnected=0;
+//  }
+}

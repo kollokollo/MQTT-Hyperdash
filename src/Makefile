@@ -40,7 +40,7 @@ DEF=
 
 # Compiler
 #CC=gcc  $(REGS)
-CC=gcc -Wall
+CC=gcc -Wall -g
 
 # Cross-Compiler fuer Windows-Excecutable
 
@@ -53,7 +53,7 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS)
 
 # these are objects which are compiled to binary
 
-MAINOBJS= main.o mqtt.o lodepng.o file.o
+MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o
 
 CSRC=    $(MAINOBJS:.o=.c)
 
@@ -61,7 +61,7 @@ DEPSRC=  $(CSRC)
 
 # Headerfiles which should be added to the distribution
 
-HSRC=  hyperdash.h lodepng.h mqtt.h file.h
+HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h
 
 # example dash files 
 
@@ -104,14 +104,15 @@ configure : configure.in
 #Makefile : Makefile.in
 #	./configure --prefix=/usr
 
-config.h: config.h.in
+# config.h: config.h.in
 	./configure --prefix=/usr
  
 # Make the excecutable
 
 hyperdash :  $(MAINOBJS)
 	$(CC) -L. $(LINKFLAGS) -o $@ $(MAINOBJS) $(LIBS)
-	strip $@
+
+
 # Make the exe for MS WINDOWS
 
 hyperdash.exe: main.c $(MYWINLIBS)
