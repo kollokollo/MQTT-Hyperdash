@@ -7,3 +7,5 @@
  */
 void mqtt_init();
 void mqtt_exit();
+void mqtt_broker(char *url,char *user, char *passwd);
+void mqtt_subscribe(char *topic,int qos);

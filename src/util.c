@@ -9,6 +9,402 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h> 
+#include <math.h> 
+#include "hyperdash.h"
+
+#include "util.h"
+
+/* Decode hexadecimal number to int  */
+static int atohex(char *n) {
+  int value=0;
+  while(*n) {
+    value<<=4;
+    if(v_digit(*n)) value+=(int)(*n-'0');
+    else if(*n>='a' && *n<='f') value+=(int)(*n-'a')+10;
+    else if(*n>='A' && *n<='F') value+=(int)(*n-'A')+10;
+    n++;
+  }
+  return(value);
+}
+/* Decode hex-encoded binary data */
+
+STRING inhexs(const char *n) {
+  const int l=strlen(n);
+  STRING ergebnis;
+  ergebnis.len=(l+1)/2;
+  ergebnis.pointer=malloc(ergebnis.len+1);  
+  unsigned int value=0;
+  int i=0;
+  while(*n) {
+    value<<=4;
+    if(v_digit(*n)) value+=(int)(*n-'0');
+    else if(*n>='a' && *n<='f') value+=(int)(*n-'a')+10;
+    else if(*n>='A' && *n<='F') value+=(int)(*n-'A')+10;
+    n++;
+    if((i&1)) (ergebnis.pointer)[i>>1]=(value&0xff);
+    i++;
+  }
+  (ergebnis.pointer)[ergebnis.len]=0;
+  return(ergebnis);
+}
+
+
+static int atobin(char *n) {
+  int value=0;
+  while(*n) {
+    value<<=1;
+    if(*n!='0') value++;  
+    n++;
+  }
+  return(value);
+}
+
+/* count number of hexadecimal digits in string n */
+static int atohexc(char *n) {
+  int i=0;
+  while(*n && (v_digit(*n) || (*n>='a' && *n<='f') || (*n>='A' && *n<='F'))) {i++;n++;}
+  return(i);
+}
+
+/* count number of binary digits in string n */
+static int atobinc(char *n) {
+  int i=0;
+  while(*n && (*n=='0' || *n=='1')) {i++;n++;}
+  return(i);
+}
+
+/* Bestimmt die anzal an Zeichen, welche zu einer Gültigen Zahl
+gehören. z.B. für val?()
+*/
+int myatofc(char *n) {
+  if(!n) return(0);
+  int i=0;
+  while (w_space(*n)) {n++;i++;}  /* Skip leading white space, if any. */
+  if(*n=='-' || *n=='+') { n++;i++;} /*  Get sign, if any.  */
+   /* try special codings  */
+  if(*n=='$') return(i+1+atohexc(++n));
+  if(*n=='%') return(i+1+atobinc(++n));
+  if(*n=='0' && (n[1]&0xdf)=='X') return(i+2+atohexc(n+2));
+  if((*n&0xdf)=='E') return(i);  /*should not happen here*/
+  if((*n&0xdf)=='I') return(i);  /*should not happen here*/
+
+  /* Count digits before decimal point or exponent, if any. */
+  for(;v_digit(*n); n++) i++;;
+  /* Count digits after decimal point, if any. */
+  if(*n=='.') {
+    n++;i++;
+    while(v_digit(*n)) {i++;n++;}
+  }
+  /* Handle exponent, if any. */
+  if((*n&0xdf)=='E') {
+    n++;i++;
+    /* Get sign of exponent, if any. */
+    if(*n=='-' || *n=='+') {i++;n++;} 
+
+    /* Get digits of exponent, if any. */
+    for(;v_digit(*n); n++) i++;;
+  }
+  if((*n&0xdf)=='I') { /*Check if the last digit is an I*/
+     // iscomplex=1;
+      n++;i++;
+  }
+  return(i); 
+}
+/* 
+Wandelt einen String mit einer (floating-point) Zahl in einen double 
+um.
+
+Diese funktion muss stark Geschwindigkeitsoptimiert sein
+TODO: Hier koennte man noch einen Flag zurückliefern, ob es ein real oder imaginaerteil ist.
+*/
+double myatof(char *n) {
+  double sign=1.0;
+  while (w_space(*n) ) n++;  /* Skip leading white space, if any. */
+  if(*n=='-') { /*  Get sign, if any.  */
+    sign=-1.0;
+    n++;
+  } else if(*n=='+') n++;
+  /* try special codings  */
+  if(*n=='$') return(sign*(double)atohex(++n));
+  if(*n=='%') return(sign*(double)atobin(++n));
+  if(*n=='0' && (n[1]&0xdf)=='X') return(sign*(double)atohex(n+2));
+
+  /* Get digits before decimal point or exponent, if any. */
+  double value=0.0;
+  for(;v_digit(*n); n++) value=value*10.0+(*n-'0');
+  /* Get digits after decimal point, if any. */
+  if(*n=='.') {
+    double pow10 = 10.0;
+    n++;
+    while(v_digit(*n)) {
+      value+=(*n-'0')/pow10;
+      pow10*=10.0;
+      n++;
+    }
+  }
+  /* Handle exponent, if any. */
+  if((*n&0xdf)=='E') {
+    int f=0;
+    double scale=1.0;
+    unsigned int ex=0; 
+    n++;
+
+    /* Get sign of exponent, if any. */
+    if(*n=='-') {
+      f=1;
+      n++;
+    } else if(*n=='+') n++;
+    /* Get digits of exponent, if any. */
+    for(;v_digit(*n); n++) ex=ex*10+(*n-'0');
+    if(ex>308) ex=308;
+    /* Calculate scaling factor. */
+    while(ex>= 64) { scale *= 1E64; ex-=64; }
+    while(ex>=  8) { scale *= 1E8;  ex-=8; }
+    while(ex>   0) { scale *= 10.0; ex--; }
+
+    /* Return signed and scaled floating point result. */
+    return sign*(f?(value/scale):(value*scale));
+  }
+  /* Return signed floating point result. */
+  return(sign*value);
+}
+
+STRING create_string(const char *n) {
+  STRING ergeb;
+  if(n) {
+    ergeb.len=strlen(n);
+    ergeb.pointer=strdup(n);
+  } else {
+    ergeb.len=0;
+    ergeb.pointer=malloc(1);
+    ergeb.pointer[0]=0;
+  }
+  return(ergeb);
+}
+STRING double_string(const STRING *a) {
+  STRING b;
+  b.len=a->len;
+  b.pointer=malloc(b.len+1);
+  memcpy(b.pointer,a->pointer,b.len);
+  (b.pointer)[b.len]=0;
+  return(b);
+}
+/* Fuer den Teil nach dem Komma und fuer Exponenten*/
+static void xfill(char *p,const char *q,char c, int n) {
+  while(*p && n--) {
+    if(*p==c) {
+      if(*q) *p=*q++;
+      else if(c=='#') *p='0';
+    }
+    p++;
+  }
+}
+/*Fuer den Teil vor dem Komma*/
+static void xfillx(char *p,const char *q,int n) {
+  char c=0,c2;
+  char f=' ';
+  while(*p && n--) {
+    c2=c;
+    c=*q;
+    switch(*p) {
+    case '$':
+      if(c==' ') {
+        int i=1;
+	while(*(p+i)==',') i++;
+        if(*(p+i)=='$' && *(q+1)==' ') *p=f;
+        q++;
+      } else if(c) {*p=c;q++;}
+      p++;
+      break;
+    case '*':
+      if(c==' ') {*p=f='*';q++;}
+      else if(c) {*p=c;q++;}
+      p++;
+      break;
+    case '0':
+    case '%':
+      if(c==' ') {*p=c='0';q++;f=' ';}
+      else if(c) {*p=c;q++;}
+      p++;
+      break;
+    case '#':
+      if(c) {*p=c;q++;f=' ';}
+      p++;
+      break;
+    case ',':
+      if(c2==' ') *p=f;
+      p++;
+      break;
+    default:
+      p++;
+    }
+  }
+}
+
+/* print 0 using "+#.###^^^^"   */
+STRING do_using(double num,STRING format) {
+  STRING dest;
+  int a=0,b=0,p,r=0,i,j,ex=0,v=0; 
+  int neg;
+  char des[32+format.len];
+
+  
+//  printf("DO__USING: %13.13g, <%s>\n",num,format.pointer);
+  if (*format.pointer=='%') { /* c-style format */
+    char b[32];
+    sprintf(b,format.pointer,num);
+    dest.len=strlen(b);
+    dest.pointer=strdup(b);
+  } else { /* basic-style format */
+    dest=double_string(&format);
+    
+   /* Zaehle die Rauten vor dem Punkt */
+   p=0;
+   while((format.pointer)[p] && (format.pointer)[p]!='.') {
+     if((format.pointer)[p]=='#' || 
+        (format.pointer)[p]=='%' || 
+        (format.pointer)[p]=='$' || 
+        (format.pointer)[p]=='0' || 
+	(format.pointer)[p]=='*') r++;
+     p++;
+   }
+   /* Zaehle die Rauten nach dem Punkt */
+   while((format.pointer)[p]) {
+     if((format.pointer)[p++]=='#') a++;
+   }
+   /* Zaehle platzhalter für Exponentialdarstellung */
+   p=0;
+   while(p<format.len) {
+     if((format.pointer)[p++]=='^') ex++;
+   }
+   /* Zaehle platzhalter für vorzeichen */
+   p=0;
+   while(p<format.len) {
+     if((format.pointer)[p]=='+' || (format.pointer)[p]=='-') v++;
+     p++;
+   }
+   neg=(num<0); 
+   num=fabs(num);
+ //  printf("Rauten vor Punkt: %d, rauten danach: %d, exponent: %d, vorzeichen: %d\n",r,a,ex,v);
+
+   /* Vorzeichen als erstes: */
+   for(i=0;i<dest.len;i++) {
+     if(format.pointer[i]=='+') {dest.pointer[i]=(neg ? '-':'+');}
+     else if(format.pointer[i]=='-') {dest.pointer[i]=(neg ? '-':' ');}
+   }
+   //printf("destpointer: <%s>\n",dest.pointer);
+
+   
+   if(ex>2) {
+     sprintf(des,"%16.16e",num); 
+     // printf("preformat: <%s>\n",des);
+     j=i=0;
+     while(des[i] && des[i]!='e') i++;
+     while(dest.pointer[j] && dest.pointer[j]!='^') j++;
+     des[i++]=0;
+     dest.pointer[j++]='e';   /*e */
+     while(dest.pointer[j] && dest.pointer[j]!='^') j++;
+     dest.pointer[j++]=des[i++];   /* +*/
+     while(dest.pointer[j] && dest.pointer[j]!='^') j++;
+     int l=strlen(&des[i])+2;
+     while(l<ex) {
+       dest.pointer[j++]='0'; 
+       while(dest.pointer[j] && dest.pointer[j]!='^') j++;
+       l++;
+     }
+     if(l>ex) {
+       for(i=0;i<dest.len;i++) dest.pointer[i]='*';
+       return(dest);    
+     } else xfill(dest.pointer,&des[i],'^',dest.len);
+   } else sprintf(des,"%16.16f",num);
+   //  printf("preformat: <%s>\n",des); 
+     /*Jetzt muss die Zahl gerundet werden.*/
+     num=myatof(des)+pow(0.1,a)*0.5;
+     sprintf(des,"%16.16f",num);
+   //  printf("preformat2: <%s>\n",des); 
+    /*Hierzu brauchen wir die Anzahl der tatsaechlichen STellen vor dem Komma*/
+    int count=0;
+    i=0;
+    while(des[i] && des[i]!='.') {
+      if(des[i]>='0' && des[i]<='9') count++;
+      i++;
+    }
+ //   printf("%d Stellen bis Punkt, davon %d signifikant.\n",i,count);
+ //   printf("des=<%s>\n",des);
+    i=0;
+    while(des[i] && des[i]!='.') i++; 
+    j=0;
+    // printf("destpointer=<%s>\n",dest.pointer);
+    while(dest.pointer[j] && dest.pointer[j]!='.') j++;
+    if(dest.pointer[j]) {
+      if(des[i]) {
+        des[i]=0;
+        xfill(dest.pointer+j+1,&des[i+1],'#',dest.len-j-1);
+      } else xfill(dest.pointer+j+1,"0000000000000000",'#',dest.len-j-1);
+    }
+    // printf("destpointer=<%s>\n",dest.pointer);
+    
+    b=0;
+    /*Jetzt noch Leerzeichen am Anfang entfernen und ggf minus einfügen.*/
+    
+    char p[strlen(des)+1+1];
+    char *p2=des;
+    // printf("des=<%s>\n",des);
+    if(neg && !v) p[b++]='-';
+    neg=0;
+    
+    while(*p2 && *p2!='.') {
+      if(*p2!=' ') p[b++]=*p2;
+      p2++;
+    }
+    p[b]=0;
+    // printf("Verbleiben: <%s> b=%d fuer %d stellen\n",p,b,r);
+    if(b==r) xfillx(dest.pointer,p,dest.len);
+    else if(b<r) {
+      char buf[r+1];
+      for(i=0;i<r-b;i++)  buf[i]=' ';
+      for(i=r-b;i<r;i++)  buf[i]=p[i-(r-b)];
+      buf[r]=0;  
+      // printf("buf=<%s>\n",buf);
+
+      xfillx(dest.pointer,buf,dest.len);
+    } else {
+      for(i=0;i<dest.len;i++) dest.pointer[i]='*';    
+    }
+  }
+  return(dest);
+}
+
+char *key_value(const char *a, const char *b, const char *def) {
+  static char value[256]; 
+  char par[256];
+  char kv[256];
+  char key[256];
+  char val[256];
+  strcpy(par,a);
+  int e=wort_sep(par,' ',1,kv,par);
+  int e2;
+  while(e>0) {
+    e2=wort_sep(kv,'=',1,key,val);
+    if(e2==2) {
+       if(!strcmp(key,b)) {
+         if(val[0]=='\"') {
+	   if(strlen(val)>0) val[strlen(val)-1]=0;
+	   strcpy(value,val+1);
+	 } else strcpy(value,val);
+	 return(value);
+       }
+    }  
+    e=wort_sep(par,' ',1,kv,par);
+  }
+  strcpy(value,def);
+  return(value);
+}
+
+
+
+
+
 
 
 /* Diese Funktion gibt zurueck

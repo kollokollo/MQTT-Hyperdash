@@ -12,3 +12,7 @@
 
 void xtrim(const char *t,int f, char *w );
 int wort_sep(const char *t,char c,int klamb ,char *w1, char *w2);
+char *key_value(const char *a, const char *b, const char *def);
+STRING do_using(double num,STRING format);
+#define w_space(c) ((c) == ' ' || (c) == '\t')
+#define v_digit(c) ((c) >= '0' && (c) <= '9')

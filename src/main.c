@@ -84,7 +84,7 @@ int main(int anzahl, char *argumente[]) {
       init_dash(maindash);
       draw_dash(maindash,mainwindow);
       handle_dash(maindash,mainwindow);
-      sleep(3);
+      sleep(30);
       close_dash(maindash);
       close_window(mainwindow);
       free_dash(maindash);

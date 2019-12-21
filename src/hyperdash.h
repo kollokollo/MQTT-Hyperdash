@@ -56,6 +56,7 @@ typedef struct {
   char *name;
   int anzelement;
   ELEMENT *tree;
+  int panelelement;
   char *buffer;
   int bufferlen;
   int isconnected;

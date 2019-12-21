@@ -10,40 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "util.h"
 #include "graphics.h"
 #include "file.h"
 #include "hyperdash.h"
-
-
-
-char *key_value(const char *a, const char *b, const char *def) {
-  static char value[256]; 
-  char par[256];
-  char kv[256];
-  char key[256];
-  char val[256];
-  strcpy(par,a);
-  int e=wort_sep(par,' ',1,kv,par);
-  int e2;
-  while(e>0) {
-    e2=wort_sep(kv,'=',1,key,val);
-    if(e2==2) {
-       if(!strcmp(key,b)) {
-         if(val[0]=='\"') {
-	   if(strlen(val)>0) val[strlen(val)-1]=0;
-	   strcpy(value,val+1);
-	 } else strcpy(value,val);
-	 return(value);
-       }
-    }  
-    e=wort_sep(par,' ',1,kv,par);
-  }
-  strcpy(value,def);
-  return(value);
-}
-
-
+#include "util.h"
 
 
 void i_broker(ELEMENT *el,char *pars) {
@@ -53,6 +23,7 @@ void i_broker(ELEMENT *el,char *pars) {
   el->w=0;
   el->h=0;
   /* connect to mqtt broker */
+  mqtt_broker(el->filename,NULL,NULL);
 }
 void i_panel(ELEMENT *el,char *pars) {
   el->text=strdup(key_value(pars,"TITLE","Dashboard"));
@@ -132,6 +103,9 @@ void i_tstring(ELEMENT *el,char *pars) {
   el->h=atoi(key_value(pars,"H","20"));
   el->font=strdup(key_value(pars,"FONT","*-HELVETICA-BOLD-R-*-20-*-*-*-*-*-*-*"));
   /* FGC BGC  */
+  
+  mqtt_subscribe(el->topic,0);
+  
 }
 void i_tnumber(ELEMENT *el,char *pars) {
   char buf[32];
@@ -144,6 +118,7 @@ void i_tnumber(ELEMENT *el,char *pars) {
   el->h=atoi(key_value(pars,"H","20"));
   el->font=strdup(key_value(pars,"FONT","*-HELVETICA-BOLD-R-*-20-*-*-*-*-*-*-*"));
   /* FGC BGC  */
+  mqtt_subscribe(el->topic,0);
 }
 
 
@@ -171,7 +146,17 @@ void u_tstring(ELEMENT *el,WINDOW *win,char *message) {
 void d_tnumber(ELEMENT *el,WINDOW *win) {
   stringColor(win->display,el->x,el->y,el->format,win->fcolor);
 }
-void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {}
+void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
+  double v;
+  STRING a,format;
+  format.pointer=el->format;
+  format.len=strlen(format.pointer);
+  v=atof(message);
+  a=do_using(v,format);
+  
+  stringColor(win->display,el->x,el->y,a.pointer,win->fcolor);
+  free(a.pointer);
+}
 
 
 const ELDEF eltyps[]= {
@@ -236,6 +221,7 @@ void init_dash(DASH *dash) {
 	  }
 	}
         if(j==anzeltyp) printf("Unknown element #%d <%s>\n",i,dash->tree[i].line);
+        else if(dash->tree[i].type==EL_PANEL) dash->panelelement=i;
       } else printf("Unknown element #%d <%s>\n",i,dash->tree[i].line);
     }
   }
