@@ -62,7 +62,7 @@ void i_pbox(ELEMENT *el,char *pars) {
   el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
 }
-void i_hbar(ELEMENT *el,char *pars) {
+void i_bar(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","10"));
   el->h=atoi(key_value(pars,"H","10"));
   
@@ -73,19 +73,6 @@ void i_hbar(ELEMENT *el,char *pars) {
   el->min=myatof(key_value(pars,"MIN","-1"));
   el->max=myatof(key_value(pars,"MAX","1"));
 }
-void i_vbar(ELEMENT *el,char *pars) {
-  el->w=atoi(key_value(pars,"W","10"));
-  el->h=atoi(key_value(pars,"H","10"));
-  
-  el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
-  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
-  el->agc=(long)myatof(key_value(pars,"AGC","$ffffffff"));
-  /* MIN MAX */
-  el->min=myatof(key_value(pars,"MIN","-1"));
-  el->max=myatof(key_value(pars,"MAX","1"));
-}
-
-
 
 
 void i_string(ELEMENT *el,char *pars) {
@@ -120,6 +107,14 @@ void i_tstring(ELEMENT *el,char *pars) {
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
+
+void i_tinarea(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","20"));
+  el->h=atoi(key_value(pars,"H","20"));
+  el->text=strdup(key_value(pars,"VALUE","0"));
+  el->revert=atoi(key_value(pars,"QOS","0"));
+}
+
 void i_tnumber(ELEMENT *el,char *pars) {
   char buf[32];
   el->format=strdup(key_value(pars,"FORMAT","###.###"));
@@ -228,7 +223,7 @@ void d_string(ELEMENT *el,WINDOW *win) {
 
 void d_tstring(ELEMENT *el,WINDOW *win) {
   set_font(el->font,win);
-  stringColor(win->display,el->x,el->y,el->topic,el->fgc);
+ // stringColor(win->display,el->x,el->y,el->topic,el->fgc);
   mqtt_subscribe(el->topic,0);
 }
 void u_tstring(ELEMENT *el,WINDOW *win,char *message) {
@@ -258,9 +253,14 @@ void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
 
 void c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y) {
   printf("Shell cmd : <%s>\n",el->text);
-  
-  
   if(system(el->text)==-1) printf("Error: system\n");  
+}
+void c_tinarea(ELEMENT *el,WINDOW *win,int x, int y) {
+  printf("topic value cmd : <%s>\n",el->text);
+  STRING a;
+  a.pointer=el->text;
+  a.len=strlen(a.pointer);
+  mqtt_publish(el->topic,a,el->revert,1);
 }
 
 void c_subdash(ELEMENT *el,WINDOW *win,int x, int y) {
@@ -268,6 +268,18 @@ void c_subdash(ELEMENT *el,WINDOW *win,int x, int y) {
   printf("Dash start: <%s>\n",el->text);
   sprintf(buf,"hyperdash %s.dash &",el->text);
   if(system(buf)==-1) printf("Error: system\n");  
+}
+void c_frame(ELEMENT *el,WINDOW *win,int x, int y) {
+printf("cframe !!!\n");
+  el->revert=1;
+  d_frame(el,win);
+  SDL_Flip(win->display);
+  /* Wait for mouse releasse*/
+  waitmouse(win);
+  el->revert=0;
+  d_frame(el,win);
+  SDL_Flip(win->display);
+printf("cframe done.\n");
 }
 
 
@@ -281,15 +293,17 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE,"BOX",i_box,d_box,NULL},
  {EL_VISIBLE,"PBOX",i_pbox,d_pbox,NULL},
  {EL_VISIBLE,"FRAME",i_frame,d_frame,NULL},
+ {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",i_frame,d_frame,NULL,c_frame},
  {EL_VISIBLE,"BITMAP",i_bitmap,NULL,NULL},
  {EL_VISIBLE,"ICON",i_icon,NULL,NULL},
  {EL_VISIBLE,"TEXT",i_string,d_string,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"TOPICSTRING",i_tstring,d_tstring,u_tstring},
  {EL_VISIBLE|EL_DYNAMIC,"TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
- {EL_VISIBLE|EL_DYNAMIC,"HBAR",i_hbar,d_hbar,u_hbar,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_vbar,d_vbar,u_vbar,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"HBAR",i_bar,d_hbar,u_hbar,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_bar,d_vbar,u_vbar,NULL},
  {EL_INPUT,"SHELLCMD",i_shellcmd,NULL,NULL,c_shellcmd},
  {EL_INPUT,"DASH"    ,i_subdash ,NULL,NULL,c_subdash},
+ {EL_INPUT|EL_DYNAMIC,"TOPICINAREA"    ,i_tinarea ,NULL,NULL,c_tinarea},
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
@@ -303,7 +317,7 @@ void click_element(ELEMENT *el, WINDOW *win, int x, int y) {
 
 void update_element(ELEMENT *el, WINDOW *win, STRING message) {
   int j=(el->type&0xff);
-  printf("update element. <%s>\n",message.pointer);
+//  printf("update element. <%s>\n",message.pointer);
   if(eltyps[j].update) (eltyps[j].update)(el,win,message.pointer);
 
 
@@ -462,6 +476,15 @@ int mouseevent(WINDOW *window, int *x, int *y, int *b, int *s) {
   return(1);
 }
 
+int waitmouse(WINDOW *window) {
+  SDL_Event event;
+  if(SDL_WaitEvent(&event)==0) return(0);
+  while(event.type!=SDL_MOUSEBUTTONUP) { 
+     if(handle_event(window,&event)==-1) return(-1);
+     if(SDL_WaitEvent(&event)==0) return(0);
+  }
+  return(1);
+}
 
 void handle_dash(DASH *dash, WINDOW *win) {
   int x,y,b,s;

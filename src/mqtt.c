@@ -47,7 +47,11 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
   STRING m;
   m.pointer=message->payload;
   m.len=message->payloadlen;
-  printf("Message arrived for <%s>:<%s>\n",topicName,message->payload);
+  char buf[m.len+1];
+  strncpy(buf,m.pointer,m.len);
+  buf[m.len]=0;
+  printf("Message arrived for <%s>:<%s>\n",topicName,buf);
+  m.pointer=buf;
   update_dash(topicName,m);
   MQTTClient_freeMessage(&message);
   MQTTClient_free(topicName);
@@ -66,6 +70,29 @@ void mqtt_subscribe(char *topic,int qos) {
 static void mqtt_unsubscribe(char *topic) {
   MQTTClient_unsubscribe(client, topic);
 }
+
+/* Publish the content of a string (message) to a topic on 
+   a (mqtt) server. This command could also work with message queues.
+ */
+void mqtt_publish(char *topic, STRING payload, int qos, int retain) {
+  MQTTClient_message pubmsg = MQTTClient_message_initializer;
+  MQTTClient_deliveryToken token;
+  pubmsg.payload=payload.pointer;
+  pubmsg.payloadlen=payload.len;
+  pubmsg.qos =qos;
+  pubmsg.retained = retain;
+//  printf("publish to <%s> <%s> qos=%d\n",topic,payload.pointer,qos);
+  MQTTClient_publishMessage(client,topic, &pubmsg, &token);
+//  printf("done token=%d\n",token);
+  // int rc=
+  MQTTClient_waitForCompletion(client, token, TIMEOUT);
+  // printf("Message with delivery token %d delivered\n", token);
+}
+
+
+
+
+
 
 void mqtt_init() {
   atexit(mqtt_exit);
