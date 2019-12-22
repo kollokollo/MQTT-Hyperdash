@@ -39,14 +39,16 @@ void connlost(void *context, char *cause) {
   
 }
 
-
+extern void update_dash(char *topic, STRING message);
 /* This callback is called in a separate thread, when a message for a
    subscribed topic is received.
  */
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
-
+  STRING m;
+  m.pointer=message->payload;
+  m.len=message->payloadlen;
   printf("Message arrived for <%s>:<%s>\n",topicName,message->payload);
-
+  update_dash(topicName,m);
   MQTTClient_freeMessage(&message);
   MQTTClient_free(topicName);
   return 1;  /* Message successfully consumed. */

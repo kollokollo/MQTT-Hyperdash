@@ -15,7 +15,7 @@ typedef struct {
 
 #define EL_IGNORE  0
 #define EL_BROKER  1
-#define EL_PANEL   2
+#define EL_PANEL   0x800
 #define EL_DYNAMIC 0x100
 #define EL_INPUT   0x200
 #define EL_VISIBLE 0x400
@@ -33,6 +33,7 @@ typedef struct {
   void (*init)();
   void (*draw)();
   void (*update)();
+  void (*click)();
 } ELDEF;
 typedef struct {
   short type;

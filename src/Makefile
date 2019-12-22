@@ -53,7 +53,8 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS)
 
 # these are objects which are compiled to binary
 
-MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o
+MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
+          5x7.o spat-a-fnt.o
 
 CSRC=    $(MAINOBJS:.o=.c)
 
@@ -94,7 +95,7 @@ DIR33=$(DIR)-bin
 LINKFLAGS = 
 WINLINKFLAGS = -L./WINDOWS/lib 
 
-LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx
+LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx -lX11
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL -lSDL_gfx
 
 all :    hyperdash

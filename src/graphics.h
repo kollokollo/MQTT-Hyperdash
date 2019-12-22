@@ -19,10 +19,8 @@ typedef struct {
   unsigned short chw,chh,baseline;
   SDL_Surface *display;
 
-
-
-
 } WINDOW;
 
 WINDOW *create_window();
 void close_window(WINDOW *win);
+void set_font(char *name, WINDOW *window);
