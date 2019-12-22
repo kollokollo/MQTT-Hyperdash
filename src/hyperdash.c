@@ -59,9 +59,35 @@ void i_pbox(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","10"));
   el->h=atoi(key_value(pars,"H","10"));
   el->linewidth=atoi(key_value(pars,"LINEWIDTH","1"));
-  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
-  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
+  el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
+  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
 }
+void i_hbar(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","10"));
+  el->h=atoi(key_value(pars,"H","10"));
+  
+  el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
+  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
+  el->agc=(long)myatof(key_value(pars,"AGC","$ffffffff"));
+  /* MIN MAX */
+  el->min=myatof(key_value(pars,"MIN","-1"));
+  el->max=myatof(key_value(pars,"MAX","1"));
+}
+void i_vbar(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","10"));
+  el->h=atoi(key_value(pars,"H","10"));
+  
+  el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
+  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
+  el->agc=(long)myatof(key_value(pars,"AGC","$ffffffff"));
+  /* MIN MAX */
+  el->min=myatof(key_value(pars,"MIN","-1"));
+  el->max=myatof(key_value(pars,"MAX","1"));
+}
+
+
+
+
 void i_string(ELEMENT *el,char *pars) {
   char buf[32];
   el->text=strdup(key_value(pars,"TEXT","TEXT"));
@@ -110,6 +136,11 @@ void i_shellcmd(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","32"));
   el->h=atoi(key_value(pars,"H","32"));
 }
+void i_subdash(ELEMENT *el,char *pars) {
+  el->text=strdup(key_value(pars,"DASH","main"));
+  el->w=atoi(key_value(pars,"W","32"));
+  el->h=atoi(key_value(pars,"H","32"));
+}
 
 
 void d_panel(ELEMENT *el,WINDOW *win) {
@@ -120,7 +151,7 @@ void d_line(ELEMENT *el,WINDOW *win) {
   lineColor(win->display,el->x,el->y,el->x2,el->y2,el->fgc);
 }
 void d_box(ELEMENT *el,WINDOW *win) {
-  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->w),el->fgc);
+  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->fgc);
 }
 void d_frame(ELEMENT *el,WINDOW *win) {
   unsigned long ac,bc;
@@ -145,8 +176,51 @@ void d_frame(ELEMENT *el,WINDOW *win) {
 }
 void d_pbox(ELEMENT *el,WINDOW *win) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
-  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->w),el->fgc);
+  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->fgc);
 }
+void d_hbar(ELEMENT *el,WINDOW *win) {
+printf("d_hbar \n");
+  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
+  int x=(int)(0-el->min)*el->w/(el->max-el->min);
+  if(el->min<0 && el->max>0) lineColor(win->display,el->x+x,el->y,el->x+x,el->y+el->h,el->agc);
+
+  mqtt_subscribe(el->topic,0);
+}
+void d_vbar(ELEMENT *el,WINDOW *win) {
+  int y=el->h-1-(int)(0-el->min)*el->h/(el->max-el->min);
+  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
+  if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y,el->x+el->w,el->y+y,el->agc);
+  mqtt_subscribe(el->topic,0);
+}
+void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
+  double v=atof(message);
+  printf("v=%g",v);
+  int x0=(int)((0-el->min)*(double)el->w/(el->max-el->min));
+  int x=(int)((v-el->min)*(double)el->w/(el->max-el->min));
+  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  if(x>x0)
+    boxColor(win->display,el->x+x0,el->y,(el->x)+x-1,(el->y)+(el->h)-1,el->fgc);
+  else
+    boxColor(win->display,el->x+x,el->y,(el->x)+x0-1,(el->y)+(el->h)-1,el->fgc);
+  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
+  if(el->min<0 && el->max>0) lineColor(win->display,el->x+x0,el->y,el->x+x0,el->y+el->h,el->agc);
+}
+void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
+  double v=atof(message);
+  printf("v=%g",v);
+  int y0=el->h-1-(int)((0-el->min)*(double)el->h/(el->max-el->min));
+  int y=el->h-1-(int)((v-el->min)*(double)el->h/(el->max-el->min));
+  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  if(y>y0)
+    boxColor(win->display,el->x,el->y+y0,(el->x)+el->w-1,(el->y)+y-1,el->fgc);
+  else
+    boxColor(win->display,el->x,el->y+y,(el->x)+el->w-1,(el->y)+y0-1,el->fgc);
+  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
+  if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y0,el->x+el->w,el->y+y0,el->agc);
+}
+
 void d_string(ELEMENT *el,WINDOW *win) {
   set_font(el->font,win);
   stringColor(win->display,el->x,el->y,el->text,el->fgc);
@@ -189,6 +263,13 @@ void c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y) {
   if(system(el->text)==-1) printf("Error: system\n");  
 }
 
+void c_subdash(ELEMENT *el,WINDOW *win,int x, int y) {
+  char buf[256];
+  printf("Dash start: <%s>\n",el->text);
+  sprintf(buf,"hyperdash %s.dash &",el->text);
+  if(system(buf)==-1) printf("Error: system\n");  
+}
+
 
 
 
@@ -205,8 +286,10 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE,"TEXT",i_string,d_string,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"TOPICSTRING",i_tstring,d_tstring,u_tstring},
  {EL_VISIBLE|EL_DYNAMIC,"TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
+ {EL_VISIBLE|EL_DYNAMIC,"HBAR",i_hbar,d_hbar,u_hbar,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_vbar,d_vbar,u_vbar,NULL},
  {EL_INPUT,"SHELLCMD",i_shellcmd,NULL,NULL,c_shellcmd},
- {EL_IGNORE,"#",NULL,NULL,NULL},
+ {EL_INPUT,"DASH"    ,i_subdash ,NULL,NULL,c_subdash},
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
@@ -215,8 +298,6 @@ void click_element(ELEMENT *el, WINDOW *win, int x, int y) {
   int j=(el->type&0xff);
   printf("click element.\n");
   if(eltyps[j].click) (eltyps[j].click)(el,win,x,y);
-
-
 }
 
 

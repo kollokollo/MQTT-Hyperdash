@@ -41,6 +41,7 @@ typedef struct {
   short x2,y2;
   short linewidth;
   short revert;
+  unsigned long agc;
   unsigned long bgc;
   unsigned long fgc;
   char *font;
@@ -49,6 +50,8 @@ typedef struct {
   char *line;
   char *filename;
   char *format;
+  double min,max;
+  
   SUBSCRIPTION *sub;
 } ELEMENT;
 
