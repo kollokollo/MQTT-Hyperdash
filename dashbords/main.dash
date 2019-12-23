@@ -1,0 +1,47 @@
+#
+# Global settings and default values
+#
+BROKER: URL="tcp://localhost:1883"
+PANEL:  TITLE="MQTT-Hyperdash Main Local Dashboard" W=420 H=300 FGC=$ffffffff BGC=$000040ff
+
+#
+# Static drawing
+#
+TEXT:   X=64 Y=40 FGC=$ffff00FF TEXT="MQTT-Hyperdash   V.1.00" FONT="BIG"
+TEXT:   X=84 Y=55 FGC=$000000FF TEXT="(c) Markus Hoffmann et al." FONT="SMALL"
+FRAME:  X=50 Y=30 W=260 H=40 
+#ICON: x=250 y=10  ICON="radi.png" TGC=$ffffffff
+#TOPICSTRING: X=310 Y=32 W=10 H=10 TOPIC=ACTIVITY FGC=$ffffffff BGC=$00ff
+#VBAR: x=398 y=100 w=10 h=100 MIN=-1 MAX=1 AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff TOPIC=SINUS
+#BITMAP: x=10 y=10  BITMAP="Disc1" fgc=$ffffffff
+# TEXTLABEL: x=10 y=30 TOPIC=ACTIVITY TEXT[0]="Label|text|color" TEXT[1]=... BGC=$000040ff
+TEXTLABEL: x=10 y=30 TOPIC=ACTIVITY \
+  TEXT[0]="0|Null|$ffffffff" \
+  TEXT[1]="1|Eins|$ff00ffff" \
+  TEXT[2]="2|Zwei|$ffff00ff" \
+  TEXT[3]="3|Drei|$5f3f00ff" \
+  BGC=$000040ff
+# BITMAPLABEL: x=10 y=30 TOPIC=ACTIVITY BITMAP[0]="Label|filename|color" BITMAP[1]=...  BGC=$000040ff
+BITMAPLABEL: x=395 y=5 TOPIC=ACTIVITY \
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff" \
+  BGC=$000040ff
+
+TEXT:   X=5 Y=100 FGC=$ffffFFFF TEXT="This is just a demonstration dashboard" FONT="MEDIUM"
+TEXT:   X=5 Y=116 FGC=$ffffFFFF TEXT="with static elements." FONT="MEDIUM"
+TEXT:   X=5 Y=132 FGC=$ffffFFFF TEXT="You should create your own for your" FONT="MEDIUM"
+TEXT:   X=5 Y=148 FGC=$ffffFFFF TEXT="Smart Home." FONT="MEDIUM"
+TEXT:   X=5 Y=164 FGC=$ffffFFFF TEXT="Folow the options below..." FONT="MEDIUM"
+
+
+SHELLCMD:     x=270 y=260 w=120 h=25 CMD="bitmap &"
+PBOX:         x=270 y=260 w=120 h=25 BGC=$444444ff 
+TEXT:         x=280 y=270 w=120 h=10 TEXT="bitmap editor" FGC=$ffffffff
+FRAMETOGGLE:  x=270 y=260 w=120 h=25
+
+SHELLCMD:     x=20 y=260 w=200 h=25 CMD="firefox https://github.com/kollokollo/MQTT-Hyperdash &"
+PBOX:         x=20 y=260 w=200 h=25 BGC=$444444ff 
+TEXT:         x=30 y=270 w=200 h=10 TEXT="MQTT-Hyperdash Homepage" FGC=$ffffffff
+FRAMETOGGLE:  x=20 y=260 w=200 h=25

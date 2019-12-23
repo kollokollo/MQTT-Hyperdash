@@ -1,0 +1,16 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=MQTT-Hyperdash
+Name[de]=MQTT-Hyperdash
+GenericName=The MQTT Dashbord
+GenericName[de]=Das MQTT Dashbord
+Comment=MQTT Dashbord
+Exec=hyperdash main.dash
+Icon=hyperdash
+Terminal=false
+Type=Application
+StartupNotify=false
+Categories=Application;Development;
+MimeType=application/dash;
+TryExec=hyperdash
+NoDisplay=false

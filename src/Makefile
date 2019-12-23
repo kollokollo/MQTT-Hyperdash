@@ -20,7 +20,7 @@ ICONDIR=$(DATADIR)/icons/hicolor/scalable/apps
 DESKTOPDIR=$(DATADIR)/applications
 MANDIR=${datarootdir}/man
 
-LIBNO=1.27
+LIBNO=1.00
 
 RELEASE=1
 
@@ -68,9 +68,9 @@ HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h
 
 EXAMPLES= 
 
-DIST= ../README ../doc/INSTALL ../COPYING ../doc/man-pages/*.1 \
+DIST= ../README ../doc/INSTALL ../COPYING *.1 \
 	../doc/ACKNOWLEGEMENTS \
-	../doc/AUTHORS ../doc/HISTORY ../RELEASE_NOTES \
+	../doc/AUTHORS  ../RELEASE_NOTES \
       $(HSRC) $(CSRC) WINDOWS/MQTT-Hyperdash.iss \
       config.h.in  \
         Makefile.in configure config.guess configure.in \
@@ -121,18 +121,26 @@ hyperdash.exe: main.c $(MYWINLIBS)
 	 $(WINLIBS)
 	strip $@
 
-install : hyperdash hyperdash.desktop hyperdash.svg
-	install -m 644 hyperdash.svg $(ICONDIR)/
+install : hyperdash hyperdash.desktop 
 	install -m 644 hyperdash.desktop $(DESKTOPDIR)/
 	install -s -m 755 hyperdash $(BINDIR)/
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
-	install -m 644 doc/man-pages/hyperdash.1 $(MANDIR)/man1/
+	install -m 644 hyperdash.1 $(MANDIR)/man1/
+	install -m 775  -d $(DATADIR)/hyperdash/bitmaps
+	install -m 644 ../bitmaps/* $(DATADIR)/hyperdash/bitmaps/
+	install -m 775  -d $(DATADIR)/hyperdash/icons
+	install -m 644 ../icons/* $(DATADIR)/hyperdash/icons/
+	install -m 775  -d $(DATADIR)/hyperdash/dashbords
+	install -m 644 ../dashbords/* $(DATADIR)/hyperdash/dashbords/
+
 uninstall :
-	rm -f $(ICONDIR)/hyperdash.svg
 	rm -f $(DESKTOPDIR)/hyperdash.desktop
 	rm -f $(BINDIR)/hyperdash
 	rm -f $(MANDIR)/man1/hyperdash.1
+	rm -rf $(DATADIR)/hyperdash/bitmaps
+	rm -rf $(DATADIR)/hyperdash/icons
+	rm -rf $(DATADIR)/hyperdash/dashbords
 clean :
 	rm -f *.o a.out Makefile.bak  \
 	backup-*.tgz *.d
@@ -158,22 +166,22 @@ rpm :	$(DIR).tar.gz hyperdash.spec
 	cp $(DIR).tar.gz $(HOME)/rpmbuild/SOURCES/
 	rpmbuild -ba  --clean --nodeps hyperdash.spec
 
-DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS ../doc/HISTORY Debian/changelog.Debian Debian/copyright \
-	../RELEASE_NOTES ../README 
+DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS \
+	 ../README 
 
 doc-pak: $(DEBDOC)
 	mkdir -p $@
-	cp ../doc/ACKNOWLEGEMENTS ../doc/HISTORY $@/
-	cp ../doc/AUTHORS ../RELEASE_NOTES ../README $@/
-	cp Debian/changelog.Debian $@/
-	gzip -9 $@/changelog.Debian
-	cp Debian/copyright $@/
+	cp ../doc/ACKNOWLEGEMENTS  $@/
+	cp ../doc/AUTHORS  ../README $@/
+#	cp Debian/changelog.Debian $@/
+#	gzip -9 $@/changelog.Debian
+#	cp Debian/copyright $@/
 
 deb :	$(BINDIST) doc-pak
 	sudo checkinstall -D --pkgname hyperdash --pkgversion $(LIBNO) \
 	--pkgrelease $(RELEASE)  \
 	--maintainer "kollo@users.sourceforge.net" \
-        --requires libc6,libasound2, --backup  \
+        --requires libc6,libasound2,libsdl1.2debian,libsdl-gfx1.2-5 --backup  \
 	--pkggroup interpreters   \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz

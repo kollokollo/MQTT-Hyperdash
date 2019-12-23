@@ -18,8 +18,9 @@
 #include "util.h"
 #include "mqtt.h"
 
-char icondir[256]="../icons";
-char bitmapdir[256]="../bitmaps";
+char icondir[256]="/usr/share/hyperdash/icons";
+char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
+char dashborddir[256]="/usr/share/hyperdash/dashbords";
 
 void i_broker(ELEMENT *el,char *pars) {
   el->filename=strdup(key_value(pars,"URL","tcp://localhost:1883"));
@@ -312,10 +313,10 @@ void d_icon(ELEMENT *el,WINDOW *win) {
 void d_frame(ELEMENT *el,WINDOW *win) {
   unsigned long ac,bc;
   if(el->revert==1) {
-    ac=0x4f4f4fff;
+    ac=0x1f1f1fff;
     bc=0xafafafff;
   } else {
-    bc=0x4f4f4fff;
+    bc=0x1f1f1fff;
     ac=0xafafafff;
   }
   lineColor(win->display,el->x,el->y,el->x+el->w,el->y,ac);
@@ -355,6 +356,10 @@ void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
   int x0=(int)((0-el->min)*(double)el->w/(el->max-el->min));
   int x=(int)((v-el->min)*(double)el->w/(el->max-el->min));
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  x=min(x,el->w);
+  x0=min(x0,el->w);
+  if(x<0) x=0;
+  if(x0<0) x0=0;
   if(x>x0)
     boxColor(win->display,el->x+x0,el->y,(el->x)+x-1,(el->y)+(el->h)-1,el->fgc);
   else
@@ -397,6 +402,11 @@ void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
   int y0=el->h-1-(int)((0-el->min)*(double)el->h/(el->max-el->min));
   int y=el->h-1-(int)((v-el->min)*(double)el->h/(el->max-el->min));
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  y=min(y,el->h);
+  y0=min(y0,el->h);
+  if(y<0) y=0;
+  if(y0<0) y0=0;
+  
   if(y>y0)
     boxColor(win->display,el->x,el->y+y0,(el->x)+el->w-1,(el->y)+y-1,el->fgc);
   else
@@ -461,8 +471,9 @@ void c_tinarea(ELEMENT *el,WINDOW *win,int x, int y) {
 
 void c_subdash(ELEMENT *el,WINDOW *win,int x, int y) {
   char buf[256];
+  if(exist(el->text))  sprintf(buf,"hyperdash %s.dash &",el->text);
+  else sprintf(buf,"hyperdash %s/%s.dash &",dashborddir,el->text);
   printf("Dash start: <%s>\n",el->text);
-  sprintf(buf,"hyperdash %s.dash &",el->text);
   if(system(buf)==-1) printf("Error: system\n");  
 }
 void c_frame(ELEMENT *el,WINDOW *win,int x, int y) {
@@ -595,7 +606,7 @@ void update_dash(char *topic, STRING message) {
   DASH *dash=global_dash;
   WINDOW *win=global_window;
   int i;
-  printf("update_dash: <%s>...\n",topic);
+ // printf("update_dash: <%s>...\n",topic);
   for(i=0;i<dash->anzelement;i++) {
     if((dash->tree[i].type&EL_DYNAMIC)==EL_DYNAMIC) {
       if(!strcmp(topic,dash->tree[i].topic)) update_element(&(dash->tree[i]),win,message);

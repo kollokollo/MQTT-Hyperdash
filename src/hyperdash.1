@@ -1,0 +1,84 @@
+.TH HYPERDASH 1 04-Jan-2019 "Version 1.00" "MQTT Dashbord"
+.SH NAME
+hyperdash \- The MQTT dashbord interpreter 
+.SH SYNOPSIS
+.B hyperdash
+.RI "[ " option " ] " 
+.I <filename>
+
+.SH DESCRIPTION
+
+MQTT Hyperdash is a fast and efficient dashboard (GUI) for the MQTT framework. 
+It uses the  SDL library for graphics rendering. Except for the paho library 
+no other special library is needed. The dashbord runs on linux, but a port 
+to other operating systems should be easy. 
+
+ 
+
+.SH Filenames
+
+.B hyperdash
+processes one input file. The suffix of the input file is 
+usually .dash.
+
+.SH OPTIONS
+.TP
+.BR \-q
+Be quiet and print less debug information. 
+.TP
+.BR \-v
+Be more verbose and print debug information. 
+.TP
+.BR \-\-version
+shows version, program and other information and exits.
+.TP
+.BR \-h ", " \-\-help
+print a short help and exit.
+.TP
+.BR \-h ", " \-\-fullscreen
+enable fullscreen graphics mode.
+.PP
+For detailed help and description of the MQTT principle take a 
+look at the README file coming with the package. 
+
+
+.SH EXAMPLES
+.nf
+hyperdash main.dash &
+.fi
+
+
+
+.SH VERSION
+Page was created for V.1.00
+
+.SH BUG REPORTS       
+
+If you find a bug in the MQTT hyperdash software, you should report it. But
+first, you should make sure that it really is a bug, and that it appears in
+the latest version of the RadCon package that you have.
+
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that
+as well! Suggestions may be mailed to the bug tracking system.
+
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+
+.SH COPYRIGHT
+Copyright (C) 2019 Markus Hoffmann 
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software 
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+.SH SEE ALSO
+mosquitto(1), mosquitto_pub(1), mosquitto_sub(1)

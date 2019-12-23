@@ -25,7 +25,7 @@
 #endif
 
 
-char ifilename[100]="in.dash";
+char ifilename[100]="main.dash";
 int verbose=0;
 
 int dofullscreen=0;
@@ -67,6 +67,7 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     else if(!strcmp(argumente[count],"--fullscreen")) dofullscreen++;
     else if(!strcmp(argumente[count],"--iconpath"))  strncpy(icondir,      argumente[++count],256);
     else if(!strcmp(argumente[count],"--bitmappath"))strncpy(bitmapdir,   argumente[++count],256);
+    else if(!strcmp(argumente[count],"--dashbordpath"))strncpy(dashborddir,   argumente[++count],256);
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
     else {
       strcpy(ifilename,argumente[count]);
@@ -83,6 +84,11 @@ int main(int anzahl, char *argumente[]) {
     intro();
   } else {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
+    if(!exist(ifilename)) {
+      char buf[strlen(ifilename)+1];
+      strcpy(buf,ifilename);
+      sprintf(ifilename,"%s/%s",dashborddir,buf);
+    }
     if(exist(ifilename)) {
       maindash=load_dash(ifilename);
       init_dash(maindash);
