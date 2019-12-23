@@ -29,6 +29,8 @@ char icondir[256]=".";
 char bitmapdir[256]=".";
 int verbose=0;
 
+int dofullscreen=0;
+
 static void intro() {
   printf("**********************************************************\n"
          "*    %10s                     V." VERSION "               *\n"
@@ -45,6 +47,7 @@ static void usage() {
     " --help <topic>\t--- Print help on topic\n"
     " --iconpath <path>\t--- set path for icon files [%s]\n"
     " --bitmappath <path>\t--- set path for bitmap files [%s]\n"
+    " --fullscreen \t--- enable fullscreen graphics mode \n"
     ,"hyperdash",ifilename,icondir,bitmapdir);
 }
 static void kommandozeile(int anzahl, char *argumente[]) {
@@ -62,6 +65,7 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     } 
     else if(!strcmp(argumente[count],"-v"))	     verbose++;
     else if(!strcmp(argumente[count],"-q"))	     verbose--;
+    else if(!strcmp(argumente[count],"--fullscreen")) dofullscreen++;
     else if(!strcmp(argumente[count],"--iconpath"))  strncpy(icondir,      argumente[++count],256);
     else if(!strcmp(argumente[count],"--bitmappath"))strncpy(bitmapdir,   argumente[++count],256);
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
@@ -83,7 +87,7 @@ int main(int anzahl, char *argumente[]) {
     if(exist(ifilename)) {
       maindash=load_dash(ifilename);
       init_dash(maindash);
-      mainwindow=create_window(maindash->tree[maindash->panelelement].text,"MQTT-Hyperdash",0,0,maindash->tree[maindash->panelelement].w,maindash->tree[maindash->panelelement].h);
+      mainwindow=create_window(maindash->tree[maindash->panelelement].text,"MQTT-Hyperdash",0,0,maindash->tree[maindash->panelelement].w,maindash->tree[maindash->panelelement].h,dofullscreen);
       global_window=mainwindow; /* TODO */
       draw_dash(maindash,mainwindow);
       handle_dash(maindash,mainwindow);

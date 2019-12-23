@@ -21,6 +21,7 @@ typedef struct {
 
 } WINDOW;
 
-WINDOW *create_window();
+
+WINDOW *create_window(const char *title, const char* info,int x,int y,unsigned int w,unsigned int h, int);
 void close_window(WINDOW *win);
 void set_font(char *name, WINDOW *window);

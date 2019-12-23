@@ -33,13 +33,13 @@ void close_window(WINDOW *win) {
 
 #define WINDOW_DEFAULT_W 512
 #define WINDOW_DEFAULT_H 256
-WINDOW *create_window(const char *title, const char* info,int x,int y,unsigned int w,unsigned int h) {
+WINDOW *create_window(const char *title, const char* info,int x,int y,unsigned int w,unsigned int h, int fullscreen) {
   WINDOW *nw;
   nw=calloc(sizeof(WINDOW),1);
   init_sdl();
   
   if(!(nw->display=SDL_SetVideoMode(w,h, 32,
-    // SDL_FULLSCREEN |
+       SDL_FULLSCREEN*fullscreen |
        SDL_HWSURFACE|SDL_SRCALPHA))) {
       printf("cannot open SDL surface \n");
       SDL_Quit();
