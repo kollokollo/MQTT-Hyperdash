@@ -27,3 +27,5 @@ void set_font(char *name, WINDOW *window);
 int waitmouse(WINDOW *window);
 int mouseevent(WINDOW *window, int *x, int *y, int *b, int *s);
 void put_bitmap(WINDOW *window, const char *adr,int x,int y,unsigned int w, unsigned int h, unsigned long int fgc);
+void put_graphics(WINDOW *window, STRING data,int x,int y,unsigned int w, unsigned int h, unsigned long int tgc);
+

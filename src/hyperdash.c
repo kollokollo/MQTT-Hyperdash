@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "basics.h"
 #include "graphics.h"
 #include "hyperdash.h"
@@ -89,6 +90,36 @@ void i_string(ELEMENT *el,char *pars) {
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
+/* TODO: */
+
+void i_textlabel(ELEMENT *el,char *pars) {
+  int i;
+  char p[256];
+  char *a;
+  char w1[256],w2[256],w3[256];
+
+  for(i=0;i<10;i++) {
+    sprintf(p,"TEXT[%d]",i);
+    a=key_value(pars,p,p);
+    wort_sep(a,'|',0,w1,w2);
+    wort_sep(w2,'|',0,w2,w3);
+    el->label[i].pointer=strdup(w1);
+    el->label[i].len=strlen(el->label[i].pointer);
+    el->data[i].pointer=strdup(w2);
+    el->data[i].len=strlen(el->data[i].pointer);
+    el->labelcolor[i]=(long)myatof(w3);
+  }
+
+  el->w=atoi(key_value(pars,"W","32"));
+  el->h=atoi(key_value(pars,"H","20"));
+  el->font=strdup(key_value(pars,"FONT","SMALL"));
+  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
+}
+
+
+
+
+
 STRING get_icon(const char *name, int *w, int *h) {
   STRING ret;
   STRING a;
@@ -103,12 +134,46 @@ STRING get_icon(const char *name, int *w, int *h) {
 static char SmallDisc_bits[] = {
    0xfc, 0x01, 0x02, 0x02, 0x07, 0x07, 0x8f, 0x07, 0xdf, 0x07, 0xff, 0x07,
    0xdf, 0x07, 0x8f, 0x07, 0x07, 0x07, 0x02, 0x02, 0xfc, 0x01};
+
 STRING get_bitmap(const char *name, int *w, int *h) {
+  int i=0;
+  int e;
   STRING ret;
-  ret.pointer=SmallDisc_bits;
-  ret.len=sizeof(SmallDisc_bits);
-  *w=(SmallDisc_width+7)&0xfffffc;
-  *h=SmallDisc_height;
+  char *odummy;
+  char dummy[256];
+  STRING a=get_file(name);
+  if(a.pointer && a.len) {
+    ret.pointer=malloc(a.len);
+    ret.len=0;
+    wort_sep(a.pointer,'_',0,dummy,a.pointer);
+    wort_sep(a.pointer,' ',0,dummy,a.pointer);
+    wort_sep(a.pointer,'\n',0,dummy,a.pointer);
+    *w=(atoi(dummy)+7)&(~7);
+    printf("w=%d\n",*w);
+    wort_sep(a.pointer,'_',0,dummy,a.pointer);
+    wort_sep(a.pointer,' ',0,dummy,a.pointer);
+    wort_sep(a.pointer,'\n',0,dummy,a.pointer);
+    *h=atoi(dummy);
+    printf("h=%d\n",*h);
+    e=wort_sep(a.pointer,'{',0,dummy,a.pointer);
+    e=wort_sep(a.pointer,',',0,dummy,a.pointer);
+    while(e>0) {
+    odummy=dummy;
+      while(odummy[0]<=' ') odummy++;
+     // printf("%d:<%s> <%s>: %x\n",i,dummy,odummy,(int)myatof(odummy));
+      ret.pointer[i++]=(int)myatof(odummy);
+      e=wort_sep(a.pointer,',',0,dummy,a.pointer);
+    }
+    ret.len=i;
+//    exit(0);
+    
+    free(a.pointer);
+  } else {
+    ret.pointer=SmallDisc_bits;
+    ret.len=sizeof(SmallDisc_bits);
+    *w=(SmallDisc_width+7)&0xfffffc;
+    *h=SmallDisc_height;
+  }
   return(ret);
 }
 void i_bitmap(ELEMENT *el,char *pars) {
@@ -123,6 +188,40 @@ void i_bitmap(ELEMENT *el,char *pars) {
   } else {
     printf("Error: Bitmap %s not found!\n",f);
   }
+  sprintf(f,"%d",w);
+  el->w=atoi(key_value(pars,"W",f));
+  sprintf(f,"%d",h);
+  el->h=atoi(key_value(pars,"H",f));
+}
+
+/* TODO: */
+void i_bitmaplabel(ELEMENT *el,char *pars) {
+  int i;
+  char p[256];
+  char *a;
+  char w1[256],w2[256],w3[256];
+  char f[256];
+  int w=32,h=32;
+  for(i=0;i<10;i++) {
+    sprintf(p,"BITMAP[%d]",i);
+    a=key_value(pars,p,p);
+    wort_sep(a,'|',0,w1,w2);
+    wort_sep(w2,'|',0,w2,w3);
+    el->label[i].pointer=strdup(w1);
+    el->label[i].len=strlen(el->label[i].pointer);
+    if(*w2) {
+    sprintf(f,"%s/%s",bitmapdir,w2);
+    if(exist(f)) {
+      el->data[i]=get_bitmap(f,&w,&h);
+      printf("Bitmap: <%s> %dx%d\n",f,w,h);
+    } else {
+      printf("Error: Bitmap %s not found!\n",f);
+    }
+    }
+    el->labelcolor[i]=(long)myatof(w3);
+  }
+
+  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   sprintf(f,"%d",w);
   el->w=atoi(key_value(pars,"W",f));
   sprintf(f,"%d",h);
@@ -201,6 +300,12 @@ void d_box(ELEMENT *el,WINDOW *win) {
 void d_bitmap(ELEMENT *el,WINDOW *win) {
   put_bitmap(win,el->data[0].pointer,el->x,el->y,el->w,el->h,el->fgc);
 }
+void d_bitmaplabel(ELEMENT *el,WINDOW *win) {
+  if(el->data[0].pointer) {
+    put_bitmap(win,el->data[0].pointer,el->x,el->y,el->w,el->h,el->labelcolor[0]);
+  }
+  mqtt_subscribe(el->topic,0);
+}
 void d_icon(ELEMENT *el,WINDOW *win) {
   put_graphics(win,el->data[0],el->x,el->y,el->w,el->h,el->agc);
 }
@@ -257,6 +362,36 @@ void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x+x0,el->y,el->x+x0,el->y+el->h,el->agc);
 }
+
+void u_textlabel(ELEMENT *el,WINDOW *win, char *message) {
+  int i;
+  int found=-1;
+  for(i=0;i<10;i++) {
+    if(el->label[i].pointer) {
+      if(!strcmp(el->label[i].pointer,message)) found=i;   
+    }
+  }
+  if(found>=0 && found<10 && el->data[found].pointer) {
+    set_font(el->font,win);
+    boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+    stringColor(win->display,el->x,el->y,el->data[found].pointer,el->labelcolor[found]);
+  }
+}
+void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message) {
+  int i;
+  int found=-1;
+  for(i=0;i<10;i++) {
+    if(el->label[i].pointer) {
+      if(!strcmp(el->label[i].pointer,message)) found=i;   
+    }
+  }
+  if(found>=0 && found<10 && el->data[found].pointer) {
+    boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+    put_bitmap(win,el->data[found].pointer,el->x,el->y,el->w,el->h,el->labelcolor[found]);
+  }
+}
+
+
 void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
   double v=atof(message);
   int y0=el->h-1-(int)((0-el->min)*(double)el->h/(el->max-el->min));
@@ -278,6 +413,13 @@ void d_string(ELEMENT *el,WINDOW *win) {
 void d_tstring(ELEMENT *el,WINDOW *win) {
   set_font(el->font,win);
  // stringColor(win->display,el->x,el->y,el->topic,el->fgc);
+  mqtt_subscribe(el->topic,0);
+}
+void d_textlabel(ELEMENT *el,WINDOW *win) {
+  set_font(el->font,win);
+  if(el->data[0].pointer) {
+    stringColor(win->display,el->x,el->y,el->data[0].pointer,el->labelcolor[0]);
+  }
   mqtt_subscribe(el->topic,0);
 }
 void u_tstring(ELEMENT *el,WINDOW *win,char *message) {
@@ -355,6 +497,8 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE|EL_DYNAMIC,"TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
  {EL_VISIBLE|EL_DYNAMIC,"HBAR",i_bar,d_hbar,u_hbar,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_bar,d_vbar,u_vbar,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"TEXTLABEL",i_textlabel,d_textlabel,u_textlabel,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"BITMAPLABEL",i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL},
  {EL_INPUT,"SHELLCMD",i_shellcmd,NULL,NULL,c_shellcmd},
  {EL_INPUT,"DASH"    ,i_subdash ,NULL,NULL,c_subdash},
  {EL_INPUT|EL_DYNAMIC,"TOPICINAREA"    ,i_tinarea ,NULL,NULL,c_tinarea},

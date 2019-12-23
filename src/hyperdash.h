@@ -46,7 +46,9 @@ typedef struct {
   char *filename;
   char *format;
   double min,max;
+  STRING label[10];
   STRING data[10];
+  unsigned long labelcolor[10];
   SUBSCRIPTION *sub;
 } ELEMENT;
 

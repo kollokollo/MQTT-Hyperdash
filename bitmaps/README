@@ -1,0 +1,3 @@
+These Bitmap files must me monochrome bitmaps in ASCII format. 
+
+The standard UNIX/LINUX tool "bitmap" can create them.
