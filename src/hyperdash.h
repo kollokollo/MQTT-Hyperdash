@@ -8,11 +8,6 @@
 #ifndef __HYPERDASH
 #define __HYPERDASH
 
-typedef struct {
-  unsigned int len;
-  char *pointer;
-} STRING;
-
 #define EL_IGNORE  0
 #define EL_BROKER  1
 #define EL_PANEL   0x800
@@ -51,7 +46,7 @@ typedef struct {
   char *filename;
   char *format;
   double min,max;
-  
+  STRING data[10];
   SUBSCRIPTION *sub;
 } ELEMENT;
 
@@ -72,12 +67,14 @@ typedef struct {
 
 
 extern int verbose;
+extern char icondir[];
+extern char bitmapdir[];
 
 DASH *load_dash(const char *filename);
 DASH *merge_dash(DASH *dash, const char *fname);
 void free_dash(DASH *dash);
 void init_dash(DASH *dash);
 void close_dash(DASH *dash);
-
-
+void draw_dash(DASH *dash, WINDOW *win);
+void handle_dash(DASH *dash, WINDOW *win);
 #endif

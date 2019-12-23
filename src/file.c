@@ -74,6 +74,25 @@ size_t bload(const char *name, char *adr, size_t len) {
   fclose(fdis);
   return(len);
 }
+
+STRING get_file(const char *name) {
+  STRING ret;
+  FILE *fdis=fopen(name,"rb");
+  if(fdis==NULL) {
+    ret.pointer=NULL;
+    ret.len=0;
+    return(ret);
+  }
+  size_t len=lof(fdis);
+  if(len>0) {
+    ret.pointer=malloc(len);
+    ret.len=fread(ret.pointer,1,len,fdis);
+  }
+  fclose(fdis);
+  return(ret);
+}
+
+
 int exist(const char *filename) {
   struct stat fstats;
   int retc=stat(filename, &fstats);

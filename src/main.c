@@ -13,10 +13,11 @@
 #include <unistd.h>
 
 #include "config.h"
-#include "file.h"
+#include "basics.h"
 #include "graphics.h"
-
 #include "hyperdash.h"
+#include "file.h"
+
 #if defined WINDOWS || defined ANDROID
   #define EX_OK 0
 #else
@@ -25,8 +26,6 @@
 
 
 char ifilename[100]="in.dash";
-char icondir[256]=".";
-char bitmapdir[256]=".";
 int verbose=0;
 
 int dofullscreen=0;

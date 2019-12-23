@@ -15,5 +15,11 @@ int bsave(const char *, char *, size_t);
 size_t bload(const char *, char *, size_t);
 
 int exist(const char *);
-
+#ifndef __HYPERDASH
+typedef struct {
+  unsigned int len;
+  char *pointer;
+} STRING;
+#endif
+STRING get_file(const char *name);
 

@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <MQTTClient.h>
 #include <time.h>
+#include "basics.h"
+#include "graphics.h"
 #include "hyperdash.h"
 #include "mqtt.h"
 

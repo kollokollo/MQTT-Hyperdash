@@ -10,8 +10,9 @@
 #include <string.h>
 #include <ctype.h> 
 #include <math.h> 
+#include "basics.h"
+#include "graphics.h"
 #include "hyperdash.h"
-
 #include "util.h"
 
 /* Decode hexadecimal number to int  */

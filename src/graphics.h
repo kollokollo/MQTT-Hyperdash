@@ -18,10 +18,12 @@ typedef struct {
   unsigned long flags;
   unsigned short chw,chh,baseline;
   SDL_Surface *display;
-
 } WINDOW;
 
-
+STRING pngtobmp(unsigned char *pngdata,size_t pngsize);
 WINDOW *create_window(const char *title, const char* info,int x,int y,unsigned int w,unsigned int h, int);
 void close_window(WINDOW *win);
 void set_font(char *name, WINDOW *window);
+int waitmouse(WINDOW *window);
+int mouseevent(WINDOW *window, int *x, int *y, int *b, int *s);
+void put_bitmap(WINDOW *window, const char *adr,int x,int y,unsigned int w, unsigned int h, unsigned long int fgc);

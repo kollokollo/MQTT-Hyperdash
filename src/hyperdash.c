@@ -10,11 +10,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include "basics.h"
 #include "graphics.h"
-#include "file.h"
 #include "hyperdash.h"
+#include "file.h"
 #include "util.h"
 #include "mqtt.h"
+
+char icondir[256]="../icons";
+char bitmapdir[256]="../bitmaps";
 
 void i_broker(ELEMENT *el,char *pars) {
   el->filename=strdup(key_value(pars,"URL","tcp://localhost:1883"));
@@ -85,17 +89,61 @@ void i_string(ELEMENT *el,char *pars) {
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
-void i_bitmap(ELEMENT *el,char *pars) {
-  el->filename=strdup(key_value(pars,"BITMAP","bitmap.bmp"));
-  el->w=atoi(key_value(pars,"W","32"));
-  el->h=atoi(key_value(pars,"H","32"));
-  /* FGC */
-  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
+STRING get_icon(const char *name, int *w, int *h) {
+  STRING ret;
+  STRING a;
+  a=get_file(name);
+  ret=pngtobmp((unsigned char *)a.pointer,(size_t)a.len);
+  free(a.pointer);
+  return(ret);
 }
+#define SmallDisc_width 11
+#define SmallDisc_height 11
+
+static char SmallDisc_bits[] = {
+   0xfc, 0x01, 0x02, 0x02, 0x07, 0x07, 0x8f, 0x07, 0xdf, 0x07, 0xff, 0x07,
+   0xdf, 0x07, 0x8f, 0x07, 0x07, 0x07, 0x02, 0x02, 0xfc, 0x01};
+STRING get_bitmap(const char *name, int *w, int *h) {
+  STRING ret;
+  ret.pointer=SmallDisc_bits;
+  ret.len=sizeof(SmallDisc_bits);
+  *w=(SmallDisc_width+7)&0xfffffc;
+  *h=SmallDisc_height;
+  return(ret);
+}
+void i_bitmap(ELEMENT *el,char *pars) {
+  char f[256];
+  int w=32,h=32;
+  el->filename=strdup(key_value(pars,"BITMAP","bitmap.bmp"));
+  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
+  sprintf(f,"%s/%s",bitmapdir,el->filename);
+  if(exist(f)) {
+    el->data[0]=get_bitmap(f,&w,&h);
+    printf("Bitmap: %dx%d\n",w,h);
+  } else {
+    printf("Error: Bitmap %s not found!\n",f);
+  }
+  sprintf(f,"%d",w);
+  el->w=atoi(key_value(pars,"W",f));
+  sprintf(f,"%d",h);
+  el->h=atoi(key_value(pars,"H",f));
+}
+
 void i_icon(ELEMENT *el,char *pars) {
+  char f[256];
+  int w=32,h=32;
   el->filename=strdup(key_value(pars,"ICON","icon.png"));
-  el->w=atoi(key_value(pars,"W","32"));
-  el->h=atoi(key_value(pars,"H","32"));
+  el->agc=(long)myatof(key_value(pars,"TGC","$00"));  /* Transparent color */
+  sprintf(f,"%s/%s",icondir,el->filename);
+  if(exist(f)) {
+    el->data[0]=get_icon(f,&w,&h);
+  } else {
+    printf("Error: Icon %s not found!\n",f);
+  }
+  sprintf(f,"%d",w);
+  el->w=atoi(key_value(pars,"W",f));
+  sprintf(f,"%d",h);
+  el->h=atoi(key_value(pars,"H",f));
 }
 void i_tstring(ELEMENT *el,char *pars) {
   char buf[32];
@@ -148,6 +196,14 @@ void d_line(ELEMENT *el,WINDOW *win) {
 void d_box(ELEMENT *el,WINDOW *win) {
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->fgc);
 }
+
+
+void d_bitmap(ELEMENT *el,WINDOW *win) {
+  put_bitmap(win,el->data[0].pointer,el->x,el->y,el->w,el->h,el->fgc);
+}
+void d_icon(ELEMENT *el,WINDOW *win) {
+  put_graphics(win,el->data[0],el->x,el->y,el->w,el->h,el->agc);
+}
 void d_frame(ELEMENT *el,WINDOW *win) {
   unsigned long ac,bc;
   if(el->revert==1) {
@@ -191,7 +247,6 @@ void d_vbar(ELEMENT *el,WINDOW *win) {
 }
 void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
   double v=atof(message);
-  printf("v=%g",v);
   int x0=(int)((0-el->min)*(double)el->w/(el->max-el->min));
   int x=(int)((v-el->min)*(double)el->w/(el->max-el->min));
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
@@ -204,7 +259,6 @@ void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
 }
 void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
   double v=atof(message);
-  printf("v=%g",v);
   int y0=el->h-1-(int)((0-el->min)*(double)el->h/(el->max-el->min));
   int y=el->h-1-(int)((v-el->min)*(double)el->h/(el->max-el->min));
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
@@ -294,8 +348,8 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE,"PBOX",i_pbox,d_pbox,NULL},
  {EL_VISIBLE,"FRAME",i_frame,d_frame,NULL},
  {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",i_frame,d_frame,NULL,c_frame},
- {EL_VISIBLE,"BITMAP",i_bitmap,NULL,NULL},
- {EL_VISIBLE,"ICON",i_icon,NULL,NULL},
+ {EL_VISIBLE,"BITMAP",i_bitmap,d_bitmap,NULL},
+ {EL_VISIBLE,"ICON",i_icon,d_icon,NULL},
  {EL_VISIBLE,"TEXT",i_string,d_string,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"TOPICSTRING",i_tstring,d_tstring,u_tstring},
  {EL_VISIBLE|EL_DYNAMIC,"TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
@@ -408,83 +462,6 @@ void update_dash(char *topic, STRING message) {
 
 
 
-int handle_event(WINDOW *w,SDL_Event *event) {
-  switch (event->type) {
-    /* Das Redraw-Event */
-/* wahrscheinlich muessen wir gar nix tun...*/
-  case SDL_QUIT:
-    printf("OOps, window close request. What should I do?\n");
-    return(-1);
-    break;
-  case SDL_ACTIVEEVENT: 
-    if ( event->active.state & SDL_APPACTIVE ) {
-        if ( event->active.gain ) {
-            printf("App activated\n");
-        } else {
-            printf("App iconified\n");
-        }
-    }
-  #ifdef SDL_WINDOWEVENT
-  case SDL_WINDOWEVENT:
-    switch (event->window.event) {
-    case SDL_WINDOWEVENT_SHOWN:
-      printf("Window %d shown", event->window.windowID);break;
-    case SDL_WINDOWEVENT_HIDDEN:
-      printf("Window %d hidden", event->window.windowID);break;
-    case SDL_WINDOWEVENT_EXPOSED:
-      printf("Window %d exposed", event->window.windowID);break;
-    case SDL_WINDOWEVENT_MOVED:
-      printf("Window %d moved to %d,%d",event->window.windowID, event->window.data1,event->window.data2);break;
-    case SDL_WINDOWEVENT_RESIZED:
-      printf("Window %d resized to %dx%d",event->window.windowID, event->window.data1,event->window.data2);break;
-    case SDL_WINDOWEVENT_MINIMIZED:
-      printf("Window %d minimized", event->window.windowID);break;
-    case SDL_WINDOWEVENT_MAXIMIZED:
-      printf("Window %d maximized", event->window.windowID);break;
-    case SDL_WINDOWEVENT_RESTORED:
-      printf("Window %d restored", event->window.windowID);break;
-    case SDL_WINDOWEVENT_ENTER:
-      printf("Mouse entered window %d",event->window.windowID);break;
-    case SDL_WINDOWEVENT_LEAVE:
-      printf("Mouse left window %d", event->window.windowID);break;
-    case SDL_WINDOWEVENT_FOCUS_GAINED:
-      printf("Window %d gained keyboard focus",event->window.windowID);break;
-    case SDL_WINDOWEVENT_FOCUS_LOST:
-      printf("Window %d lost keyboard focus",event->window.windowID);break;
-    case SDL_WINDOWEVENT_CLOSE:
-      printf("Window %d closed", event->window.windowID);break;
-    default:
-      printf("Window %d got unknown event %d",event->window.windowID, event->window.event);break;
-    }
-  #endif
-  }
-  return(0);
-}
-
-
-int mouseevent(WINDOW *window, int *x, int *y, int *b, int *s) {
-  SDL_Event event;
-  if(SDL_WaitEvent(&event)==0) return(0);
-  while(event.type!=SDL_MOUSEBUTTONDOWN && event.type!=SDL_MOUSEBUTTONUP) { 
-     if(handle_event(window,&event)==-1) return(-1);
-     if(SDL_WaitEvent(&event)==0) return(0);
-  }
-  *x=event.button.x;
-  *y=event.button.y;
-  *b=event.button.button;
-  *s=event.button.state;
-  return(1);
-}
-
-int waitmouse(WINDOW *window) {
-  SDL_Event event;
-  if(SDL_WaitEvent(&event)==0) return(0);
-  while(event.type!=SDL_MOUSEBUTTONUP) { 
-     if(handle_event(window,&event)==-1) return(-1);
-     if(SDL_WaitEvent(&event)==0) return(0);
-  }
-  return(1);
-}
 
 void handle_dash(DASH *dash, WINDOW *win) {
   int x,y,b,s;
