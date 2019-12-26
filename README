@@ -21,6 +21,8 @@ There are two applications included:
 
 hyperdash runs a panel/dashboard, which has been defined in a dash file. 
 
+<img src="screenshots/Haussteuerung.png">
+
 hyperdash-designer is a graphical tool to create the dash files. However 
 this program is still stub and the dash files must be created and edited using 
 a text editor by hand. However we also think of automatically create dash files 

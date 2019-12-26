@@ -40,6 +40,7 @@ typedef struct {
   unsigned long bgc;
   unsigned long fgc;
   char *font;
+  int fontsize;
   char *topic;
   char *text;
   char *line;
@@ -71,6 +72,7 @@ typedef struct {
 extern int verbose;
 extern char icondir[];
 extern char bitmapdir[];
+extern char fontdir[];
 extern char dashborddir[];
 
 DASH *load_dash(const char *filename);

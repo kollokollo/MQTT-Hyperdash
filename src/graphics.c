@@ -12,14 +12,25 @@
 #include <stdint.h>
 #include "basics.h"
 #include "graphics.h"
+#include "hyperdash.h"
+#include "file.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <SDL/SDL.h>
+//#include <SDL/SDL_image.h>
+#include <SDL/SDL_ttf.h>
+
 int init_sdl() {
   static int done=0;
   if(done) return(0);
   XInitThreads();
-  if(SDL_Init(SDL_INIT_VIDEO) < 0 ) return -1;
+//  if(SDL_Init(SDL_INIT_VIDEO) < 0 ) return -1;
+  if(SDL_Init(SDL_INIT_EVERYTHING) < 0 ) return -1;
+  
+  //Initialize SDL_ttf
+    if( TTF_Init() == -1 ) return -1;
+  
   atexit(SDL_Quit);
   
   /* Enable Unicode translation */
@@ -76,42 +87,6 @@ static void *memrevcpy(char *dest, const char *src, size_t n) {
   }
   return(dest);
 }
-
-/* NAME="BIG"
-        "SMALL"
-        "LARGE"
-	"8x16"
-	"8x8"
-	"5x7"
-
-*/
-
-extern const unsigned char *spat_a816;
-extern const unsigned char *asciiTable;
-
-
-/*  TODO: produces segmentation fault ....*/
-
-void set_font(char *name, WINDOW *window) {
-  if(strcmp(name,"BIG")==0 || strcmp(name,"8x16")==0) {
-    window->chw=8;
-    window->chh=16;
-    window->baseline=window->chh-2; 
-   // gfxPrimitivesSetFont(spat_a816,8,16); 	
-  } else if(strcmp(name,"MEDIUM")==0 || strcmp(name,"8x8")==0) {
-    window->chw=8;
-    window->chh=8;
-    window->baseline=window->chh-0;
-  //  gfxPrimitivesSetFont(NULL,8,8); 	
-  } else if(strcmp(name,"SMALL")==0 || strcmp(name,"5x7")==0) {
-    window->chw=5;
-    window->chh=7;
-    window->baseline=window->chh-0;
-   // gfxPrimitivesSetFont(asciiTable,5,7);
-  }
-}
-
-
 
 
 int handle_event(WINDOW *w,SDL_Event *event) {
@@ -268,3 +243,40 @@ void put_bitmap(WINDOW *window, const char *adr,int x,int y,unsigned int w, unsi
   SDL_FreeSurface(image);
 }
 
+void put_font_text(WINDOW *window, const char *font, int size,char *text, int x,int y,unsigned long int fgc, int h) {
+  SDL_Surface *message = NULL;
+  TTF_Font *ttffont = NULL;
+  SDL_Color textColor = { (fgc&0xff000000)>>24, (fgc&0xff0000)>>16, (fgc&0xff00)>>8 };
+  char fontname[256];
+  sprintf(fontname,"%s/%s.ttf",fontdir,font);
+  if(!exist(fontname)) {
+    printf("ERROR: font not found: <%s>\n",fontname);
+    stringColor(window->display,x,y+(h-8)/2,text,fgc);
+    return;
+  }
+//  ttffont = TTF_OpenFont("/home/hoffmann/c/MQTT-Hyperdash/fonts/Arial.ttf",size);
+  ttffont = TTF_OpenFont(fontname,size);
+  
+  if(ttffont==NULL) {
+    stringColor(window->display,x,y+(h-8)/2,text,fgc);
+    return;
+  }
+  int fontheight=TTF_FontHeight(ttffont);
+
+//  message = TTF_RenderText_Solid(ttffont,text, textColor);
+  message = TTF_RenderUTF8_Blended(ttffont,text, textColor);
+
+  /* If there was an error in rendering the text, use the primitive font */
+  
+  if(message==NULL) {
+    TTF_CloseFont(ttffont);
+    stringColor(window->display,x,y+(h-8)/2,text,fgc);
+    return;
+  }
+
+  SDL_Rect a={0,0,message->w,message->h};
+  SDL_Rect b={x,y+(h-fontheight)/2,message->w,message->h};
+  SDL_BlitSurface(message, &a,window->display, &b);
+  SDL_FreeSurface(message);
+  TTF_CloseFont(ttffont);
+}

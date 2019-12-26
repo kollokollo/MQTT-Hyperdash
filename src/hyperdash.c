@@ -18,8 +18,13 @@
 #include "util.h"
 #include "mqtt.h"
 
+/*TODO: FrameLabel*/
+
+
 char icondir[256]="/usr/share/hyperdash/icons";
 char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
+char fontdir[256]="/usr/share/hyperdash/fonts";
+
 char dashborddir[256]="/usr/share/hyperdash/dashbords";
 
 void i_broker(ELEMENT *el,char *pars) {
@@ -61,6 +66,13 @@ void i_frame(ELEMENT *el,char *pars) {
   el->h=atoi(key_value(pars,"H","10"));
   el->revert=atoi(key_value(pars,"REVERT","0"));
 }
+void i_framelabel(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","10"));
+  el->h=atoi(key_value(pars,"H","10"));
+  el->label[0].pointer=strdup(key_value(pars,"MATCH","0"));
+  el->label[0].len=strlen(el->label[0].pointer);
+}
+
 void i_pbox(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","10"));
   el->h=atoi(key_value(pars,"H","10"));
@@ -88,10 +100,11 @@ void i_string(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W",buf));
   el->h=atoi(key_value(pars,"H","20"));
   el->font=strdup(key_value(pars,"FONT","SMALL"));
+  el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
-/* TODO: */
+
 
 void i_textlabel(ELEMENT *el,char *pars) {
   int i;
@@ -195,7 +208,7 @@ void i_bitmap(ELEMENT *el,char *pars) {
   el->h=atoi(key_value(pars,"H",f));
 }
 
-/* TODO: */
+
 void i_bitmaplabel(ELEMENT *el,char *pars) {
   int i;
   char p[256];
@@ -286,8 +299,10 @@ void i_subdash(ELEMENT *el,char *pars) {
 }
 
 
+#define ELEMENT_SUBSCRIBE() mqtt_subscribe(el->topic,0)
+
+
 void d_panel(ELEMENT *el,WINDOW *win) {
-  set_font(el->font,win);
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
 }
 void d_line(ELEMENT *el,WINDOW *win) {
@@ -305,7 +320,7 @@ void d_bitmaplabel(ELEMENT *el,WINDOW *win) {
   if(el->data[0].pointer) {
     put_bitmap(win,el->data[0].pointer,el->x,el->y,el->w,el->h,el->labelcolor[0]);
   }
-  mqtt_subscribe(el->topic,0);
+  ELEMENT_SUBSCRIBE();
 }
 void d_icon(ELEMENT *el,WINDOW *win) {
   put_graphics(win,el->data[0],el->x,el->y,el->w,el->h,el->agc);
@@ -331,26 +346,35 @@ void d_frame(ELEMENT *el,WINDOW *win) {
   lineColor(win->display,el->x,el->y+el->h  ,el->x+el->w  ,el->y+el->h  ,bc);
   lineColor(win->display,el->x+1,el->y+el->h-1,el->x+el->w-2,el->y+el->h-1,bc);
 }
+void d_framelabel(ELEMENT *el,WINDOW *win) {
+  d_frame(el,win);
+  ELEMENT_SUBSCRIBE();
+}
+
+
 void d_pbox(ELEMENT *el,WINDOW *win) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->fgc);
 }
 void d_hbar(ELEMENT *el,WINDOW *win) {
-printf("d_hbar \n");
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
   int x=(int)(0-el->min)*el->w/(el->max-el->min);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x+x,el->y,el->x+x,el->y+el->h,el->agc);
-
-  mqtt_subscribe(el->topic,0);
+  ELEMENT_SUBSCRIBE();
 }
 void d_vbar(ELEMENT *el,WINDOW *win) {
   int y=el->h-1-(int)(0-el->min)*el->h/(el->max-el->min);
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y,el->x+el->w,el->y+y,el->agc);
-  mqtt_subscribe(el->topic,0);
+  ELEMENT_SUBSCRIBE();
 }
+
+
+/* Update Functions */
+
+
 void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
   double v=atof(message);
   int x0=(int)((0-el->min)*(double)el->w/(el->max-el->min));
@@ -377,11 +401,24 @@ void u_textlabel(ELEMENT *el,WINDOW *win, char *message) {
     }
   }
   if(found>=0 && found<10 && el->data[found].pointer) {
-    set_font(el->font,win);
     boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
     stringColor(win->display,el->x,el->y,el->data[found].pointer,el->labelcolor[found]);
   }
 }
+
+
+
+void u_framelabel(ELEMENT *el,WINDOW *win, char *message) {
+  el->revert=0;
+  if(el->label[0].pointer) {
+    if(!strcmp(el->label[0].pointer,message)) el->revert=1;   
+  }
+  d_frame(el,win);
+}
+
+
+
+
 void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message) {
   int i;
   int found=-1;
@@ -414,34 +451,29 @@ void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y0,el->x+el->w,el->y+y0,el->agc);
 }
-
 void d_string(ELEMENT *el,WINDOW *win) {
-  set_font(el->font,win);
-  stringColor(win->display,el->x,el->y,el->text,el->fgc);
+  put_font_text(win,el->font,el->fontsize,el->text,el->x,el->y,el->fgc,el->h);
 }
 
 void d_tstring(ELEMENT *el,WINDOW *win) {
-  set_font(el->font,win);
- // stringColor(win->display,el->x,el->y,el->topic,el->fgc);
-  mqtt_subscribe(el->topic,0);
+ // put_font_text(win,el->font,el->fontsize,el->topic,el->x,el->y,el->fgc);
+  ELEMENT_SUBSCRIBE();
 }
 void d_textlabel(ELEMENT *el,WINDOW *win) {
-  set_font(el->font,win);
   if(el->data[0].pointer) {
-    stringColor(win->display,el->x,el->y,el->data[0].pointer,el->labelcolor[0]);
+    put_font_text(win,el->font,el->fontsize,el->data[0].pointer,el->x,el->y,el->labelcolor[0],el->h);
   }
-  mqtt_subscribe(el->topic,0);
+  ELEMENT_SUBSCRIBE();
 }
 void u_tstring(ELEMENT *el,WINDOW *win,char *message) {
-  set_font(el->font,win);
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   stringColor(win->display,el->x,el->y,message,el->fgc);
 }
 
 void d_tnumber(ELEMENT *el,WINDOW *win) {
-  set_font(el->font,win);
+  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   stringColor(win->display,el->x,el->y,el->format,el->fgc);
-  mqtt_subscribe(el->topic,0);
+  ELEMENT_SUBSCRIBE();
 }
 void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
   double v;
@@ -452,10 +484,13 @@ void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
   a=do_using(v,format);
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
 
-  set_font(el->font,win);  
   stringColor(win->display,el->x,el->y,a.pointer,el->fgc);
   free(a.pointer);
 }
+
+
+
+/* Click Functions */
 
 void c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y) {
   printf("Shell cmd : <%s>\n",el->text);
@@ -477,7 +512,6 @@ void c_subdash(ELEMENT *el,WINDOW *win,int x, int y) {
   if(system(buf)==-1) printf("Error: system\n");  
 }
 void c_frame(ELEMENT *el,WINDOW *win,int x, int y) {
-printf("cframe !!!\n");
   el->revert=1;
   d_frame(el,win);
   SDL_Flip(win->display);
@@ -486,18 +520,17 @@ printf("cframe !!!\n");
   el->revert=0;
   d_frame(el,win);
   SDL_Flip(win->display);
-printf("cframe done.\n");
 }
 
 
 
 
 const ELDEF eltyps[]= {
- {EL_IGNORE,"#",NULL,NULL,NULL},
+// {EL_IGNORE,"#",NULL,NULL,NULL},
  {EL_BROKER,"BROKER",i_broker,NULL,NULL},
- {EL_PANEL|EL_VISIBLE, "PANEL",i_panel,d_panel,NULL},
- {EL_VISIBLE,"LINE",i_line,d_line,NULL},
  {EL_VISIBLE,"BOX",i_box,d_box,NULL},
+ {EL_VISIBLE,"LINE",i_line,d_line,NULL},
+ {EL_PANEL|EL_VISIBLE, "PANEL",i_panel,d_panel,NULL},
  {EL_VISIBLE,"PBOX",i_pbox,d_pbox,NULL},
  {EL_VISIBLE,"FRAME",i_frame,d_frame,NULL},
  {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",i_frame,d_frame,NULL,c_frame},
@@ -510,6 +543,7 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_bar,d_vbar,u_vbar,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"TEXTLABEL",i_textlabel,d_textlabel,u_textlabel,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"BITMAPLABEL",i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"FRAMELABEL",i_framelabel,d_framelabel,u_framelabel,NULL},
  {EL_INPUT,"SHELLCMD",i_shellcmd,NULL,NULL,c_shellcmd},
  {EL_INPUT,"DASH"    ,i_subdash ,NULL,NULL,c_subdash},
  {EL_INPUT|EL_DYNAMIC,"TOPICINAREA"    ,i_tinarea ,NULL,NULL,c_tinarea},
@@ -517,24 +551,25 @@ const ELDEF eltyps[]= {
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
 
-void click_element(ELEMENT *el, WINDOW *win, int x, int y) {
+static void click_element(ELEMENT *el, WINDOW *win, int x, int y) {
   int j=(el->type&0xff);
   printf("click element.\n");
   if(eltyps[j].click) (eltyps[j].click)(el,win,x,y);
 }
 
 
-void update_element(ELEMENT *el, WINDOW *win, STRING message) {
+static void update_element(ELEMENT *el, WINDOW *win, STRING message) {
   int j=(el->type&0xff);
 //  printf("update element. <%s>\n",message.pointer);
   if(eltyps[j].update) (eltyps[j].update)(el,win,message.pointer);
 
 
 }
-void draw_element(ELEMENT *el, WINDOW *win) {
+static void draw_element(ELEMENT *el, WINDOW *win) {
   int j=(el->type&0xff);
   if(eltyps[j].draw) (eltyps[j].draw)(el,win);
 }
+
 DASH *global_dash;
 WINDOW *global_window;
 
@@ -573,8 +608,6 @@ void init_dash(DASH *dash) {
 	      dash->tree[i].x=atoi(key_value(b,"X","0"));
 	      dash->tree[i].y=atoi(key_value(b,"Y","0"));
             }
-	    
-	    
 	    if(eltyps[j].init) (eltyps[j].init)(&(dash->tree[i]),b);
 	    break;
 	  }
@@ -587,7 +620,7 @@ void init_dash(DASH *dash) {
 }
 
 void close_dash(DASH *dash) {
-  /*
+  /*  TODO:
     unsubscribe alle parameter.
     Verbindung zum Broker trennen. 
   
@@ -681,14 +714,14 @@ DASH *merge_dash(DASH *dash, const char *fname) {
   bload(fname,dash->buffer+dash->bufferlen,len);
   dash->bufferlen+=len;
   
-     /* Zeilenzahl herausbekommen */
-    char *pos=dash->buffer;
-    int oldanz=dash->anzelement;
-    int i=0;
-    dash->anzelement=0;
-    
-    /*Erster Durchgang */
-    while(i<dash->bufferlen) {
+   /* Zeilenzahl herausbekommen */
+  char *pos=dash->buffer;
+  int oldanz=dash->anzelement;
+  int i=0;
+  dash->anzelement=0;
+  
+  /*Erster Durchgang */
+  while(i<dash->bufferlen) {
       if(i<dash->bufferlen-1 && dash->buffer[i]=='\r' && dash->buffer[i+1]=='\n') {  /*DOS WINDOWS line ending behandeln.*/
         dash->buffer[i]='\n';
 	dash->buffer[i+1]=2;  /* Marker */
@@ -703,8 +736,6 @@ DASH *merge_dash(DASH *dash, const char *fname) {
       i++;
     }
     if(i>0 && dash->buffer[i-1]!=0) dash->anzelement++;  /*letzte Zeile hatte kein \n*/
-
-    
     dash->tree=(ELEMENT *)realloc(dash->tree,dash->anzelement*sizeof(ELEMENT));
     bzero(dash->tree+oldanz*sizeof(ELEMENT),(dash->anzelement-oldanz)*sizeof(ELEMENT));
  
@@ -727,11 +758,10 @@ DASH *merge_dash(DASH *dash, const char *fname) {
       }
       i++;
     }
-    if((pos-dash->buffer)<dash->bufferlen) {
-      dash->tree[len++].line=pos;  /* Potenzielle letzte Zeile ohne \n */
-      dash->buffer[i]=0; /*stelle sicher dass die letzte Zeile durch ein 0 beendet ist*/
-    }
+  if((pos-dash->buffer)<dash->bufferlen) {
+    dash->tree[len++].line=pos;  /* Potenzielle letzte Zeile ohne \n */
+    dash->buffer[i]=0; /*stelle sicher dass die letzte Zeile durch ein 0 beendet ist*/
+  }
   if(verbose>0) printf("(%d elements)\n",dash->anzelement);
-
   return(dash);
 }

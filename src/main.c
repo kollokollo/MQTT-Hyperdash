@@ -46,8 +46,9 @@ static void usage() {
     " --help <topic>\t--- Print help on topic\n"
     " --iconpath <path>\t--- set path for icon files [%s]\n"
     " --bitmappath <path>\t--- set path for bitmap files [%s]\n"
+    " --fontpath <path>\t--- set path for bitmap files [%s]\n"
     " --fullscreen \t--- enable fullscreen graphics mode \n"
-    ,"hyperdash",ifilename,icondir,bitmapdir);
+    ,"hyperdash",ifilename,icondir,bitmapdir,fontdir);
 }
 static void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
@@ -67,6 +68,7 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     else if(!strcmp(argumente[count],"--fullscreen")) dofullscreen++;
     else if(!strcmp(argumente[count],"--iconpath"))  strncpy(icondir,      argumente[++count],256);
     else if(!strcmp(argumente[count],"--bitmappath"))strncpy(bitmapdir,   argumente[++count],256);
+    else if(!strcmp(argumente[count],"--fontpath"))strncpy(fontdir,   argumente[++count],256);
     else if(!strcmp(argumente[count],"--dashbordpath"))strncpy(dashborddir,   argumente[++count],256);
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
     else {

@@ -54,7 +54,7 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS)
 # these are objects which are compiled to binary
 
 MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
-          5x7.o spat-a-fnt.o bitmap.o
+          bitmap.o
 
 CSRC=    $(MAINOBJS:.o=.c)
 
@@ -95,7 +95,7 @@ DIR33=$(DIR)-bin
 LINKFLAGS = 
 WINLINKFLAGS = -L./WINDOWS/lib 
 
-LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx -lX11
+LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx  -lSDL_ttf -lX11
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL -lSDL_gfx
 
 all :    hyperdash
@@ -131,6 +131,8 @@ install : hyperdash hyperdash.desktop
 	install -m 644 ../bitmaps/* $(DATADIR)/hyperdash/bitmaps/
 	install -m 775  -d $(DATADIR)/hyperdash/icons
 	install -m 644 ../icons/* $(DATADIR)/hyperdash/icons/
+	install -m 775  -d $(DATADIR)/hyperdash/fonts
+	install -m 644 ../fonts/* $(DATADIR)/hyperdash/fonts/
 	install -m 775  -d $(DATADIR)/hyperdash/dashbords
 	install -m 644 ../dashbords/* $(DATADIR)/hyperdash/dashbords/
 
@@ -140,6 +142,7 @@ uninstall :
 	rm -f $(MANDIR)/man1/hyperdash.1
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons
+	rm -rf $(DATADIR)/hyperdash/fonts
 	rm -rf $(DATADIR)/hyperdash/dashbords
 clean :
 	rm -f *.o a.out Makefile.bak  \

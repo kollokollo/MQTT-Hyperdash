@@ -7,13 +7,13 @@ PANEL:  TITLE="Haussteuerung" W=420 H=300 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
-TEXT:   X=64 Y=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" FONT="BIG"
-FRAME:  X=50 Y=30 W=244 H=30 
+TEXT:   X=62 Y=20 H=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" FONT="Arial_Bold" FONSIZE=24
+FRAME:  X=50 Y=20 W=254 H=40 
 
 LINE:   X=0 Y=0 X2=32 Y2=32 FGC=$ffffffff
 LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
 
-TOPICSTRING: X=310 Y=32 W=100 H=10 TOPIC=HOME/ENVIRONMENT/PRESSURE FGC=$ffff00ff BGC=$00ff
+TOPICSTRING: X=310 Y=32 W=100 H=10 TOPIC=HOME/ENVIRONMENT/PRESSURE FGC=$ffff00ff BGC=$40ff
 
 
 
@@ -45,25 +45,23 @@ TOPICNUMBER: X=110 Y=190 W=80  TOPIC=HOME/WASSER/POWER FORMAT="####.# l/h" BGC=$
 
 SHELLCMD: x=20 y=260 w=80 h=25 CMD="xload &"
 PBOX:     x=20 y=260 w=80 h=25 BGC=$444444ff 
-TEXT:     x=30 y=270 w=80 h=10 TEXT="xload" FGC=$ffffffff
+TEXT:     x=30 y=260 w=80 h=25 TEXT="xload" FGC=$ffffffff FONT="Arial"
 FRAMETOGGLE:    x=20 y=260 w=80 h=25
 
-SHELLCMD:     x=220 y=260 w=80 h=25 CMD="bitmap &"
+DASH:         x=220 y=260 w=80 h=25 DASH="main"
 PBOX:         x=220 y=260 w=80 h=25 BGC=$444444ff 
-TEXT:         x=230 y=270 w=80 h=10 TEXT="bitmap" FGC=$ffffffff
+TEXT:         x=230 y=260 w=80 h=25 TEXT="home" FGC=$ffffffff FONT="Arial"
 FRAMETOGGLE:  x=220 y=260 w=80 h=25
 
 TOPICINAREA: x=120 y=260 w=80 h=25 VALUE="1" TOPIC=HOME/ELECTRICITY/STATUS QOS=2
-PBOX:     x=120 y=260 w=80 h=25 BGC=$444444ff 
-TEXT:     x=130 y=270 w=80 h=10 TEXT="-> 1" FGC=$ffffffff
-FRAMETOGGLE:    x=120 y=260 w=80 h=25
-
-
+PBOX:        x=120 y=260 w=80 h=25 BGC=$444444ff 
+TEXT:        x=130 y=260 w=80 h=25 TEXT="-> Set 1" FGC=$ffffffff FONT="Arial"
+FRAMETOGGLE: x=120 y=260 w=80 h=25
 
 
 PBOX:  x=330 y=260 w=80 h=25 BGC=$444444ff 
 DASH:  x=330 y=260 w=80 h=25 DASH="sonnenschein"
-TEXT:  x=340 y=270 w=80 h=10 TEXT="-> Solar" FGC=$ffffffff
+TEXT:  x=340 y=260 w=80 h=25 TEXT="-> Solar" FGC=$ffffffff FONT="Arial"
 FRAMETOGGLE: x=330 y=260 w=80 h=25 
 
 TEXT: X=352  Y=215 FGC=$ffffFFFF TEXT="E  G  W" FONT="BIG"

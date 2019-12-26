@@ -1,3 +1,8 @@
+## The .dash file format
+
+--- for MQTT Hyperdash ---
+
+
 A dash file consists of UTF-8 encoded ASCII text. 
 
 Each line contains one element. 
@@ -6,9 +11,11 @@ A line with an element definition has following structure:
 
 elementname : one or more KEY=VALUE pairs separated by whitespace.
 
-The order of KEY=VALUE pairs is irrelevant. They are all optional. If missing, default values apply.
+The order of KEY=VALUE pairs is irrelevant. They are all optional. 
+If missing, default values apply.
 
-String values should be enclosed by "" if they contain whitespaces.
+String values should be enclosed by "" if they contain whitespaces and when
+case matters.
 
 Comments are marked with a '#' at the beginning of a line.
 
@@ -20,12 +27,13 @@ Currently there exist following element types:
 
 1. Static elements 
 ==================
-Static elements are just drwing primitives. They do noch change with topics contens.
+Static elements are just drawing primitives. They do noch change with topics 
+contens.
 
 PANEL: TITLE=<title> W=<width in pixels> H=<height in pixels> FGC=<colorspec> BGC=<colorspec>
 
-This sets the title of the window/screen and specifys its fixed size in pixels. Also a default
-foreground and background color can be specified. 
+This sets the title of the window/screen and specifies its fixed size in pixels. 
+Also a default foreground and background color can be specified. 
 
 BROKER: URL=<broker url> USER=<username> PASSWD=<password>
 
@@ -33,11 +41,13 @@ This sets the mqtt broker url, and also username and password if required.
 
 LINE: X=<x-coordinate> Y=<y-coordinate> X2=<x-coordinate> Y2=<y-coordinate> FGC=<colorspec> LINEWIDTH=<line width in pixels>
 
-Draws a simple line if given width in given color. 
+Draws a simple line of given width in given color. 
 
-TEXT: X=<x-coordinate> Y=<y-coordinate> FGC=<colorspec> FGC=<colorspec> TEXT=<the text> FONT=<fontspec>
+TEXT: X=<x-coordinate> Y=<y-coordinate> H=<height> FGC=<colorspec> FGC=<colorspec> TEXT=<the text> FONT=<fontspec> FONTSIZE=<size>
 
-Draws a text at coordinates in given color with given font. 
+Draws a text at coordinates (X,Y) in given color with a given font. Fonts are
+true type fonts (.ttf). The size (height) if the Charackters can be specified with
+FONTSIZE. H defines the textbox height. The text will be vertically centered to this height.
 
 BOX: X=<x-coordinate> Y=<y-coordinate>  W=<width in pixels> H=<height in pixels> FGC=<colorspec> LINEWIDTH=<line width in pixels>
 
@@ -47,7 +57,7 @@ PBOX:  X=<x-coordinate> Y=<y-coordinate>  W=<width in pixels> H=<height in pixel
 
 Draws a filled box. 
 
-FRAME: X=<x-coordinate> Y=<y-coordinate>  W=<width in pixels> H=<height in pixels> 
+FRAME: X=<x-coordinate> Y=<y-coordinate>  W=<width in pixels> H=<height in pixels>  REVERT=<0/1>
 
 Draws a shadowed frame.
 
@@ -76,9 +86,9 @@ TopicNumber: X=<x> Y=<y> TOPIC=<topic> FGC=<colorspec> BGC=<colorspec> FONT=<fon
 Evaluates the topic message as a number and then uses formatter to display them. The Formatter should
 be a string also used in BASIC PRINT USING statements. 
 
-TopicFrame:  X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> HIT=<content> 
+TopicFrame:  X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MATCH=<content> 
 
-Draws a Frame, and if the topics content matches HIT-content, it is drawn in reversed state. 
+Draws a Frame, and if the topics content matches MATCH-content, it is drawn in reversed state. 
 
 TopicMeter: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MIN=<value> MAX=<value>
 
@@ -167,6 +177,6 @@ DashClickFrame: X=<x> Y=<y> W=<w> H=<h> DASH=<dashbord name>
 Same, but it opens another window with another dashboard.
 
 
-More element types can be thought of, but our goal is for now to implment these elements given here. 
-
+More element types can be thought of, but our goal is to keep everything as simple
+as possible.
 
