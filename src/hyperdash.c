@@ -18,8 +18,6 @@
 #include "util.h"
 #include "mqtt.h"
 
-/*TODO: FrameLabel*/
-
 
 char icondir[256]="/usr/share/hyperdash/icons";
 char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
@@ -127,6 +125,7 @@ void i_textlabel(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","32"));
   el->h=atoi(key_value(pars,"H","20"));
   el->font=strdup(key_value(pars,"FONT","SMALL"));
+  el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
 }
 
@@ -163,12 +162,10 @@ STRING get_bitmap(const char *name, int *w, int *h) {
     wort_sep(a.pointer,' ',0,dummy,a.pointer);
     wort_sep(a.pointer,'\n',0,dummy,a.pointer);
     *w=(atoi(dummy)+7)&(~7);
-    printf("w=%d\n",*w);
     wort_sep(a.pointer,'_',0,dummy,a.pointer);
     wort_sep(a.pointer,' ',0,dummy,a.pointer);
     wort_sep(a.pointer,'\n',0,dummy,a.pointer);
     *h=atoi(dummy);
-    printf("h=%d\n",*h);
     e=wort_sep(a.pointer,'{',0,dummy,a.pointer);
     e=wort_sep(a.pointer,',',0,dummy,a.pointer);
     while(e>0) {
@@ -264,6 +261,7 @@ void i_tstring(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W",buf));
   el->h=atoi(key_value(pars,"H","20"));
   el->font=strdup(key_value(pars,"FONT","SMALL"));
+  el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
   /* FGC BGC  */  
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
@@ -275,6 +273,11 @@ void i_tinarea(ELEMENT *el,char *pars) {
   el->text=strdup(key_value(pars,"VALUE","0"));
   el->revert=atoi(key_value(pars,"QOS","0"));
 }
+void i_tinstring(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","20"));
+  el->h=atoi(key_value(pars,"H","20"));
+  el->revert=atoi(key_value(pars,"QOS","0"));
+}
 
 void i_tnumber(ELEMENT *el,char *pars) {
   char buf[32];
@@ -283,6 +286,7 @@ void i_tnumber(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W",buf));
   el->h=atoi(key_value(pars,"H","20"));
   el->font=strdup(key_value(pars,"FONT","SMALL"));
+  el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
   /* FGC BGC  */
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
@@ -467,24 +471,22 @@ void d_textlabel(ELEMENT *el,WINDOW *win) {
 }
 void u_tstring(ELEMENT *el,WINDOW *win,char *message) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
-  stringColor(win->display,el->x,el->y,message,el->fgc);
+  put_font_text(win,el->font,el->fontsize,message,el->x,el->y,el->fgc,el->h);
 }
 
 void d_tnumber(ELEMENT *el,WINDOW *win) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
-  stringColor(win->display,el->x,el->y,el->format,el->fgc);
+  put_font_text(win,el->font,el->fontsize,el->format,el->x,el->y,el->fgc,el->h);
   ELEMENT_SUBSCRIBE();
 }
 void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
-  double v;
   STRING a,format;
   format.pointer=el->format;
   format.len=strlen(format.pointer);
-  v=atof(message);
+  double v=atof(message);
   a=do_using(v,format);
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
-
-  stringColor(win->display,el->x,el->y,a.pointer,el->fgc);
+  put_font_text(win,el->font,el->fontsize,a.pointer,el->x,el->y,el->fgc,el->h);
   free(a.pointer);
 }
 
@@ -495,6 +497,14 @@ void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
 void c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y) {
   printf("Shell cmd : <%s>\n",el->text);
   if(system(el->text)==-1) printf("Error: system\n");  
+}
+void c_tinstring(ELEMENT *el,WINDOW *win,int x, int y) {
+  printf("input string for topic <%s>\n",el->topic);
+  STRING a;
+  a.pointer=el->topic;
+  a.len=strlen(a.pointer);
+  input_dialog(el->topic);
+  mqtt_publish(el->topic,a,el->revert,1);
 }
 void c_tinarea(ELEMENT *el,WINDOW *win,int x, int y) {
   printf("topic value cmd : <%s>\n",el->text);
@@ -522,6 +532,7 @@ void c_frame(ELEMENT *el,WINDOW *win,int x, int y) {
   SDL_Flip(win->display);
 }
 
+/* Here all element types are defined. */
 
 
 
@@ -541,12 +552,17 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE|EL_DYNAMIC,"TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
  {EL_VISIBLE|EL_DYNAMIC,"HBAR",i_bar,d_hbar,u_hbar,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_bar,d_vbar,u_vbar,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"TOPICMETER",i_bar,d_vbar,u_vbar,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"TEXTLABEL",i_textlabel,d_textlabel,u_textlabel,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"BITMAPLABEL",i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"FRAMELABEL",i_framelabel,d_framelabel,u_framelabel,NULL},
  {EL_INPUT,"SHELLCMD",i_shellcmd,NULL,NULL,c_shellcmd},
  {EL_INPUT,"DASH"    ,i_subdash ,NULL,NULL,c_subdash},
  {EL_INPUT|EL_DYNAMIC,"TOPICINAREA"    ,i_tinarea ,NULL,NULL,c_tinarea},
+ {EL_INPUT|EL_DYNAMIC,"TOPICINSTRING"  ,i_tinstring ,NULL,NULL,c_tinstring},
+ {EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER"  ,i_tinstring ,NULL,NULL,c_tinstring},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICHSCALER"  ,i_tinstring ,NULL,NULL,c_tinstring},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICVSCALER"  ,i_tinstring ,NULL,NULL,c_tinstring},
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
@@ -560,10 +576,7 @@ static void click_element(ELEMENT *el, WINDOW *win, int x, int y) {
 
 static void update_element(ELEMENT *el, WINDOW *win, STRING message) {
   int j=(el->type&0xff);
-//  printf("update element. <%s>\n",message.pointer);
   if(eltyps[j].update) (eltyps[j].update)(el,win,message.pointer);
-
-
 }
 static void draw_element(ELEMENT *el, WINDOW *win) {
   int j=(el->type&0xff);
@@ -602,7 +615,8 @@ void init_dash(DASH *dash) {
 	  if(!strcmp(eltyps[j].name,a)) {
 	    dash->tree[i].type=eltyps[j].opcode|(j&0xff);
 	    // printf("found...%x\n",dash->tree[i].type);
-	    if((dash->tree[i].type&EL_DYNAMIC)==EL_DYNAMIC) dash->tree[i].topic=strdup(key_value(b,"TOPIC","TOPIC"));
+	    if((dash->tree[i].type&EL_DYNAMIC)==EL_DYNAMIC) 
+	      dash->tree[i].topic=strdup(key_value(b,"TOPIC","TOPIC"));
 	    if((dash->tree[i].type&EL_VISIBLE)==EL_VISIBLE ||
 	       (dash->tree[i].type&EL_INPUT)==EL_INPUT) {
 	      dash->tree[i].x=atoi(key_value(b,"X","0"));
@@ -617,14 +631,43 @@ void init_dash(DASH *dash) {
       } else printf("Unknown element #%d <%s>\n",i,dash->tree[i].line);
     }
   }
+  
+  /* Now do the subscriptions */
+  
+  
+}
+void free_element(ELEMENT *el) {
+  free(el->topic);
+  el->topic=NULL;
+  free(el->font);
+  el->font=NULL;
+  free(el->text);
+  el->text=NULL;
+  free(el->filename);
+  el->filename=NULL;
+  free(el->format);
+  el->format=NULL;
+  int j;
+  for(j=0;j<10;j++) {
+    free(el->label[j].pointer);
+    el->label[j].pointer=NULL;
+    el->label[j].len=0;
+    free(el->data[j].pointer);
+    el->data[j].pointer=NULL;
+    el->data[j].len=0;
+  }  
 }
 
+
+/* Undo actions from init_dash */
+
 void close_dash(DASH *dash) {
-  /*  TODO:
-    unsubscribe alle parameter.
-    Verbindung zum Broker trennen. 
-  
-  */
+  int i;
+  for(i=0;i<dash->anzelement;i++) {
+    free_element(&(dash->tree[i]));
+  }
+  mqtt_unsubscribe_all();
+  mqtt_disconnect();  /* Verbindung zum Broker trennen. */ 
 }
 
 
@@ -651,13 +694,16 @@ void update_dash(char *topic, STRING message) {
 
 
 
-void handle_dash(DASH *dash, WINDOW *win) {
+int handle_dash(DASH *dash, WINDOW *win) {
   int x,y,b,s;
   int a;
   while(1) {
     a=mouseevent(win,&x,&y,&b,&s);
-    if(a==-1) return;
-    else if(a==1) {
+    if(a==-1) return(0);
+    else if(a==-2) {
+      printf("Connection lost!\n");
+      return(-1);
+    } else if(a==1) {
       if(s==1 && b==1) {
         int i;
         for(i=0;i<dash->anzelement;i++) {
@@ -673,16 +719,11 @@ void handle_dash(DASH *dash, WINDOW *win) {
   }
 }
 
-void free_element(ELEMENT *el) {
-  free(el->topic);
-  free(el->font);
-  free(el->text);
-  free(el->filename);
-  free(el->format);
-}
 
 
-/* remove dash from memory and clear dashbuffer */
+/* remove dash from memory and clear dashbuffer 
+   basically undo everything from load_dash and init_dash
+   */
 void free_dash(DASH *dash) {
   while(--(dash->anzelement)>=0) {
     free_element(&(dash->tree[dash->anzelement]));

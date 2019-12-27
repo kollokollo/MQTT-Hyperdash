@@ -1,26 +1,27 @@
 # Demo Dashboard (MQTT Hyperdash) for the home automation
+# I have sensors an my power meter, my gas meter and my water meter.
 #
 # Global settings and default values
 #
 BROKER: URL="tcp://gaspower:1883"
-PANEL:  TITLE="Haussteuerung" W=420 H=300 FGC=$ffffffff BGC=$000040ff
+PANEL:  TITLE="Home Power" W=420 H=300 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
-TEXT:   X=62 Y=20 H=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" FONT="Arial_Bold" FONSIZE=24
+TEXT:   X=62 Y=20 H=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" \
+        FONT="Arial_Bold" FONSIZE=24
 FRAME:  X=50 Y=20 W=254 H=40 
 
 LINE:   X=0 Y=0 X2=32 Y2=32 FGC=$ffffffff
 LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
 
-TOPICSTRING: X=310 Y=32 W=100 H=10 TOPIC=HOME/ENVIRONMENT/PRESSURE FGC=$ffff00ff BGC=$40ff
+TOPICSTRING: X=320 Y=32 W=100 H=10 TOPIC=HOME/ENVIRONMENT/PRESSURE \
+        FGC=$ffff00ff BGC=$40ff
 
-
-
-TEXT:        X=10  Y=95 FGC=$ffffFFFF TEXT="Counter:" FONT="BIG"
+TEXT:   X=10  Y=80 FGC=$ffffFFFF TEXT="Counter:" FONT="Arial_Bold" FONTSIZE=16
 
 TOPICNUMBER: X=10 Y=112 W=100 H=10 TOPIC=HOME/ELECTRICITY/COUNTER FORMAT="######.# kWh" FGC=$ffff00ff BGC=$772222ff
-FRAME:       X=8 Y=110 W=103 H=13 REVERT=1
+FRAME:       X=8  Y=110 W=103 H=13 REVERT=1
 
 TOPICNUMBER: X=130 Y=112 W=90 H=10 TOPIC=HOME/GAS/COUNTER FORMAT="#####.# m3" FGC=$ffff00ff BGC=$772222ff
 FRAME:       X=128 Y=110 W=93 H=13 REVERT=1
@@ -30,23 +31,23 @@ FRAME:       X=248 Y=110 W=93 H=13 REVERT=1
 
 BOX:    X=5 Y=140 W=240 H=70 FGC=$8800FF
 
-TEXT:        X=10  Y=232 FGC=$ffffFFFF TEXT="Status:" FONT="BIG"
-TOPICSTRING: X=110 Y=232 W=200 H=10 TOPIC=HOME/ELECTRICITY/STATUS FGC=$ffff00ff BGC=$00ff
-FRAME:       X=108 Y=230 W=204 H=14 REVERT=1
+TEXT:        X=10  Y=232 H=16 FGC=$ffffFFFF TEXT="Status:" FONT="Arial_Bold" FONTSIZE=16
+TOPICSTRING: X=90 Y=232 W=200 H=16 TOPIC=HOME/ELECTRICITY/STATUS FGC=$ffff00ff BGC=$00ff
+FRAME:       X=88 Y=230 W=204 H=18 REVERT=1
 
-TEXT:        X=10  Y=150 FGC=$ffffFFFF TEXT="Electricity:" FONT="BIG"
+TEXT:        X=10  Y=150 FGC=$ffffFFFF TEXT="Electricity:"
 TOPICNUMBER: X=110 Y=150 W=80 TOPIC=HOME/ELECTRICITY/POWER FORMAT="  #### W" BGC=$44ff FGC=$ffff00ff
 
-TEXT:        X=10  Y=170 FGC=$ffffFFFF TEXT="Gas:" FONT="BIG"
+TEXT:        X=10  Y=170 FGC=$ffffFFFF TEXT="Gas:"
 TOPICNUMBER: X=110 Y=170 W=80  TOPIC=HOME/GAS/POWER FORMAT="####.# l/h" BGC=$44ff FGC=$ffff00ff
 
-TEXT:        X=10  Y=190 FGC=$ffffFFFF TEXT="Water:" FONT="BIG"
+TEXT:        X=10  Y=190 FGC=$ffffFFFF TEXT="Water:"
 TOPICNUMBER: X=110 Y=190 W=80  TOPIC=HOME/WASSER/POWER FORMAT="####.# l/h" BGC=$44ff FGC=$ffff00ff
 
-SHELLCMD: x=20 y=260 w=80 h=25 CMD="xload &"
-PBOX:     x=20 y=260 w=80 h=25 BGC=$444444ff 
-TEXT:     x=30 y=260 w=80 h=25 TEXT="xload" FGC=$ffffffff FONT="Arial"
-FRAMETOGGLE:    x=20 y=260 w=80 h=25
+SHELLCMD:    x=10 y=260 w=80 h=25 CMD="xload &"
+PBOX:        x=10 y=260 w=80 h=25 BGC=$444444ff 
+TEXT:        x=20 y=260 w=80 h=25 TEXT="xload" FGC=$ffffffff FONT="Arial"
+FRAMETOGGLE: x=10 y=260 w=80 h=25
 
 DASH:         x=220 y=260 w=80 h=25 DASH="main"
 PBOX:         x=220 y=260 w=80 h=25 BGC=$444444ff 
@@ -64,30 +65,48 @@ DASH:  x=330 y=260 w=80 h=25 DASH="sonnenschein"
 TEXT:  x=340 y=260 w=80 h=25 TEXT="-> Solar" FGC=$ffffffff FONT="Arial"
 FRAMETOGGLE: x=330 y=260 w=80 h=25 
 
-TEXT: X=352  Y=215 FGC=$ffffFFFF TEXT="E  G  W" FONT="BIG"
 
-VBAR: x=350 y=100 w=10 h=100 MIN=0 MAX=3000 AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff TOPIC=HOME/ELECTRICITY/POWER
+#
+# These VBARs are currently the only graphic way to show the values.
+# infuture we want to have a METER element and maybe other fancy ones... 
+#
 
-VBAR: x=374 y=100 w=10 h=100 MIN=0 MAX=1500 AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff TOPIC=HOME/GAS/POWER
 
-VBAR: x=398 y=100 w=10 h=100 MIN=0 MAX=1000 AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff TOPIC=HOME/WASSER/POWER
+TEXT: X=352  Y=215 FGC=$ffffFFFF TEXT="E  G  W"
+
+VBAR: x=350 y=100 w=10 h=100 MIN=0 MAX=3000 \
+      AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
+      TOPIC=HOME/ELECTRICITY/POWER
+
+VBAR: x=374 y=100 w=10 h=100 MIN=0 MAX=1500 \
+      AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
+      TOPIC=HOME/GAS/POWER
+
+VBAR: x=398 y=100 w=10 h=100 MIN=0 MAX=1000 \
+      AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
+      TOPIC=HOME/WASSER/POWER
+#
+# These Bitmap labels make animations, so that one can see, if the measument
+# devices are sill active and the connections is ok. I recommend this for all
+# intelligent sensors. If the animation stops, something is wrong.
+#
 
 
 BITMAPLABEL: x=345 y=75 BGC=$000040ff TOPIC=HOME/ELECTRICITY/ACTIVITY \
-BITMAP[0]="0|Disc1|$ffffffff" \
-BITMAP[1]="1|Disc2|$ffffffff" \
-BITMAP[2]="2|Disc3|$ffffffff" \
-BITMAP[3]="3|Disc4|$ffffffff"
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff"
 
 
 BITMAPLABEL: x=369 y=75 BGC=$000040ff TOPIC=HOME/GAS/ACTIVITY \
-BITMAP[0]="0|Disc1|$ffffffff" \
-BITMAP[1]="1|Disc2|$ffffffff" \
-BITMAP[2]="2|Disc3|$ffffffff" \
-BITMAP[3]="3|Disc4|$ffffffff"
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff"
 
 BITMAPLABEL: x=393 y=75 BGC=$000040ff TOPIC=HOME/WASSER/ACTIVITY \
-BITMAP[0]="0|Disc1|$ffffffff" \
-BITMAP[1]="1|Disc2|$ffffffff" \
-BITMAP[2]="2|Disc3|$ffffffff" \
-BITMAP[3]="3|Disc4|$ffffffff"
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff"

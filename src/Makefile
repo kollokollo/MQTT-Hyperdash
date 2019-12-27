@@ -54,7 +54,7 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS)
 # these are objects which are compiled to binary
 
 MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
-          bitmap.o
+          bitmap.o input.o
 
 CSRC=    $(MAINOBJS:.o=.c)
 
@@ -62,7 +62,7 @@ DEPSRC=  $(CSRC)
 
 # Headerfiles which should be added to the distribution
 
-HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h
+HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h input.h
 
 # example dash files 
 

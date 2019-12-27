@@ -1,0 +1,22 @@
+MQTT Hyperdash V.1.00
+=====================
+
+
+
+The MQTT is specially designed for high  bandwidth an machine data transpet for
+the Internet of Things (IoT)  on all layers and, due to envisaged future
+upgrades and expansions,  seamless extension in capacity and capability. 
+
+The man machine interface MQTT Hyperdash is the interactive tool from which the
+individual components of the IoT are controlled. In order to avoid
+confusion and to minimize the learning time, the interface builds on ergonomic
+and logical concepts which allow for an intuitive understanding of its
+operation and of the operation of the devices it controls.
+
+Virtual control panels (dashbords) allow users to operate on the graphical
+representations of a large set of devices like switches, knobs, sliders, digital
+and analog indicators, whose behaviour is equivalent to that of the real
+instrumental devices.  
+
+The connection with the MQTT brokers on the lower layers is automatic and
+completely transparent.

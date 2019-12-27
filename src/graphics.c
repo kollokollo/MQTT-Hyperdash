@@ -14,6 +14,7 @@
 #include "graphics.h"
 #include "hyperdash.h"
 #include "file.h"
+#include "mqtt.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -161,6 +162,9 @@ int mouseevent(WINDOW *window, int *x, int *y, int *b, int *s) {
   while(event.type!=SDL_MOUSEBUTTONDOWN && event.type!=SDL_MOUSEBUTTONUP) { 
      if(handle_event(window,&event)==-1) return(-1);
      if(SDL_WaitEvent(&event)==0) return(0);
+//     printf("Event-Loop\n");
+     /* Here we can check if the connection to he broker is still ok.*/
+     if(!mqtt_isconnected) return(-2); /*Connection lost */  
   }
   *x=event.button.x;
   *y=event.button.y;
@@ -250,12 +254,11 @@ void put_font_text(WINDOW *window, const char *font, int size,char *text, int x,
   char fontname[256];
   sprintf(fontname,"%s/%s.ttf",fontdir,font);
   if(!exist(fontname)) {
-    printf("ERROR: font not found: <%s>\n",fontname);
+    if(strcmp(font,"SMALL")) printf("ERROR: font not found: <%s>\n",fontname);
     stringColor(window->display,x,y+(h-8)/2,text,fgc);
     return;
   }
-//  ttffont = TTF_OpenFont("/home/hoffmann/c/MQTT-Hyperdash/fonts/Arial.ttf",size);
-  ttffont = TTF_OpenFont(fontname,size);
+  ttffont=TTF_OpenFont(fontname,size);
   
   if(ttffont==NULL) {
     stringColor(window->display,x,y+(h-8)/2,text,fgc);

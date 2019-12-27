@@ -21,7 +21,7 @@
 char clientID[64];
 #define TIMEOUT     10000L
 MQTTClient client;
-int mqtt_isconnected=0;
+volatile int mqtt_isconnected=0;
 volatile MQTTClient_deliveryToken deliveredtoken;
 /* This is a callback function. 
    The client application must provide an implementation of this function
@@ -33,12 +33,8 @@ function is executed on a separate thread to the one on which the client applica
 */
 
 void connlost(void *context, char *cause) {
-  printf("\nMQTT-Connection lost\n");
-  printf("     cause: %s\n", cause);
-  
-  /* TODO: sleep a while and then try to reconnect....*/
-  
-  
+  printf("ERROR: MQTT-Connection lost, cause: %s\n", cause);
+  mqtt_isconnected=0;
 }
 
 extern void update_dash(char *topic, STRING message);
@@ -52,7 +48,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
   char buf[m.len+1];
   strncpy(buf,m.pointer,m.len);
   buf[m.len]=0;
-  printf("Message arrived for <%s>:<%s>\n",topicName,buf);
+  if(verbose>0) printf("Message arrived for <%s>:<%s>\n",topicName,buf);
   m.pointer=buf;
   update_dash(topicName,m);
   MQTTClient_freeMessage(&message);
@@ -131,20 +127,29 @@ void mqtt_broker(char *url,char *user, char *passwd) {
     printf("MQTT Client: <%s> ",clientID);
     printf("Failed to connect, return code %d\n", rc);
   }
-
-
+  mqtt_isconnected=1;
 }
+void mqtt_unsubscribe_all() {
+  if(mqtt_isconnected) {
 
-void mqtt_exit() {
+
+  }
   /* free the subscription list */
 //  while(anzsubscription>0) {
 //    anzsubscription--;
 //    free(subscriptions[anzsubscription].topic);
 //  }
+}
+void mqtt_disconnect() {
+  if(mqtt_isconnected) {
+    MQTTClient_disconnect(client, 10000);
+    MQTTClient_destroy(&client);
+    mqtt_isconnected=0;
+  }
+}
 
-//  if(mqtt_isconnected) {
-//    MQTTClient_disconnect(client, 10000);
-//    MQTTClient_destroy(&client);
-//    mqtt_isconnected=0;
-//  }
+
+void mqtt_exit() {
+  mqtt_unsubscribe_all();
+  mqtt_disconnect();
 }

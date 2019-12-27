@@ -92,13 +92,23 @@ int main(int anzahl, char *argumente[]) {
       sprintf(ifilename,"%s/%s",dashborddir,buf);
     }
     if(exist(ifilename)) {
+      int rc=0;
       maindash=load_dash(ifilename);
       init_dash(maindash);
       mainwindow=create_window(maindash->tree[maindash->panelelement].text,"MQTT-Hyperdash",0,0,maindash->tree[maindash->panelelement].w,maindash->tree[maindash->panelelement].h,dofullscreen);
       global_window=mainwindow; /* TODO */
       draw_dash(maindash,mainwindow);
-      handle_dash(maindash,mainwindow);
+again:
+      rc=handle_dash(maindash,mainwindow);
       close_dash(maindash);
+      if(rc==-1) {
+	printf("Reconnect in 5 Sec.\n");
+        sleep(5);
+	printf("Reconnect: \n");
+	init_dash(maindash);
+	draw_dash(maindash,mainwindow);
+	goto again;
+      }
       close_window(mainwindow);
       free_dash(maindash);
     } else printf("ERROR: %s not found !\n",ifilename);

@@ -2,28 +2,12 @@
 # Global settings and default values
 #
 BROKER: URL="tcp://localhost:1883"
-PANEL:  TITLE="Dashboard" W=420 H=300 FGC=$ffffffff BGC=$000040ff
+PANEL:  TITLE="Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
 
 #
 # Static drawing
 #
-TEXT:   X=64 Y=40 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="BIG"
+TEXT:   X=64 Y=40 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial"
 FRAME:  X=50 Y=30 W=244 H=30 
-ICON: x=250 y=10  ICON="radi.png" TGC=$ffffffff
 TOPICSTRING: X=310 Y=32 W=10 H=10 TOPIC=ACTIVITY FGC=$ffffffff BGC=$00ff
-VBAR: x=398 y=100 w=10 h=100 MIN=-1 MAX=1 AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff TOPIC=SINUS
-BITMAP: x=10 y=10  BITMAP="Disc1" fgc=$ffffffff
-# TEXTLABEL: x=10 y=30 TOPIC=ACTIVITY TEXT[0]="Label|text|color" TEXT[1]=... BGC=$000040ff
-TEXTLABEL: x=10 y=30 TOPIC=ACTIVITY \
-  TEXT[0]="0|Null|$ffffffff" \
-  TEXT[1]="1|Eins|$ff00ffff" \
-  TEXT[2]="2|Zwei|$ffff00ff" \
-  TEXT[3]="3|Drei|$5f3f00ff" \
-  BGC=$000040ff
-# BITMAPLABEL: x=10 y=30 TOPIC=ACTIVITY BITMAP[0]="Label|filename|color" BITMAP[1]=...  BGC=$000040ff
-BITMAPLABEL: x=10 y=50 TOPIC=ACTIVITY \
-  BITMAP[0]="0|Disc1|$ffffffff" \
-  BITMAP[1]="1|Disc2|$ffffffff" \
-  BITMAP[2]="2|Disc3|$ffffffff" \
-  BITMAP[3]="3|Disc4|$ffffffff" \
-  BGC=$000040ff
+TOPICINSTRING: TOPIC="TEST" x=0 y=0 w=100 h=100

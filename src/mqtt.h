@@ -10,3 +10,7 @@ void mqtt_exit();
 void mqtt_broker(char *url,char *user, char *passwd);
 void mqtt_subscribe(char *topic,int qos);
 void mqtt_publish(char *topic, STRING payload, int qos, int retain);
+void mqtt_disconnect();
+void mqtt_unsubscribe_all();
+
+extern volatile int mqtt_isconnected;

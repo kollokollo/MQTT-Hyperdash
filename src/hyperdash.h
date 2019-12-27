@@ -81,5 +81,5 @@ void free_dash(DASH *dash);
 void init_dash(DASH *dash);
 void close_dash(DASH *dash);
 void draw_dash(DASH *dash, WINDOW *win);
-void handle_dash(DASH *dash, WINDOW *win);
+int handle_dash(DASH *dash, WINDOW *win);
 #endif
