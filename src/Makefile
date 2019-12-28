@@ -49,7 +49,7 @@ WINCC=i686-w64-mingw32-gcc
 # Preprocessor
 CPP=gcc -E
 
-CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS)
+CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS) `pkg-config --cflags gtk+-2.0`
 
 # these are objects which are compiled to binary
 
@@ -95,7 +95,7 @@ DIR33=$(DIR)-bin
 LINKFLAGS = 
 WINLINKFLAGS = -L./WINDOWS/lib 
 
-LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx  -lSDL_ttf -lX11
+LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx  -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
 WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL -lSDL_gfx
 
 all :    hyperdash

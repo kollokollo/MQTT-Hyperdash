@@ -96,7 +96,7 @@ void mqtt_init() {
   atexit(mqtt_exit);
 }
 
-void mqtt_broker(char *url,char *user, char *passwd) {
+int mqtt_broker(char *url,char *user, char *passwd) {
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
   MQTTClient_willOptions will_opts;
   
@@ -126,8 +126,11 @@ void mqtt_broker(char *url,char *user, char *passwd) {
   if((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
     printf("MQTT Client: <%s> ",clientID);
     printf("Failed to connect, return code %d\n", rc);
+    mqtt_isconnected=1;
+    return(-1);
   }
   mqtt_isconnected=1;
+  return(0);
 }
 void mqtt_unsubscribe_all() {
   if(mqtt_isconnected) {

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h> 
+#include <locale.h> 
 #include <math.h> 
 #include "basics.h"
 #include "graphics.h"
@@ -29,7 +30,7 @@ static int atohex(char *n) {
 }
 /* Decode hex-encoded binary data */
 
-STRING inhexs(const char *n) {
+static STRING inhexs(const char *n) {
   const int l=strlen(n);
   STRING ergebnis;
   ergebnis.len=(l+1)/2;
@@ -77,7 +78,7 @@ static int atobinc(char *n) {
 /* Bestimmt die anzal an Zeichen, welche zu einer Gültigen Zahl
 gehören. z.B. für val?()
 */
-int myatofc(char *n) {
+static int myatofc(char *n) {
   if(!n) return(0);
   int i=0;
   while (w_space(*n)) {n++;i++;}  /* Skip leading white space, if any. */
@@ -170,7 +171,7 @@ double myatof(char *n) {
   return(sign*value);
 }
 
-STRING create_string(const char *n) {
+static STRING create_string(const char *n) {
   STRING ergeb;
   if(n) {
     ergeb.len=strlen(n);
@@ -182,7 +183,7 @@ STRING create_string(const char *n) {
   }
   return(ergeb);
 }
-STRING double_string(const STRING *a) {
+static STRING double_string(const STRING *a) {
   STRING b;
   b.len=a->len;
   b.pointer=malloc(b.len+1);
@@ -248,9 +249,16 @@ STRING do_using(double num,STRING format) {
   int a=0,b=0,p,r=0,i,j,ex=0,v=0; 
   int neg;
   char des[32+format.len];
-
+locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
+locale_t old = uselocale(safe_locale);
+//  struct lconv *lc;
+  
+//  lc=localeconv();
+//  printf("Locale-> <%s>\n",lc->decimal_point);
   
 //  printf("DO__USING: %13.13g, <%s>\n",num,format.pointer);
+  
+  
   if (*format.pointer=='%') { /* c-style format */
     char b[32];
     sprintf(b,format.pointer,num);
@@ -372,7 +380,9 @@ STRING do_using(double num,STRING format) {
     } else {
       for(i=0;i<dest.len;i++) dest.pointer[i]='*';    
     }
-  }
+  } 
+   uselocale(old);
+
   return(dest);
 }
 

@@ -28,7 +28,7 @@ typedef struct {
   void (*init)();
   void (*draw)();
   void (*update)();
-  void (*click)();
+  int (*click)();
 } ELDEF;
 typedef struct {
   short type;

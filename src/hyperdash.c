@@ -6,6 +6,20 @@
  * COPYING for details
  */
  
+ 
+ /*TODO: 
+   1. Ticker elements (frametoggle) HTIC,VTIC: MIN,MAX,TIC=
+   right-click opens a box where one can choose 10x or 1x tics.
+   2. Scaler elements HSCALER, VSCALER, MIN, MAX, RANGE, TIC
+   right-click opens a box where one can choose different ranges
+   (full, medium (30%), fine (10%)) and where one can set the value 
+   explicitly. Also the arrow keys should be active for tics.
+
+
+  */
+ 
+ 
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +31,7 @@
 #include "file.h"
 #include "util.h"
 #include "mqtt.h"
+#include "input.h"
 
 
 char icondir[256]="/usr/share/hyperdash/icons";
@@ -32,7 +47,8 @@ void i_broker(ELEMENT *el,char *pars) {
   el->w=0;
   el->h=0;
   /* connect to mqtt broker */
-  mqtt_broker(el->filename,NULL,NULL);
+  int rc=mqtt_broker(el->filename,NULL,NULL);
+  if(rc==-1) message_dialog("MQTT Hyperdash Error","ERROR: Could not connect to the MQTT broker.", 1);
 }
 void i_panel(ELEMENT *el,char *pars) {
   el->text=strdup(key_value(pars,"TITLE","Dashboard"));
@@ -195,7 +211,7 @@ void i_bitmap(ELEMENT *el,char *pars) {
   sprintf(f,"%s/%s",bitmapdir,el->filename);
   if(exist(f)) {
     el->data[0]=get_bitmap(f,&w,&h);
-    printf("Bitmap: %dx%d\n",w,h);
+    if(verbose>0) printf("Bitmap: %dx%d\n",w,h);
   } else {
     printf("Error: Bitmap %s not found!\n",f);
   }
@@ -224,7 +240,7 @@ void i_bitmaplabel(ELEMENT *el,char *pars) {
     sprintf(f,"%s/%s",bitmapdir,w2);
     if(exist(f)) {
       el->data[i]=get_bitmap(f,&w,&h);
-      printf("Bitmap: <%s> %dx%d\n",f,w,h);
+      if(verbose>0) printf("Bitmap: <%s> %dx%d\n",f,w,h);
     } else {
       printf("Error: Bitmap %s not found!\n",f);
     }
@@ -483,8 +499,10 @@ void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
   STRING a,format;
   format.pointer=el->format;
   format.len=strlen(format.pointer);
-  double v=atof(message);
+  double v=myatof(message);
+  
   a=do_using(v,format);
+  
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   put_font_text(win,el->font,el->fontsize,a.pointer,el->x,el->y,el->fgc,el->h);
   free(a.pointer);
@@ -493,43 +511,89 @@ void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
 
 
 /* Click Functions */
+int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==2) {
+    printf("Panel clicked: %d\n",b);
+    /*TODO: open a file selector to select a new dash to display.*/
+message_dialog("MQTT Hyperdash Info","MQTT Hyperdash Version 1.00\nby Markus Hoffmann",1);
+    return(1);
+  } else if(b==3) {
+    char newdash[256];
+    char buf[256];
 
-void c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y) {
-  printf("Shell cmd : <%s>\n",el->text);
-  if(system(el->text)==-1) printf("Error: system\n");  
+    printf("Panel clicked: %d\n",b);
+    newdash[0]=0;
+    /* open a file selector to select a new dash to display.*/
+    int rc=fileselect_dialog(newdash,dashborddir,"*.dash");
+    if(rc && newdash[0]) {
+      if(exist(newdash))  sprintf(buf,"hyperdash %s &",newdash);
+      else sprintf(buf,"hyperdash %s/%s.dash &",dashborddir,newdash);
+      printf("Dash start: <%s>\n",newdash);
+      if(system(buf)==-1) printf("Error: system\n");  
+    }
+    return(1);
+  }
+  return(0);
 }
-void c_tinstring(ELEMENT *el,WINDOW *win,int x, int y) {
-  printf("input string for topic <%s>\n",el->topic);
-  STRING a;
-  a.pointer=el->topic;
-  a.len=strlen(a.pointer);
-  input_dialog(el->topic);
-  mqtt_publish(el->topic,a,el->revert,1);
+int c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    printf("Shell cmd : <%s>\n",el->text);
+    if(system(el->text)==-1) printf("Error: system\n");
+    return(1);
+  }
+  return(0);
 }
-void c_tinarea(ELEMENT *el,WINDOW *win,int x, int y) {
-  printf("topic value cmd : <%s>\n",el->text);
-  STRING a;
-  a.pointer=el->text;
-  a.len=strlen(a.pointer);
-  mqtt_publish(el->topic,a,el->revert,1);
+int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    printf("input string for topic <%s>\n",el->topic);
+    STRING a;
+    char buf[256];
+    int rc=input_dialog(el->topic,buf);
+    if(rc>0) {
+      a.pointer=buf;
+      a.len=strlen(a.pointer);
+      mqtt_publish(el->topic,a,el->revert,1);
+    }
+    return(1);
+  }
+  return(0);
+}
+int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    printf("topic value cmd : <%s>\n",el->text);
+    STRING a;
+    a.pointer=el->text;
+    a.len=strlen(a.pointer);
+    mqtt_publish(el->topic,a,el->revert,1);
+   // return(1); Do not consume it. There my be other action.... 
+  }
+  return(0);
 }
 
-void c_subdash(ELEMENT *el,WINDOW *win,int x, int y) {
+int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   char buf[256];
-  if(exist(el->text))  sprintf(buf,"hyperdash %s.dash &",el->text);
-  else sprintf(buf,"hyperdash %s/%s.dash &",dashborddir,el->text);
-  printf("Dash start: <%s>\n",el->text);
-  if(system(buf)==-1) printf("Error: system\n");  
+  if(b==1) {
+    if(exist(el->text))  sprintf(buf,"hyperdash %s.dash &",el->text);
+    else sprintf(buf,"hyperdash %s/%s.dash &",dashborddir,el->text);
+    printf("Dash start: <%s>\n",el->text);
+    if(system(buf)==-1) printf("Error: system\n");  
+    return(1);
+  }
+  return(0);
 }
-void c_frame(ELEMENT *el,WINDOW *win,int x, int y) {
-  el->revert=1;
-  d_frame(el,win);
-  SDL_Flip(win->display);
-  /* Wait for mouse releasse*/
-  waitmouse(win);
-  el->revert=0;
-  d_frame(el,win);
-  SDL_Flip(win->display);
+int c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    el->revert=1;
+    d_frame(el,win);
+    SDL_Flip(win->display);
+    /* Wait for mouse releasse*/
+    waitmouse(win);
+    el->revert=0;
+    d_frame(el,win);
+    SDL_Flip(win->display);
+   // return(1); Do not consume it. There my be other action.... 
+  }
+  return(0);
 }
 
 /* Here all element types are defined. */
@@ -541,7 +605,7 @@ const ELDEF eltyps[]= {
  {EL_BROKER,"BROKER",i_broker,NULL,NULL},
  {EL_VISIBLE,"BOX",i_box,d_box,NULL},
  {EL_VISIBLE,"LINE",i_line,d_line,NULL},
- {EL_PANEL|EL_VISIBLE, "PANEL",i_panel,d_panel,NULL},
+ {EL_PANEL|EL_VISIBLE|EL_INPUT, "PANEL",i_panel,d_panel,NULL,c_panel},
  {EL_VISIBLE,"PBOX",i_pbox,d_pbox,NULL},
  {EL_VISIBLE,"FRAME",i_frame,d_frame,NULL},
  {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",i_frame,d_frame,NULL,c_frame},
@@ -567,10 +631,11 @@ const ELDEF eltyps[]= {
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
 
-static void click_element(ELEMENT *el, WINDOW *win, int x, int y) {
+static int click_element(ELEMENT *el, WINDOW *win, int x, int y,int b) {
   int j=(el->type&0xff);
-  printf("click element.\n");
-  if(eltyps[j].click) (eltyps[j].click)(el,win,x,y);
+  printf("click element %d with %d. %s\n",j,b,eltyps[j].name);
+  if(eltyps[j].click) return( (eltyps[j].click)(el,win,x,y,b));
+  return(0);
 }
 
 
@@ -704,14 +769,15 @@ int handle_dash(DASH *dash, WINDOW *win) {
       printf("Connection lost!\n");
       return(-1);
     } else if(a==1) {
-      if(s==1 && b==1) {
-        int i;
-        for(i=0;i<dash->anzelement;i++) {
+      if(s==1) {
+        int i,consumed=0;
+        for(i=dash->anzelement-1;i>=0;i--) {
           if((dash->tree[i].type&EL_INPUT)==EL_INPUT) {
 	    if(dash->tree[i].x<=x && dash->tree[i].y<=y &&
 	       dash->tree[i].x+dash->tree[i].w>x &&
 	       dash->tree[i].y+dash->tree[i].h>y)
-               click_element(&(dash->tree[i]),win,x,y);
+               consumed=click_element(&(dash->tree[i]),win,x,y,b);
+	       if(consumed) break;
           } 
         }
       }

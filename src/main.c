@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <gtk/gtk.h>
 
 #include "config.h"
 #include "basics.h"
@@ -82,6 +83,7 @@ extern WINDOW *global_window;  /* TODO */
 int main(int anzahl, char *argumente[]) {
   DASH *maindash;
   WINDOW *mainwindow;
+  gtk_init (&anzahl, &argumente);
   if(anzahl<2) {
     intro();
   } else {
