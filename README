@@ -38,6 +38,12 @@ So I started this project. Please let me know, if I am right....
 
 ## Installation
 
+First you should make sure, that all necessary packages are installed. In doubt, 
+do a 
+
+sudo apt-get install libsdl-gfx1.2-dev libsdl1.2-dev libsdl-ttf2.0-dev
+
+
 You can simply do a 
 
 cd src/
