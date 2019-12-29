@@ -85,8 +85,9 @@ STRING get_file(const char *name) {
   }
   size_t len=lof(fdis);
   if(len>0) {
-    ret.pointer=malloc(len);
+    ret.pointer=malloc(len+1);
     ret.len=fread(ret.pointer,1,len,fdis);
+    ret.pointer[ret.len]=0;
   }
   fclose(fdis);
   return(ret);

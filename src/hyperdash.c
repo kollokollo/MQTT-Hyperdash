@@ -194,17 +194,16 @@ STRING get_bitmap(const char *name, int *w, int *h) {
     wort_sep(a.pointer,'\n',0,dummy,a.pointer);
     *h=atoi(dummy);
     e=wort_sep(a.pointer,'{',0,dummy,a.pointer);
+    e=wort_sep(a.pointer,'}',0,a.pointer,dummy);
     e=wort_sep(a.pointer,',',0,dummy,a.pointer);
     while(e>0) {
-    odummy=dummy;
+      odummy=dummy;
       while(odummy[0]<=' ') odummy++;
-     // printf("%d:<%s> <%s>: %x\n",i,dummy,odummy,(int)myatof(odummy));
+      // printf("%d:<%s> <%s>: %x\n",i,dummy,odummy,(int)myatof(odummy));
       ret.pointer[i++]=(int)myatof(odummy);
       e=wort_sep(a.pointer,',',0,dummy,a.pointer);
     }
     ret.len=i;
-//    exit(0);
-    
     free(a.pointer);
   } else {
     ret.pointer=SmallDisc_bits;
@@ -353,6 +352,7 @@ void d_circle(ELEMENT *el,WINDOW *win) {
 }
 
 void d_bitmap(ELEMENT *el,WINDOW *win) {
+  if(el->data[0].pointer)
   put_bitmap(win,el->data[0].pointer,el->x,el->y,el->w,el->h,el->fgc);
 }
 void d_bitmaplabel(ELEMENT *el,WINDOW *win) {

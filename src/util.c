@@ -28,27 +28,7 @@ static int atohex(char *n) {
   }
   return(value);
 }
-/* Decode hex-encoded binary data */
 
-static STRING inhexs(const char *n) {
-  const int l=strlen(n);
-  STRING ergebnis;
-  ergebnis.len=(l+1)/2;
-  ergebnis.pointer=malloc(ergebnis.len+1);  
-  unsigned int value=0;
-  int i=0;
-  while(*n) {
-    value<<=4;
-    if(v_digit(*n)) value+=(int)(*n-'0');
-    else if(*n>='a' && *n<='f') value+=(int)(*n-'a')+10;
-    else if(*n>='A' && *n<='F') value+=(int)(*n-'A')+10;
-    n++;
-    if((i&1)) (ergebnis.pointer)[i>>1]=(value&0xff);
-    i++;
-  }
-  (ergebnis.pointer)[ergebnis.len]=0;
-  return(ergebnis);
-}
 
 
 static int atobin(char *n) {
@@ -61,57 +41,7 @@ static int atobin(char *n) {
   return(value);
 }
 
-/* count number of hexadecimal digits in string n */
-static int atohexc(char *n) {
-  int i=0;
-  while(*n && (v_digit(*n) || (*n>='a' && *n<='f') || (*n>='A' && *n<='F'))) {i++;n++;}
-  return(i);
-}
 
-/* count number of binary digits in string n */
-static int atobinc(char *n) {
-  int i=0;
-  while(*n && (*n=='0' || *n=='1')) {i++;n++;}
-  return(i);
-}
-
-/* Bestimmt die anzal an Zeichen, welche zu einer Gültigen Zahl
-gehören. z.B. für val?()
-*/
-static int myatofc(char *n) {
-  if(!n) return(0);
-  int i=0;
-  while (w_space(*n)) {n++;i++;}  /* Skip leading white space, if any. */
-  if(*n=='-' || *n=='+') { n++;i++;} /*  Get sign, if any.  */
-   /* try special codings  */
-  if(*n=='$') return(i+1+atohexc(++n));
-  if(*n=='%') return(i+1+atobinc(++n));
-  if(*n=='0' && (n[1]&0xdf)=='X') return(i+2+atohexc(n+2));
-  if((*n&0xdf)=='E') return(i);  /*should not happen here*/
-  if((*n&0xdf)=='I') return(i);  /*should not happen here*/
-
-  /* Count digits before decimal point or exponent, if any. */
-  for(;v_digit(*n); n++) i++;;
-  /* Count digits after decimal point, if any. */
-  if(*n=='.') {
-    n++;i++;
-    while(v_digit(*n)) {i++;n++;}
-  }
-  /* Handle exponent, if any. */
-  if((*n&0xdf)=='E') {
-    n++;i++;
-    /* Get sign of exponent, if any. */
-    if(*n=='-' || *n=='+') {i++;n++;} 
-
-    /* Get digits of exponent, if any. */
-    for(;v_digit(*n); n++) i++;;
-  }
-  if((*n&0xdf)=='I') { /*Check if the last digit is an I*/
-     // iscomplex=1;
-      n++;i++;
-  }
-  return(i); 
-}
 /* 
 Wandelt einen String mit einer (floating-point) Zahl in einen double 
 um.
@@ -171,18 +101,7 @@ double myatof(char *n) {
   return(sign*value);
 }
 
-static STRING create_string(const char *n) {
-  STRING ergeb;
-  if(n) {
-    ergeb.len=strlen(n);
-    ergeb.pointer=strdup(n);
-  } else {
-    ergeb.len=0;
-    ergeb.pointer=malloc(1);
-    ergeb.pointer[0]=0;
-  }
-  return(ergeb);
-}
+
 static STRING double_string(const STRING *a) {
   STRING b;
   b.len=a->len;
