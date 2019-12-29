@@ -78,13 +78,19 @@ VBAR: x=350 y=100 w=10 h=100 MIN=0 MAX=3000 \
       AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
       TOPIC=HOME/ELECTRICITY/POWER
 
-VBAR: x=374 y=100 w=10 h=100 MIN=0 MAX=1500 \
+VBAR: x=374 y=100 w=10 h=100 MIN=0 MAX=1000 \
       AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
       TOPIC=HOME/GAS/POWER
 
-VBAR: x=398 y=100 w=10 h=100 MIN=0 MAX=1000 \
+VBAR: x=398 y=100 w=10 h=100 MIN=0 MAX=500 \
       AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
       TOPIC=HOME/WASSER/POWER
+      
+PCIRCLE:    X=250 Y=145 W=80 H=80 FGC=$ffffffff BGC=$ffffffff 
+PBOX:       X=250 Y=185 W=80 H=40 FGC=$40ff BGC=$40ff 
+TOPICMETER: X=255 Y=150 W=70 H=70 TOPIC=HOME/WASSER/POWER MIN=0 MAX=500 AGC=$808080ff FGC=$ffff00ff
+    
+
 #
 # These Bitmap labels make animations, so that one can see, if the measument
 # devices are sill active and the connections is ok. I recommend this for all

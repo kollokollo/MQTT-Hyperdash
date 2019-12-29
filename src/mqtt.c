@@ -61,13 +61,15 @@ void clear_subscription(int idx) {
 }
 void clear_all_subscriptions() {
   int i;
-  for(i=0;i<anzsubscriptions;i++) {
-    subscriptions[i].anz=0;
-    free(subscriptions[i].topic);
-    subscriptions[i].topic=NULL;
-    free(subscriptions[i].last_value.pointer);
-    subscriptions[i].last_value.len=0;
-    subscriptions[i].last_value.pointer=NULL;  
+  if(anzsubscriptions>0) {
+    for(i=0;i<anzsubscriptions;i++) {
+      subscriptions[i].anz=0;
+      free(subscriptions[i].topic);
+      subscriptions[i].topic=NULL;
+      free(subscriptions[i].last_value.pointer);
+      subscriptions[i].last_value.len=0;
+      subscriptions[i].last_value.pointer=NULL;  
+    }
   }
   anzsubscriptions=0;
 }
@@ -79,11 +81,21 @@ int add_subscription(const char *topic) {
     anzsubscriptions++;
     subscriptions[i].anz=1;
     subscriptions[i].topic=strdup(topic);
-    mqtt_subscribe(topic,0);
   }
   return(i);
 }
 
+
+void mqtt_subscribe_all() {
+  if(mqtt_isconnected && anzsubscriptions>0) {
+    int i;
+    for(i=0;i<anzsubscriptions;i++) {
+      if(subscriptions[i].anz>0) {
+        mqtt_subscribe(subscriptions[i].topic,0);
+      }
+    }
+  }
+}
 
 void connlost(void *context, char *cause) {
   printf("ERROR: MQTT-Connection lost, cause: %s\n", cause);

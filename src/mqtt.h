@@ -19,3 +19,4 @@ int add_subscription(const char *topic);
 int find_subscription(const char *topic);
 extern SUBSCRIPTION subscriptions[];
 extern int anzsubscriptions;
+void mqtt_subscribe_all();

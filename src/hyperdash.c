@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <math.h>
 #include "basics.h"
 #include "graphics.h"
 #include "hyperdash.h"
@@ -94,6 +95,17 @@ void i_pbox(ELEMENT *el,char *pars) {
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
 }
 void i_bar(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","10"));
+  el->h=atoi(key_value(pars,"H","10"));
+  
+  el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
+  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
+  el->agc=(long)myatof(key_value(pars,"AGC","$ffffffff"));
+  /* MIN MAX */
+  el->min=myatof(key_value(pars,"MIN","-1"));
+  el->max=myatof(key_value(pars,"MAX","1"));
+}
+void i_meter(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","10"));
   el->h=atoi(key_value(pars,"H","10"));
   
@@ -293,6 +305,12 @@ void i_tinstring(ELEMENT *el,char *pars) {
   el->h=atoi(key_value(pars,"H","20"));
   el->revert=atoi(key_value(pars,"QOS","0"));
 }
+void i_tinnumber(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","20"));
+  el->h=atoi(key_value(pars,"H","20"));
+  el->revert=atoi(key_value(pars,"QOS","0"));
+  el->format=strdup(key_value(pars,"FORMAT","###.###"));
+}
 
 void i_tnumber(ELEMENT *el,char *pars) {
   char buf[32];
@@ -330,7 +348,9 @@ void d_line(ELEMENT *el,WINDOW *win) {
 void d_box(ELEMENT *el,WINDOW *win) {
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->fgc);
 }
-
+void d_circle(ELEMENT *el,WINDOW *win) {
+  ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->fgc);
+}
 
 void d_bitmap(ELEMENT *el,WINDOW *win) {
   put_bitmap(win,el->data[0].pointer,el->x,el->y,el->w,el->h,el->fgc);
@@ -375,6 +395,10 @@ void d_pbox(ELEMENT *el,WINDOW *win) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->fgc);
 }
+void d_pcircle(ELEMENT *el,WINDOW *win) {
+  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->bgc);
+  ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->fgc);
+}
 void d_hbar(ELEMENT *el,WINDOW *win) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
@@ -389,13 +413,28 @@ void d_vbar(ELEMENT *el,WINDOW *win) {
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y,el->x+el->w,el->y+y,el->agc);
   ELEMENT_SUBSCRIBE();
 }
+void d_meter(ELEMENT *el,WINDOW *win) {
+/* TODO */
+  int y=el->h-1-(int)(0-el->min)*el->h/(el->max-el->min);
+//  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+
+  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->bgc);
+  ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->agc);
+  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2/10,el->h/2/10,el->agc);
+
+
+//  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
+  if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y,el->x+el->w,el->y+y,el->agc);
+  ELEMENT_SUBSCRIBE();
+}
+
 
 
 /* Update Functions */
 
 
 void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
-  double v=atof(message);
+  double v=myatof(message);
   int x0=(int)((0-el->min)*(double)el->w/(el->max-el->min));
   int x=(int)((v-el->min)*(double)el->w/(el->max-el->min));
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
@@ -451,10 +490,51 @@ void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message) {
     put_bitmap(win,el->data[found].pointer,el->x,el->y,el->w,el->h,el->labelcolor[found]);
   }
 }
+#define PI       3.141592653589793
+void u_meter(ELEMENT *el,WINDOW *win, char *message) {
+  double v=myatof(message);
+  double phi=(v-el->min)/(el->max-el->min)*2*PI;
 
+/*TODO: SDLcannot draw arcs and segments of a circle, however this can be
+implemented using polygons....
+*/
 
+  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->bgc);
+  Sint16 vx[5],vy[5];
+  vx[0]=0;
+  vy[0]=1000/40;
+  vx[1]=2*1000/5;
+  vy[1]=1000/10;
+  vx[2]=1000/2;
+  vy[2]=0;
+  vx[3]=2*1000/5;
+  vy[3]=-1000/10;
+  vx[4]=0;
+  vy[4]=-1000/40;
+  int i;
+  Sint16 ooo;
+  for(i=0;i<5;i++) {
+    /* Rotate */
+    ooo=(Sint16)( cos(phi)*(double)vx[i]+sin(phi)*(double)vy[i]);
+    vy[i]=(Sint16)(-sin(phi)*(double)vx[i]+cos(phi)*(double)vy[i]);
+    vx[i]=ooo;
+    /* Scale */
+    vx[i]=(Sint16)((double)vx[i]*(double)el->w/1000.0);
+    vy[i]=(Sint16)((double)vy[i]*(double)el->h/1000.0);
+
+    
+    /* translate*/
+    vx[i]+=el->x+el->w/2;
+    vy[i]+=el->y+el->h/2;
+  }
+  
+  
+  filledPolygonColor(win->display,&vx[0],&vy[0],5,el->fgc);
+  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2/10,el->h/2/10,el->agc);
+  ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->agc);
+}
 void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
-  double v=atof(message);
+  double v=myatof(message);
   int y0=el->h-1-(int)((0-el->min)*(double)el->h/(el->max-el->min));
   int y=el->h-1-(int)((v-el->min)*(double)el->h/(el->max-el->min));
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
@@ -558,6 +638,30 @@ int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   }
   return(0);
 }
+int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    printf("input number for topic <%s> with format <%s>\n",el->topic,el->format);
+    STRING a;
+    char buf[256];
+    char *def=subscriptions[el->subscription].last_value.pointer;
+    int rc=input_dialog(el->topic,buf,def);
+    if(rc>0) {
+      double v=myatof(buf);
+      STRING format;
+      format.pointer=el->format;
+      format.len=strlen(format.pointer);
+      a=do_using(v,format);
+      mqtt_publish(el->topic,a,el->revert,1);
+      free(a.pointer);
+    }
+    return(1);
+  }
+  return(0);
+}
+
+
+
+
 int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
     printf("topic value cmd : <%s>\n",el->text);
@@ -604,9 +708,11 @@ const ELDEF eltyps[]= {
 // {EL_IGNORE,"#",NULL,NULL,NULL},
  {EL_BROKER,"BROKER",i_broker,NULL,NULL},
  {EL_VISIBLE,"BOX",i_box,d_box,NULL},
+ {EL_VISIBLE,"CIRCLE",i_box,d_circle,NULL},
  {EL_VISIBLE,"LINE",i_line,d_line,NULL},
  {EL_PANEL|EL_VISIBLE|EL_INPUT, "PANEL",i_panel,d_panel,NULL,c_panel},
  {EL_VISIBLE,"PBOX",i_pbox,d_pbox,NULL},
+ {EL_VISIBLE,"PCIRCLE",i_pbox,d_pcircle,NULL},
  {EL_VISIBLE,"FRAME",i_frame,d_frame,NULL},
  {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",i_frame,d_frame,NULL,c_frame},
  {EL_VISIBLE,"BITMAP",i_bitmap,d_bitmap,NULL},
@@ -616,7 +722,9 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE|EL_DYNAMIC,"TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
  {EL_VISIBLE|EL_DYNAMIC,"HBAR",i_bar,d_hbar,u_hbar,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_bar,d_vbar,u_vbar,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"TOPICMETER",i_bar,d_vbar,u_vbar,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"TOPICMETER",i_meter,d_meter,u_meter,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,"TOPICVMETER",i_bar,d_vbar,u_vbar,NULL}, /*TODO*/
+ {EL_VISIBLE|EL_DYNAMIC,"TOPICHMETER",i_bar,d_hbar,u_hbar,NULL}, /*TODO*/
  {EL_VISIBLE|EL_DYNAMIC,"TEXTLABEL",i_textlabel,d_textlabel,u_textlabel,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"BITMAPLABEL",i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"FRAMELABEL",i_framelabel,d_framelabel,u_framelabel,NULL},
@@ -624,7 +732,7 @@ const ELDEF eltyps[]= {
  {EL_INPUT,"DASH"    ,i_subdash ,NULL,NULL,c_subdash},
  {EL_INPUT|EL_DYNAMIC,"TOPICINAREA"    ,i_tinarea ,NULL,NULL,c_tinarea},
  {EL_INPUT|EL_DYNAMIC,"TOPICINSTRING"  ,i_tinstring ,NULL,NULL,c_tinstring},
- {EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER"  ,i_tinstring ,NULL,NULL,c_tinstring},
+ {EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER"  ,i_tinnumber ,NULL,NULL,c_tinnumber},
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICHSCALER"  ,i_tinstring ,NULL,NULL,c_tinstring},
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICVSCALER"  ,i_tinstring ,NULL,NULL,c_tinstring},
 };
@@ -742,6 +850,7 @@ void draw_dash(DASH *dash, WINDOW *win) {
     if((dash->tree[i].type&EL_VISIBLE)==EL_VISIBLE) draw_element(&(dash->tree[i]),win); 
   }
   SDL_Flip(win->display); 
+  mqtt_subscribe_all();
 }
 void update_dash(char *topic, STRING message) {
   DASH *dash=global_dash;
