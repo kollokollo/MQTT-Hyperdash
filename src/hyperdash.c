@@ -37,7 +37,6 @@
 char icondir[256]="/usr/share/hyperdash/icons";
 char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
 char fontdir[256]="/usr/share/hyperdash/fonts";
-
 char dashborddir[256]="/usr/share/hyperdash/dashbords";
 
 void i_broker(ELEMENT *el,char *pars) {
@@ -319,7 +318,7 @@ void i_subdash(ELEMENT *el,char *pars) {
 }
 
 
-#define ELEMENT_SUBSCRIBE() mqtt_subscribe(el->topic,0)
+#define ELEMENT_SUBSCRIBE() el->subscription=add_subscription(el->topic)
 
 
 void d_panel(ELEMENT *el,WINDOW *win) {
@@ -548,7 +547,8 @@ int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     printf("input string for topic <%s>\n",el->topic);
     STRING a;
     char buf[256];
-    int rc=input_dialog(el->topic,buf);
+    char *def=subscriptions[el->subscription].last_value.pointer;
+    int rc=input_dialog(el->topic,buf,def);
     if(rc>0) {
       a.pointer=buf;
       a.len=strlen(a.pointer);

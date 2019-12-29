@@ -1,4 +1,12 @@
 #
+# This is the main dashbord which opens, when hyperdash is called from the
+# system panel. It contains only static elements because a broker need not 
+# necessarily be installed. Of courseit is not of much use this way, but
+# can show the basic functions of hyperdash...
+#
+#
+
+#
 # Global settings and default values
 #
 BROKER: URL="tcp://localhost:1883"
@@ -34,6 +42,10 @@ TEXT:   X=5 Y=116 FGC=$ffffFFFF TEXT="with static elements."  FONT="Courier_New_
 TEXT:   X=5 Y=132 FGC=$ffffFFFF TEXT="You should create your own for your"  FONT="Courier_New_Bold" FONTSIZE=16
 TEXT:   X=5 Y=148 FGC=$ffffFFFF TEXT="Smart Home." FONT="Courier_New_Bold" FONTSIZE=16
 TEXT:   X=5 Y=164 FGC=$ffffFFFF TEXT="Folow the options below..." FONT="Courier_New_Bold" FONTSIZE=16
+
+
+BOX: x=5 y=200 w=410 h=30 FGC=$00ff00ff
+TEXT: X=15 Y=200 H=30 FGC=$ffffFFFF TEXT="right click opens a file selector" FONT="Arial_Bold" FONTSIZE=16
 
 
 SHELLCMD:     x=270 y=260 w=120 h=25 CMD="bitmap &"

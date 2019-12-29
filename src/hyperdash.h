@@ -20,6 +20,7 @@
 typedef struct {
   char *topic;
   int anz;
+  STRING last_value;
 } SUBSCRIPTION;
 
 typedef struct {
@@ -50,7 +51,7 @@ typedef struct {
   STRING label[10];
   STRING data[10];
   unsigned long labelcolor[10];
-  SUBSCRIPTION *sub;
+  int subscription;
 } ELEMENT;
 
 

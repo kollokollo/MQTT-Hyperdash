@@ -173,7 +173,7 @@ static void inputOK_clicked (GtkWidget *widget, gpointer data) {
   g_print(input_value);
 }
 
-int input_dialog(const char *topic, char *value) {
+int input_dialog(const char *topic, char *value, char *def) {
   char buf[256];
   sprintf(buf,"Enter Value for Topic\n%s:\n",topic);
 
@@ -195,12 +195,8 @@ int input_dialog(const char *topic, char *value) {
   button2 = gtk_button_new_with_label ("CANCEL");
   textarea = gtk_label_new(buf);
   inputarea=gtk_entry_new();
-  gtk_entry_set_text( GTK_ENTRY(inputarea),"default"); /* TODO:
-  
-  save the last value in el-> structure, so that it can be used here....
-  
-  */
-  
+  if(def) gtk_entry_set_text( GTK_ENTRY(inputarea),def);
+
   g_signal_connect (button, "clicked", G_CALLBACK (inputOK_clicked), (gpointer) inputarea);
   g_signal_connect (button2, "clicked", G_CALLBACK (on_button_clicked), (gpointer) "2");
 

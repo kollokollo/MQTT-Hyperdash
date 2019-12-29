@@ -8,4 +8,4 @@
  
 int fileselect_dialog(char *filename, const char *path, const char *mask);
 int message_dialog(char *title,char *text, int anzbut);
-int input_dialog(const char *topic, char *value);
+int input_dialog(const char *topic, char *value, char *def);

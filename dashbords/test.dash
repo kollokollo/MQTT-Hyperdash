@@ -7,8 +7,27 @@ PANEL:  TITLE="Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
-TEXT:   X=64 Y=40 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial"
-FRAME:  X=50 Y=30 W=244 H=30 
-TOPICINSTRING: TOPIC="TEST" x=110 y=132 w=100 h=30
-TOPICSTRING: X=110 Y=132 W=100 H=30 TOPIC=TEST FGC=$ffffffff BGC=$00ff
-FRAMETOGGLE: X=108 Y=130 W=104 H=34
+TEXT:   X=60 Y=30       H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=32
+FRAME:  X=50 Y=30 W=244 H=60 
+
+# This is a simple button allowing to input the value of a topic
+# Note that when you enter ON or OFF also the states f the buttons change...
+
+
+TOPICINSTRING: TOPIC="TEST" x=110 y=152 w=100 h=30
+TOPICSTRING: X=110 Y=152 W=100 H=30 TOPIC=TEST FGC=$ffffffff BGC=$00ff
+FRAMETOGGLE: X=108 Y=150 W=104 H=34
+
+# this is how one ca realize a Radiobutton pair or group
+# e.g. for ON/OFF Switches The Buttons also show the actual state.
+#
+
+PBOX: x=100 y=100 w=50 h=30 bgc=$444444ff
+PBOX: x=160 y=100 w=50 h=30 bgc=$444444ff
+TEXT: x=110 y=100 w=30 h=30 TEXT="OFF" fgc=$ff0000ff FONT="Arial"
+TEXT: x=170 y=100 w=30 h=30 TEXT="ON" fgc=$00ff00ff FONT="Arial"
+TOPICINAREA: x=100 y=100 w=50 h=30 TOPIC=TEST VALUE="OFF"
+TOPICINAREA: x=160 y=100 w=50 h=30 TOPIC=TEST VALUE="ON"
+FRAMELABEL: TOPIC=TEST x=100 y=100 w=50 h=30 MATCH="OFF"
+FRAMELABEL: TOPIC=TEST x=160 y=100 w=50 h=30 MATCH="ON"
+
