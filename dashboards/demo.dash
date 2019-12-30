@@ -8,9 +8,9 @@ PANEL:  TITLE="Home Power" W=420 H=300 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
-TEXT:   X=62 Y=20 H=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" \
+TEXT:   X=62 Y=15 H=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" \
         FONT="Arial_Bold" FONSIZE=24
-FRAME:  X=50 Y=20 W=254 H=40 
+FRAME:  X=50 Y=15 W=254 H=40 
 
 LINE:   X=0 Y=0 X2=32 Y2=32 FGC=$ffffffff
 LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
@@ -18,7 +18,6 @@ LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
 TOPICSTRING: X=320 Y=32 W=100 H=10 TOPIC=HOME/ENVIRONMENT/PRESSURE \
         FGC=$ffff00ff BGC=$40ff
 
-TEXT:   X=10  Y=80 FGC=$ffffFFFF TEXT="Counter:" FONT="Arial_Bold" FONTSIZE=16
 
 TOPICNUMBER: X=10 Y=112 W=100 H=10 TOPIC=HOME/ELECTRICITY/COUNTER FORMAT="######.# kWh" FGC=$ffff00ff BGC=$772222ff
 FRAME:       X=8  Y=110 W=103 H=13 REVERT=1
@@ -54,10 +53,6 @@ PBOX:         x=220 y=260 w=80 h=25 BGC=$444444ff
 TEXT:         x=230 y=260 w=80 h=25 TEXT="home" FGC=$ffffffff FONT="Arial"
 FRAMETOGGLE:  x=220 y=260 w=80 h=25
 
-TOPICINAREA: x=120 y=260 w=80 h=25 VALUE="1" TOPIC=HOME/ELECTRICITY/STATUS QOS=2
-PBOX:        x=120 y=260 w=80 h=25 BGC=$444444ff 
-TEXT:        x=130 y=260 w=80 h=25 TEXT="-> Set 1" FGC=$ffffffff FONT="Arial"
-FRAMETOGGLE: x=120 y=260 w=80 h=25
 
 
 PBOX:  x=330 y=260 w=80 h=25 BGC=$444444ff 
@@ -74,22 +69,30 @@ FRAMETOGGLE: x=330 y=260 w=80 h=25
 
 TEXT: X=352  Y=215 FGC=$ffffFFFF TEXT="E  G  W"
 
-VBAR: x=350 y=100 w=10 h=100 MIN=0 MAX=3000 \
-      AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
+TOPICVMETER: x=350 y=100 w=20 h=120 MIN=0 MAX=3000 \
+      AGC=$555500ff BGC=$000040ff FGC=$ffffffff \
       TOPIC=HOME/ELECTRICITY/POWER
 
-VBAR: x=374 y=100 w=10 h=100 MIN=0 MAX=1000 \
-      AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
+TOPICVMETER: x=374 y=100 w=20 h=120 MIN=0 MAX=1400 \
+      AGC=$555500ff BGC=$000040ff FGC=$ffffffff \
       TOPIC=HOME/GAS/POWER
 
-VBAR: x=398 y=100 w=10 h=100 MIN=0 MAX=500 \
-      AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
+TOPICVMETER: x=398 y=100 w=20 h=120 MIN=0 MAX=500 \
+      AGC=$555500ff BGC=$000040ff FGC=$ffffffff \
       TOPIC=HOME/WASSER/POWER
       
-PCIRCLE:    X=250 Y=145 W=80 H=80 FGC=$ffffffff BGC=$ffffffff 
-PBOX:       X=250 Y=185 W=80 H=40 FGC=$40ff BGC=$40ff 
-TOPICMETER: X=255 Y=150 W=70 H=70 TOPIC=HOME/WASSER/POWER MIN=0 MAX=500 AGC=$808080ff FGC=$ffff00ff
-    
+TOPICMETER: X=25 Y=60 W=80 H=80 TOPIC=HOME/ELECTRICITY/POWER MIN=0 MAX=2000 \
+            AMIN=180 AMAX=0 \
+            AGC=$808080ff FGC=$ffff00ff BGC=$40ff
+TOPICMETER: X=140 Y=60 W=80 H=80 TOPIC=HOME/GAS/POWER MIN=0 MAX=1000 \
+            AMIN=180 AMAX=0 \
+            AGC=$808080ff FGC=$ffff00ff BGC=$40ff
+TOPICMETER: X=260 Y=60 W=80 H=80 TOPIC=HOME/WASSER/POWER MIN=0 MAX=500 \
+            AMIN=180 AMAX=0 \
+            AGC=$808080ff FGC=$ffff00ff BGC=$40ff
+TEXT: X=10 Y=62 H=20 FONT="Arial" FONTSIZE=16 TEXT="E" FGC=$00ff00ff
+TEXT: X=130 Y=62 H=20 FONT="Arial" FONTSIZE=16 TEXT="G" FGC=$00ff00ff
+TEXT: X=250 Y=62 H=20 FONT="Arial" FONTSIZE=16 TEXT="W" FGC=$00ff00ff
 
 #
 # These Bitmap labels make animations, so that one can see, if the measument

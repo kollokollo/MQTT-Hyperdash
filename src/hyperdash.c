@@ -460,7 +460,7 @@ void u_textlabel(ELEMENT *el,WINDOW *win, char *message) {
   }
   if(found>=0 && found<10 && el->data[found].pointer) {
     boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
-    stringColor(win->display,el->x,el->y,el->data[found].pointer,el->labelcolor[found]);
+    put_font_text(win,el->font,el->fontsize,el->data[found].pointer,el->x,el->y,el->labelcolor[found],el->h);
   }
 }
 
@@ -499,6 +499,9 @@ void u_meter(ELEMENT *el,WINDOW *win, char *message) {
   int i;
   double v=myatof(message);
   double phi;
+  int lim=(int)(el->amax-el->amin);
+  int flag=1;
+  if(lim<0) {lim=-lim;flag=-1;}
 
 /* SDL cannot draw arcs and segments of a circle, however this can be
 implemented using polygons....
@@ -533,22 +536,21 @@ implemented using polygons....
   filledPolygonColor(win->display,&vx[0],&vy[0],7,el->bgc);
 
   phi=(v-el->min)/(el->max-el->min);
+  if(phi<0) phi=0;
+  if(phi>1) phi=1;
   phi=phi*PI/180*(el->amax-el->amin)+PI/180*el->amin;
 
   
   vx[0]=el->x+el->w/2;
   vy[0]=el->y+el->h/2;
-  int lim=(int)(el->amax-el->amin);
-  int flag=1;
-  if(lim<0) {lim=-lim;flag=-1;}
+ // printf("flag=%d, lim=%d\n",flag,lim);
   for(i=0;i<lim;i++) {
     if(flag>0) {
       vx[i+1]=el->w/2*cos(PI*((double)i+el->amin)/180);
-      vy[i+1]=el->h/2*sin(PI*((double)i+el->amin)/180);
+      vy[i+1]=-el->h/2*sin(PI*((double)i+el->amin)/180);
     } else {
       vx[i+1]=el->w/2*cos(PI*((double)i+el->amax)/180);
       vy[i+1]=-el->h/2*sin(PI*((double)i+el->amax)/180);
-    
     }
     /* translate*/
     vx[i+1]+=el->x+el->w/2;
@@ -624,9 +626,11 @@ void u_thmeter(ELEMENT *el,WINDOW *win, char *message) {
   double vv;
   char buf[32];
   char *p,*q;
+  double scale=1;
+  while(fabs(scale*el->min)<1 && fabs(scale*el->min)<1 && scale<1e6) scale*=10; 
   for(i=x;i<x+w;i++) {
     vv=(el->max-el->min)*(i-x)/(double)w+el->min;
-    sprintf(buf,"%g",vv); 
+    sprintf(buf,"%g",vv*scale); 
     q=p=buf;
     while(*p) {
       if(isdigit(*p)) *q++=*p;
@@ -644,7 +648,6 @@ void u_thmeter(ELEMENT *el,WINDOW *win, char *message) {
     else 
       lineColor(win->display,i,el->y+el->h/4,i,el->y+el->h/2,el->bgc);
   }
-  
   rectangleColor(win->display,x,y,x+w,y+h/2,el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,x+x0,y,x+x0,y+h/2,el->fgc);
   if(!isnan(v)) {
@@ -699,15 +702,17 @@ void u_tvmeter(ELEMENT *el,WINDOW *win, char *message) {
   double vv;
   char buf[32];
   char *p,*q;
+  double scale=1;
+  while(fabs(scale*el->min)<1 && fabs(scale*el->min)<1 && scale<1e6) scale*=10; 
   for(i=y;i<y+h;i++) {
     vv=(el->max-el->min)*(y+h-i)/(double)h+el->min;
-sprintf(buf,"%g",vv); 
-q=p=buf;
-while(*p) {
-  if(isdigit(*p)) *q++=*p;
-  p++;
-}
-*q=0;
+    sprintf(buf,"%g",vv*scale);
+    q=p=buf;
+    while(*p) {
+      if(isdigit(*p)) *q++=*p;
+      p++;
+    }
+    *q=0;
 // printf("%03d: %s\n",i,buf);
     f=(buf[0])&1;
     if(f)
