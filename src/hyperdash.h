@@ -75,7 +75,7 @@ extern int verbose;
 extern char icondir[];
 extern char bitmapdir[];
 extern char fontdir[];
-extern char dashborddir[];
+extern char dashboarddir[];
 
 DASH *load_dash(const char *filename);
 DASH *merge_dash(DASH *dash, const char *fname);

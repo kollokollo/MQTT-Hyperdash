@@ -38,7 +38,7 @@
 char icondir[256]="/usr/share/hyperdash/icons";
 char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
 char fontdir[256]="/usr/share/hyperdash/fonts";
-char dashborddir[256]="/usr/share/hyperdash/dashbords";
+char dashboarddir[256]="/usr/share/hyperdash/dashboards";
 
 void i_broker(ELEMENT *el,char *pars) {
   el->filename=strdup(key_value(pars,"URL","tcp://localhost:1883"));
@@ -818,10 +818,10 @@ message_dialog("MQTT Hyperdash Info","MQTT Hyperdash Version 1.00\nby Markus Hof
     printf("Panel clicked: %d\n",b);
     newdash[0]=0;
     /* open a file selector to select a new dash to display.*/
-    int rc=fileselect_dialog(newdash,dashborddir,"*.dash");
+    int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
     if(rc && newdash[0]) {
       if(exist(newdash))  sprintf(buf,"hyperdash %s &",newdash);
-      else sprintf(buf,"hyperdash %s/%s.dash &",dashborddir,newdash);
+      else sprintf(buf,"hyperdash %s/%s.dash &",dashboarddir,newdash);
       printf("Dash start: <%s>\n",newdash);
       if(system(buf)==-1) printf("Error: system\n");  
     }
@@ -893,7 +893,7 @@ int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   char buf[256];
   if(b==1) {
     if(exist(el->text))  sprintf(buf,"hyperdash %s.dash &",el->text);
-    else sprintf(buf,"hyperdash %s/%s.dash &",dashborddir,el->text);
+    else sprintf(buf,"hyperdash %s/%s.dash &",dashboarddir,el->text);
     printf("Dash start: <%s>\n",el->text);
     if(system(buf)==-1) printf("Error: system\n");  
     return(1);

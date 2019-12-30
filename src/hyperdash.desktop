@@ -2,9 +2,9 @@
 Encoding=UTF-8
 Name=MQTT-Hyperdash
 Name[de]=MQTT-Hyperdash
-GenericName=The MQTT Dashbord
-GenericName[de]=Das MQTT Dashbord
-Comment=MQTT Dashbord
+GenericName=The MQTT Dashboard
+GenericName[de]=Das MQTT Dashboard
+Comment=MQTT Dashboard
 Exec=hyperdash main.dash
 Icon=hyperdash
 Terminal=false

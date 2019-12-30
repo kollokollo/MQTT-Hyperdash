@@ -1,6 +1,6 @@
 # Makefile for MQTT-Hyperdash (c) Markus Hoffmann V.1.27
 
-# This file is part of MQTT-Hyperdash, the universal MQTT Dashbord
+# This file is part of MQTT-Hyperdash, the universal MQTT Dashboard
 # ======================================================================
 # MQTT-Hyperdash is free software and comes with NO WARRANTY - read the file
 # COPYING for details
@@ -68,7 +68,7 @@ HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h input.h
 
 EXAMPLES= 
 
-DIST= ../README ../doc/INSTALL ../COPYING *.1 \
+DIST= ../README.md ../doc/INSTALL ../COPYING *.1 \
 	../doc/ACKNOWLEGEMENTS \
 	../doc/AUTHORS  ../RELEASE_NOTES \
       $(HSRC) $(CSRC) WINDOWS/MQTT-Hyperdash.iss \
@@ -133,8 +133,8 @@ install : hyperdash hyperdash.desktop
 	install -m 644 ../icons/* $(DATADIR)/hyperdash/icons/
 	install -m 775  -d $(DATADIR)/hyperdash/fonts
 	install -m 644 ../fonts/* $(DATADIR)/hyperdash/fonts/
-	install -m 775  -d $(DATADIR)/hyperdash/dashbords
-	install -m 644 ../dashbords/* $(DATADIR)/hyperdash/dashbords/
+	install -m 775  -d $(DATADIR)/hyperdash/dashboards
+	install -m 644 ../dashboards/* $(DATADIR)/hyperdash/dashboards/
 
 uninstall :
 	rm -f $(DESKTOPDIR)/hyperdash.desktop
@@ -143,7 +143,7 @@ uninstall :
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons
 	rm -rf $(DATADIR)/hyperdash/fonts
-	rm -rf $(DATADIR)/hyperdash/dashbords
+	rm -rf $(DATADIR)/hyperdash/dashboards
 clean :
 	rm -f *.o a.out Makefile.bak  \
 	backup-*.tgz *.d
@@ -170,12 +170,12 @@ rpm :	$(DIR).tar.gz hyperdash.spec
 	rpmbuild -ba  --clean --nodeps hyperdash.spec
 
 DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS \
-	 ../README 
+	 ../README.md 
 
 doc-pak: $(DEBDOC)
 	mkdir -p $@
 	cp ../doc/ACKNOWLEGEMENTS  $@/
-	cp ../doc/AUTHORS  ../README $@/
+	cp ../doc/AUTHORS  ../README.md $@/
 #	cp Debian/changelog.Debian $@/
 #	gzip -9 $@/changelog.Debian
 #	cp Debian/copyright $@/

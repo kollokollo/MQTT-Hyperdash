@@ -9,12 +9,12 @@ Name        : Hyper-Dash
 Version     : 1.00                              Vendor: Markus Hoffmann
 Group       : Development/Languages             License: GPL
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
-Summary     : A MQTT Dashbord
+Summary     : A MQTT Dashboard
 Description :
 
 This is a fast and efficient dashboard (GUI) for the MQTT framework. It uses
 the SDL library for graphics rendering. Except for the paho library no other
-special library is needed. The dashbord runs on linux, but a port to other
+special library is needed. The dashboard runs on linux, but a port to other
 operating systems should be easy. 
 
 There are two applications included: 

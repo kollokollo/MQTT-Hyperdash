@@ -1,5 +1,5 @@
 #
-# This is the main dashbord which opens, when hyperdash is called from the
+# This is the main dashboard which opens, when hyperdash is called from the
 # system panel. It contains only static elements because a broker need not 
 # necessarily be installed. Of courseit is not of much use this way, but
 # can show the basic functions of hyperdash...

@@ -129,7 +129,7 @@ int fileselect_dialog(char *filename, const char *path, const char *mask) {
 
 
 /* Create a new file selection widget */
-    GtkWidget *filew = gtk_file_selection_new("Dashbord file selection");
+    GtkWidget *filew = gtk_file_selection_new("Dashboard file selection");
     
     gtk_signal_connect(GTK_OBJECT(filew),"destroy",
                         (GtkSignalFunc) destroy, &filew);

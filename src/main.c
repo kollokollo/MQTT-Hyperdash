@@ -70,7 +70,7 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     else if(!strcmp(argumente[count],"--iconpath"))  strncpy(icondir,      argumente[++count],256);
     else if(!strcmp(argumente[count],"--bitmappath"))strncpy(bitmapdir,   argumente[++count],256);
     else if(!strcmp(argumente[count],"--fontpath"))strncpy(fontdir,   argumente[++count],256);
-    else if(!strcmp(argumente[count],"--dashbordpath"))strncpy(dashborddir,   argumente[++count],256);
+    else if(!strcmp(argumente[count],"--dashboardpath"))strncpy(dashboarddir,   argumente[++count],256);
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
     else {
       strcpy(ifilename,argumente[count]);
@@ -91,7 +91,7 @@ int main(int anzahl, char *argumente[]) {
     if(!exist(ifilename)) {
       char buf[strlen(ifilename)+1];
       strcpy(buf,ifilename);
-      sprintf(ifilename,"%s/%s",dashborddir,buf);
+      sprintf(ifilename,"%s/%s",dashboarddir,buf);
     }
     if(exist(ifilename)) {
       int rc=0;
