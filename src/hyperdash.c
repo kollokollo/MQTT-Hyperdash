@@ -115,6 +115,8 @@ void i_meter(ELEMENT *el,char *pars) {
   /* MIN MAX */
   el->min=myatof(key_value(pars,"MIN","-1"));
   el->max=myatof(key_value(pars,"MAX","1"));
+  el->amin=myatof(key_value(pars,"AMIN","-225"));
+  el->amax=myatof(key_value(pars,"AMAX","45"));
 }
 
 
@@ -413,18 +415,16 @@ void d_vbar(ELEMENT *el,WINDOW *win) {
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y,el->x+el->w,el->y+y,el->agc);
   ELEMENT_SUBSCRIBE();
 }
+void d_tvmeter(ELEMENT *el,WINDOW *win) {
+  u_tvmeter(el,win,"NaN");
+  ELEMENT_SUBSCRIBE();
+}
+void d_thmeter(ELEMENT *el,WINDOW *win) {
+  u_thmeter(el,win,"NaN");
+  ELEMENT_SUBSCRIBE();
+}
 void d_meter(ELEMENT *el,WINDOW *win) {
-/* TODO */
-  int y=el->h-1-(int)(0-el->min)*el->h/(el->max-el->min);
-//  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
-
-  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->bgc);
-  ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->agc);
-  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2/10,el->h/2/10,el->agc);
-
-
-//  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
-  if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y,el->x+el->w,el->y+y,el->agc);
+  u_meter(el,win,"NaN");
   ELEMENT_SUBSCRIBE();
 }
 
@@ -491,47 +491,102 @@ void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message) {
   }
 }
 #define PI       3.141592653589793
-void u_meter(ELEMENT *el,WINDOW *win, char *message) {
-  double v=myatof(message);
-  double phi=(v-el->min)/(el->max-el->min)*2*PI;
 
-/*TODO: SDLcannot draw arcs and segments of a circle, however this can be
+const Sint16 zeigerx[7]={0, 200,400,500, 400,200,  0};
+const Sint16 zeigery[7]={25, 25,100,  0,-100,-25,-25};
+
+void u_meter(ELEMENT *el,WINDOW *win, char *message) {
+  int i;
+  double v=myatof(message);
+  double phi;
+
+/* SDL cannot draw arcs and segments of a circle, however this can be
 implemented using polygons....
 */
-
-  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->bgc);
-  Sint16 vx[5],vy[5];
-  vx[0]=0;
-  vy[0]=1000/40;
-  vx[1]=2*1000/5;
-  vy[1]=1000/10;
-  vx[2]=1000/2;
-  vy[2]=0;
-  vx[3]=2*1000/5;
-  vy[3]=-1000/10;
-  vx[4]=0;
-  vy[4]=-1000/40;
-  int i;
-  Sint16 ooo;
-  for(i=0;i<5;i++) {
+  int anz=2+360;
+  Sint16 vx[anz],vy[anz];
+  phi=PI*el->amin/180;
+  for(i=0;i<7;i++) {
     /* Rotate */
-    ooo=(Sint16)( cos(phi)*(double)vx[i]+sin(phi)*(double)vy[i]);
-    vy[i]=(Sint16)(-sin(phi)*(double)vx[i]+cos(phi)*(double)vy[i]);
-    vx[i]=ooo;
+    vx[i]=(Sint16)( cos(phi)*(double)zeigerx[i]+sin(phi)*(double)zeigery[i]);
+    vy[i]=(Sint16)(-sin(phi)*(double)zeigerx[i]+cos(phi)*(double)zeigery[i]);
     /* Scale */
-    vx[i]=(Sint16)((double)vx[i]*(double)el->w/1000.0);
-    vy[i]=(Sint16)((double)vy[i]*(double)el->h/1000.0);
+    vx[i]=(Sint16)((double)vx[i]*(double)el->w/1100.0);
+    vy[i]=(Sint16)((double)vy[i]*(double)el->h/1100.0);
+    /* translate*/
+    vx[i]+=el->x+el->w/2;
+    vy[i]+=el->y+el->h/2;
+  }
+  filledPolygonColor(win->display,&vx[0],&vy[0],7,el->bgc);
+  phi=PI*el->amax/180;
+  for(i=0;i<7;i++) {
+    /* Rotate */
+    vx[i]=(Sint16)( cos(phi)*(double)zeigerx[i]+sin(phi)*(double)zeigery[i]);
+    vy[i]=(Sint16)(-sin(phi)*(double)zeigerx[i]+cos(phi)*(double)zeigery[i]);
+    /* Scale */
+    vx[i]=(Sint16)((double)vx[i]*(double)el->w/1100.0);
+    vy[i]=(Sint16)((double)vy[i]*(double)el->h/1100.0);
+    /* translate*/
+    vx[i]+=el->x+el->w/2;
+    vy[i]+=el->y+el->h/2;
+  }
+  filledPolygonColor(win->display,&vx[0],&vy[0],7,el->bgc);
 
+  phi=(v-el->min)/(el->max-el->min);
+  phi=phi*PI/180*(el->amax-el->amin)+PI/180*el->amin;
+
+  
+  vx[0]=el->x+el->w/2;
+  vy[0]=el->y+el->h/2;
+  int lim=(int)(el->amax-el->amin);
+  int flag=1;
+  if(lim<0) {lim=-lim;flag=-1;}
+  for(i=0;i<lim;i++) {
+    if(flag>0) {
+      vx[i+1]=el->w/2*cos(PI*((double)i+el->amin)/180);
+      vy[i+1]=el->h/2*sin(PI*((double)i+el->amin)/180);
+    } else {
+      vx[i+1]=el->w/2*cos(PI*((double)i+el->amax)/180);
+      vy[i+1]=-el->h/2*sin(PI*((double)i+el->amax)/180);
     
+    }
+    /* translate*/
+    vx[i+1]+=el->x+el->w/2;
+    vy[i+1]+=el->y+el->h/2;
+  }
+  vx[i+1]=el->x+el->w/2;
+  vy[i+1]=el->y+el->h/2;
+  filledPolygonColor(win->display,&vx[0],&vy[0],i+2,el->bgc);
+  
+  polygonColor(win->display,&vx[0],&vy[0],i+2,el->agc);
+if(el->min<0 && el->max>0) {
+  double phi0=(0-el->min)/(el->max-el->min);
+  phi0=phi0*PI/180*(el->amax-el->amin)+PI/180*el->amin;
+  vx[0]=el->w/2*cos(phi0)+el->x+el->w/2;
+  vy[0]=-el->h/2*sin(phi0)+el->y+el->h/2;
+  vx[1]=el->w/2*0.8*cos(phi0)+el->x+el->w/2;
+  vy[1]=-el->h/2*0.8*sin(phi0)+el->y+el->h/2;
+  lineColor(win->display,vx[0],vy[0],vx[1],vy[1],el->fgc);
+}
+
+if(!isnan(v)) {
+  for(i=0;i<7;i++) {
+    /* Rotate */
+    vx[i]=(Sint16)( cos(phi)*(double)zeigerx[i]+sin(phi)*(double)zeigery[i]);
+    vy[i]=(Sint16)(-sin(phi)*(double)zeigerx[i]+cos(phi)*(double)zeigery[i]);
+    /* Scale */
+    vx[i]=(Sint16)((double)vx[i]*(double)el->w/1100.0);
+    vy[i]=(Sint16)((double)vy[i]*(double)el->h/1100.0);
     /* translate*/
     vx[i]+=el->x+el->w/2;
     vy[i]+=el->y+el->h/2;
   }
   
   
-  filledPolygonColor(win->display,&vx[0],&vy[0],5,el->fgc);
+  filledPolygonColor(win->display,&vx[0],&vy[0],7,el->fgc);
+}
   filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2/10,el->h/2/10,el->agc);
-  ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->agc);
+//  ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->agc);
 }
 void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
   double v=myatof(message);
@@ -550,6 +605,166 @@ void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y0,el->x+el->w,el->y+y0,el->agc);
 }
+void u_thmeter(ELEMENT *el,WINDOW *win, char *message) {
+  double v=myatof(message);
+  int x=el->x+35*el->h/120;
+  int y=el->y;
+  int w=el->w-2*35*el->h/120;
+  int h=el->h;
+  
+  int x0=(int)((0-el->min)*(double)w/(el->max-el->min));
+  int x1=(int)((v-el->min)*(double)w/(el->max-el->min));
+  boxColor(win->display,el->x,el->y,el->x+el->w-1,el->y+el->h-1,el->bgc);
+  x1=min(x1,w);
+  x0=min(x0,w);
+  if(x1<0) x1=0;
+  if(x0<0) x0=0;
+  
+  int i,f;
+  double vv;
+  char buf[32];
+  char *p,*q;
+  for(i=x;i<x+w;i++) {
+    vv=(el->max-el->min)*(i-x)/(double)w+el->min;
+    sprintf(buf,"%g",vv); 
+    q=p=buf;
+    while(*p) {
+      if(isdigit(*p)) *q++=*p;
+      p++;
+    }
+    *q=0;
+    f=(buf[0])&1;
+    if(f)
+      lineColor(win->display,i,el->y,i,el->y+el->h/4,el->agc);
+    else 
+      lineColor(win->display,i,el->y,i,el->y+el->y/4,el->bgc);
+    f=(buf[1])&1;
+    if(f)
+      lineColor(win->display,i,el->y+el->h/4,i,el->y+el->h/2,el->agc);
+    else 
+      lineColor(win->display,i,el->y+el->h/4,i,el->y+el->h/2,el->bgc);
+  }
+  
+  rectangleColor(win->display,x,y,x+w,y+h/2,el->agc);
+  if(el->min<0 && el->max>0) lineColor(win->display,x+x0,y,x+x0,y+h/2,el->fgc);
+  if(!isnan(v)) {
+  Sint16 vx[7],vy[7];
+  vy[0]=-10;
+  vx[0]=0;
+
+  vy[1]=33;
+  vx[1]=20;
+
+  vy[2]=50;
+  vx[2]=35;
+
+  vy[3]=59;
+  vx[3]=0;
+
+  vy[4]=50;
+  vx[4]=-35;
+
+  vy[5]=33;
+  vx[5]=-20;
+
+  vy[6]=-10;
+  vx[6]=0;
+
+  for(i=0;i<7;i++) {
+    /* Scale */
+    vx[i]=(Sint16)((double)vx[i]*(double)h/120.0);
+    vy[i]=(Sint16)((double)vy[i]*(double)h/120.0);
+    /* translate*/
+    vx[i]+=x+x1;
+    vy[i]+=y+h/2;
+  }
+  filledPolygonColor(win->display,&vx[0],&vy[0],7,el->fgc);
+  }
+}
+void u_tvmeter(ELEMENT *el,WINDOW *win, char *message) {
+  double v=myatof(message);
+  int x=el->x;
+  int y=el->y+35*el->w/120;
+  int w=el->w;
+  int h=el->h-2*35*el->w/120;
+  int y0=h-1-(int)((0-el->min)*(double)h/(el->max-el->min));
+  int y1=h-1-(int)((v-el->min)*(double)h/(el->max-el->min));
+  boxColor(win->display,el->x,el->y,el->x+el->w-1,el->y+el->h-1,el->bgc);
+  y1=min(y1,h);
+  y0=min(y0,h);
+  if(y1<0) y1=0;
+  if(y0<0) y0=0;
+  
+  int i,f;
+  double vv;
+  char buf[32];
+  char *p,*q;
+  for(i=y;i<y+h;i++) {
+    vv=(el->max-el->min)*(y+h-i)/(double)h+el->min;
+sprintf(buf,"%g",vv); 
+q=p=buf;
+while(*p) {
+  if(isdigit(*p)) *q++=*p;
+  p++;
+}
+*q=0;
+// printf("%03d: %s\n",i,buf);
+    f=(buf[0])&1;
+    if(f)
+      lineColor(win->display,el->x,i,el->x+el->w/4,i,el->agc);
+    else 
+      lineColor(win->display,el->x,i,el->x+el->w/4,i,el->bgc);
+    f=(buf[1])&1;
+    if(f)
+      lineColor(win->display,el->x+el->w/4,i,el->x+el->w/2,i,el->agc);
+    else 
+      lineColor(win->display,el->x+el->w/4,i,el->x+el->w/2,i,el->bgc);
+  
+  }
+  
+  rectangleColor(win->display,x,y,x+w/2,y+h,el->agc);
+  if(el->min<0 && el->max>0) lineColor(win->display,x,y+y0,x+w/2,y+y0,el->fgc);
+  if(!isnan(v)) {
+    Sint16 vx[7],vy[7];
+  vx[0]=-10;
+  vy[0]=0;
+
+  vx[1]=33;
+  vy[1]=20;
+
+  vx[2]=50;
+  vy[2]=35;
+
+  vx[3]=59;
+  vy[3]=0;
+
+  vx[4]=50;
+  vy[4]=-35;
+
+  vx[5]=33;
+  vy[5]=-20;
+
+
+  vx[6]=-10;
+  vy[6]=0;
+
+  for(i=0;i<7;i++) {
+    /* Scale */
+    vx[i]=(Sint16)((double)vx[i]*(double)w/120.0);
+    vy[i]=(Sint16)((double)vy[i]*(double)w/120.0);
+
+    
+    /* translate*/
+    vx[i]+=x+w/2;
+    vy[i]+=y+y1;
+  }
+  filledPolygonColor(win->display,&vx[0],&vy[0],7,el->fgc);
+}
+}
+
+
+
+
 void d_string(ELEMENT *el,WINDOW *win) {
   put_font_text(win,el->font,el->fontsize,el->text,el->x,el->y,el->fgc,el->h);
 }
@@ -723,8 +938,8 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE|EL_DYNAMIC,"HBAR",i_bar,d_hbar,u_hbar,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_bar,d_vbar,u_vbar,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"TOPICMETER",i_meter,d_meter,u_meter,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"TOPICVMETER",i_bar,d_vbar,u_vbar,NULL}, /*TODO*/
- {EL_VISIBLE|EL_DYNAMIC,"TOPICHMETER",i_bar,d_hbar,u_hbar,NULL}, /*TODO*/
+ {EL_VISIBLE|EL_DYNAMIC,"TOPICVMETER",i_bar,d_tvmeter,u_tvmeter,NULL}, 
+ {EL_VISIBLE|EL_DYNAMIC,"TOPICHMETER",i_bar,d_thmeter,u_thmeter,NULL}, 
  {EL_VISIBLE|EL_DYNAMIC,"TEXTLABEL",i_textlabel,d_textlabel,u_textlabel,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"BITMAPLABEL",i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL},
  {EL_VISIBLE|EL_DYNAMIC,"FRAMELABEL",i_framelabel,d_framelabel,u_framelabel,NULL},

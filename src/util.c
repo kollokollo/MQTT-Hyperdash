@@ -60,7 +60,7 @@ double myatof(char *n) {
   if(*n=='$') return(sign*(double)atohex(++n));
   if(*n=='%') return(sign*(double)atobin(++n));
   if(*n=='0' && (n[1]&0xdf)=='X') return(sign*(double)atohex(n+2));
-
+  if(*n=='N') return(NAN);
   /* Get digits before decimal point or exponent, if any. */
   double value=0.0;
   for(;v_digit(*n); n++) value=value*10.0+(*n-'0');

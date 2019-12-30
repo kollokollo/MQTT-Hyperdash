@@ -1,0 +1,37 @@
+#
+# Global settings and default values
+#
+BROKER: URL="tcp://localhost:1883"
+PANEL:  TITLE="Dashboard" W=420 H=300 FGC=$ffffffff BGC=$000040ff
+
+#
+# Static drawing
+#
+TEXT:   X=54 Y=30 H=50 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial_Bold" FONTSIZE=32
+FRAME:  X=40 Y=30 W=264 H=50 
+TEXTLABEL: x=360 y=10 h=10 TOPIC=ACTIVITY \
+  TEXT[0]="0|Null|$ffffffff" \
+  TEXT[1]="1|Eins|$ff00ffff" \
+  TEXT[2]="2|Zwei|$ffff00ff" \
+  TEXT[3]="3|Drei|$5f3f00ff" \
+  BGC=$000040ff
+BITMAPLABEL: x=390 y=10 TOPIC=ACTIVITY \
+  BITMAP[0]="0|Battery1|$ffffffff" \
+  BITMAP[1]="1|Battery2|$ffffffff" \
+  BITMAP[2]="2|Battery3|$ffffffff" \
+  BITMAP[3]="3|Battery4|$ffffffff" \
+  BGC=$000040ff
+TOPICNUMBER: X=110 Y=232 W=65 H=10 TOPIC=COUNTER FGC=$ffffffff BGC=$00ff FORMAT="########"
+TOPICNUMBER: X=240 Y=230 W=65 H=10 TOPIC=SINUS FGC=$ffffffff BGC=$00ff FORMAT="##.###"
+TOPICVMETER: x=198 y=100 w=25 h=140 MIN=-1 MAX=2 \
+             AGC=$444444ff BGC=$000000ff FGC=$ffffffff TOPIC=SINUS
+FRAME:  x=196 y=98 w=29 h=144 revert=1
+
+PBOX:        x=36 y=98 w=144 h=39 BGC=$ff FGC=$ff
+TOPICHMETER: x=38 y=100 w=140 h=25 MIN=-1 MAX=2 \
+             AGC=$444444ff BGC=$000000ff FGC=$ffffffff TOPIC=SINUS
+FRAME:       x=36 y=98 w=144 h=39 revert=1
+TOPICNUMBER: X=38 Y=125 W=140 H=10 TOPIC=SINUS FGC=$ffffffff BGC=$00ff FORMAT="   ##.###"
+
+TOPICMETER:  x=308 y=100 w=100 h=100 MIN=-1 MAX=2 AMIN=180 AMAX=0 \
+             AGC=$444444ff BGC=$000000ff FGC=$ffffffff TOPIC=SINUS
