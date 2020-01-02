@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.00
 
-RELEASE=1
+RELEASE=2
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -138,8 +138,6 @@ install : hyperdash hyperdash.desktop
 	install -m 644 ../bitmaps/* $(DATADIR)/hyperdash/bitmaps/
 	install -m 775  -d $(DATADIR)/hyperdash/icons
 	install -m 644 ../icons/* $(DATADIR)/hyperdash/icons/
-	install -m 775  -d $(DATADIR)/hyperdash/fonts
-	install -m 644 ../fonts/* $(DATADIR)/hyperdash/fonts/
 	install -m 775  -d $(DATADIR)/hyperdash/dashboards
 	install -m 644 ../dashboards/* $(DATADIR)/hyperdash/dashboards/
 
@@ -149,7 +147,6 @@ uninstall :
 	rm -f $(MANDIR)/man1/hyperdash.1
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons
-	rm -rf $(DATADIR)/hyperdash/fonts
 	rm -rf $(DATADIR)/hyperdash/dashboards
 clean :
 	rm -f *.o a.out Makefile.bak  \

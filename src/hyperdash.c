@@ -24,7 +24,7 @@
 
 char icondir[256]="/usr/share/hyperdash/icons";
 char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
-char fontdir[256]="/usr/share/hyperdash/fonts";
+char fontdir[256]="/usr/share/fonts/truetype/msttcorefonts";
 char dashboarddir[256]="/usr/share/hyperdash/dashboards";
 
 /* Update Functions */

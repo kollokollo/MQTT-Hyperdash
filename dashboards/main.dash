@@ -16,7 +16,7 @@ PANEL:  TITLE="MQTT-Hyperdash Main Local Dashboard" W=420 H=300 FGC=$ffffffff BG
 # Static drawing
 #
 TEXT:   X=64 Y=30 FGC=$ffff00FF h=40 TEXT="MQTT-Hyperdash   V.1.00" FONT="Arial_Bold" FONTSIZE=20
-TEXT:   X=170 Y=60 FGC=$000000FF TEXT="(c) Markus Hoffmann et al." FONT="Arial" FONTSIZE=10
+TEXT:   X=170 Y=70 FGC=$00ffffFF TEXT="(c) Markus Hoffmann et al." FONT="Arial" FONTSIZE=10
 FRAME:  X=50 Y=30 W=260 H=50 
 #ICON: x=250 y=10  ICON="radi.png" TGC=$ffffffff
 #TOPICSTRING: X=310 Y=32 W=10 H=10 TOPIC=ACTIVITY FGC=$ffffffff BGC=$00ff
