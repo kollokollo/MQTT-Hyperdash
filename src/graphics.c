@@ -14,15 +14,13 @@
 #include "graphics.h"
 #include "hyperdash.h"
 #include "file.h"
+#include "util.h"
 #include "mqtt.h"
 
 #ifndef WINDOWS
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #endif
-#include <SDL/SDL.h>
-//#include <SDL/SDL_image.h>
-#include <SDL/SDL_ttf.h>
 
 int init_sdl() {
   static int done=0;
@@ -251,24 +249,16 @@ void put_bitmap(WINDOW *window, const char *adr,int x,int y,unsigned int w, unsi
   SDL_FreeSurface(image);
 }
 
-void put_font_text(WINDOW *window, const char *font, int size,char *text, int x,int y,unsigned long int fgc, int h) {
+void put_font_text(SDL_Surface *display, int fidx, char *text, int x,int y,unsigned long int fgc, int h) {
   SDL_Surface *message = NULL;
   TTF_Font *ttffont = NULL;
   SDL_Color textColor = { (fgc&0xff000000)>>24, (fgc&0xff0000)>>16, (fgc&0xff00)>>8 };
-  char fontname[256];
-  sprintf(fontname,"%s/%s.ttf",fontdir,font);
-  if(!exist(fontname)) {
-    if(strcmp(font,"SMALL")) printf("ERROR: font not found: <%s>\n",fontname);
-    stringColor(window->display,x,y+(h-8)/2,text,fgc);
-    return;
-  }
-  ttffont=TTF_OpenFont(fontname,size);
-  
+  ttffont=fonts[fidx].font;
   if(ttffont==NULL) {
-    stringColor(window->display,x,y+(h-8)/2,text,fgc);
+    stringColor(display,x,y+(h-8)/2,text,fgc);
     return;
   }
-  int fontheight=TTF_FontHeight(ttffont);
+  int fontheight=fonts[fidx].height;
 
 //  message = TTF_RenderText_Solid(ttffont,text, textColor);
   message = TTF_RenderUTF8_Blended(ttffont,text, textColor);
@@ -276,14 +266,144 @@ void put_font_text(WINDOW *window, const char *font, int size,char *text, int x,
   /* If there was an error in rendering the text, use the primitive font */
   
   if(message==NULL) {
-    TTF_CloseFont(ttffont);
-    stringColor(window->display,x,y+(h-8)/2,text,fgc);
+    stringColor(display,x,y+(h-8)/2,text,fgc);
     return;
   }
 
   SDL_Rect a={0,0,message->w,message->h};
   SDL_Rect b={x,y+(h-fontheight)/2,message->w,message->h};
-  SDL_BlitSurface(message, &a,window->display, &b);
+  SDL_BlitSurface(message, &a,display, &b);
   SDL_FreeSurface(message);
-  TTF_CloseFont(ttffont);
 }
+
+FONTDEF fonts[256];
+int anzfonts=0;
+int find_font(const char *name,int size) {
+  int ret=-1;
+  int i;
+  if(anzfonts>0) {
+    for(i=0;i<anzfonts;i++) {
+      if(!strcmp(name,fonts[i].name) && size==fonts[i].size) return(i); 
+    }
+  }
+  return(ret);
+}
+void clear_font(int idx) {
+  if(idx>=0 && idx<anzfonts) {
+    fonts[idx].anz=0;
+    free(fonts[idx].name);
+    fonts[idx].name=NULL;
+    TTF_CloseFont(fonts[idx].font);
+    fonts[idx].font=NULL;
+    fonts[idx].size=0;
+    if(idx==anzfonts-1) anzfonts--;
+  }
+  while(anzfonts>0 && fonts[anzfonts-1].anz==0) {
+     anzfonts--;
+  }
+}
+void clear_all_fonts() {
+  int i;
+  if(anzfonts>0) {
+    for(i=0;i<anzfonts;i++) {
+      fonts[i].anz=0;
+      free(fonts[i].name);
+      fonts[i].name=NULL;
+      TTF_CloseFont(fonts[i].font);
+      fonts[i].font=NULL;
+      fonts[i].size=0;
+    }
+  }
+  anzfonts=0;
+}
+int add_font(const char *name, int size) {
+  int i=find_font(name,size);
+  if(i>=0) fonts[i].anz++;
+  else {
+    i=anzfonts;
+    anzfonts++;
+    fonts[i].anz=1;
+    fonts[i].size=size;
+    fonts[i].name=strdup(name);
+  }
+  return(i);
+}
+void open_all_fonts() {
+  printf("Open_all_fonts:\nwe have %d fonts:\n",anzfonts);
+  if(anzfonts>0) {
+    char fontname[256];
+    int i;
+    for(i=0;i<anzfonts;i++) {
+      if(fonts[i].anz>0) {
+        sprintf(fontname,"%s/%s.ttf",fontdir,fonts[i].name);
+        if(!exist(fontname)) {
+          if(strcmp(fonts[i].name,"SMALL")) printf("ERROR: font not found: <%s>\n",fontname);
+          fonts[i].font=NULL;
+	  fonts[i].height=8;
+        } else {
+  	  printf("%d: %s : %d\n",i,fontname,fonts[i].size);
+          fonts[i].font=TTF_OpenFont(fontname,fonts[i].size);
+          if(fonts[i].font==NULL) {
+	    printf("ERROR: could not open font <%s> size=%d\n",fontname,fonts[i].size);
+            fonts[i].height=8;
+          } else fonts[i].height=TTF_FontHeight(fonts[i].font);
+        }
+      }
+    }
+  }
+}
+STRING get_icon(const char *name, int *w, int *h) {
+  STRING ret;
+  STRING a;
+  a=get_file(name);
+  ret=pngtobmp((unsigned char *)a.pointer,(size_t)a.len);
+  free(a.pointer);
+  return(ret);
+}
+
+#define SmallDisc_width 11
+#define SmallDisc_height 11
+
+static char SmallDisc_bits[] = {
+   0xfc, 0x01, 0x02, 0x02, 0x07, 0x07, 0x8f, 0x07, 0xdf, 0x07, 0xff, 0x07,
+   0xdf, 0x07, 0x8f, 0x07, 0x07, 0x07, 0x02, 0x02, 0xfc, 0x01};
+
+STRING get_bitmap(const char *name, int *w, int *h) {
+  int i=0;
+  int e;
+  STRING ret;
+  char *odummy;
+  char dummy[256];
+  STRING a=get_file(name);
+  if(a.pointer && a.len) {
+    ret.pointer=malloc(a.len);
+    ret.len=0;
+    wort_sep(a.pointer,'_',0,dummy,a.pointer);
+    wort_sep(a.pointer,' ',0,dummy,a.pointer);
+    wort_sep(a.pointer,'\n',0,dummy,a.pointer);
+    *w=(atoi(dummy)+7)&(~7);
+    wort_sep(a.pointer,'_',0,dummy,a.pointer);
+    wort_sep(a.pointer,' ',0,dummy,a.pointer);
+    wort_sep(a.pointer,'\n',0,dummy,a.pointer);
+    *h=atoi(dummy);
+    e=wort_sep(a.pointer,'{',0,dummy,a.pointer);
+    e=wort_sep(a.pointer,'}',0,a.pointer,dummy);
+    e=wort_sep(a.pointer,',',0,dummy,a.pointer);
+    while(e>0) {
+      odummy=dummy;
+      while(odummy[0]<=' ') odummy++;
+      // printf("%d:<%s> <%s>: %x\n",i,dummy,odummy,(int)myatof(odummy));
+      ret.pointer[i++]=(int)myatof(odummy);
+      e=wort_sep(a.pointer,',',0,dummy,a.pointer);
+    }
+    ret.len=i;
+    free(a.pointer);
+  } else {
+    ret.pointer=SmallDisc_bits;
+    ret.len=sizeof(SmallDisc_bits);
+    *w=(SmallDisc_width+7)&0xfffffc;
+    *h=SmallDisc_height;
+  }
+  return(ret);
+}
+

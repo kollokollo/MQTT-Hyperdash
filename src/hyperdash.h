@@ -23,6 +23,7 @@ typedef struct {
   STRING last_value;
 } SUBSCRIPTION;
 
+
 typedef struct {
   unsigned int opcode;
   const char *name;
@@ -53,6 +54,7 @@ typedef struct {
   STRING data[10];
   unsigned long labelcolor[10];
   int subscription;
+  int fontnr;
 } ELEMENT;
 
 
@@ -84,18 +86,5 @@ void init_dash(DASH *dash);
 void close_dash(DASH *dash);
 void draw_dash(DASH *dash, WINDOW *win);
 int handle_dash(DASH *dash, WINDOW *win);
-
-
-/* Here the definitions of the individual element functions: */
-
-void i_meter(ELEMENT *el,char *pars);
-void d_meter(ELEMENT *el,WINDOW *win);
-void u_meter(ELEMENT *el,WINDOW *win, char *message);
-
-void d_tvmeter(ELEMENT *el,WINDOW *win);
-void u_tvmeter(ELEMENT *el,WINDOW *win, char *message);
-void d_thmeter(ELEMENT *el,WINDOW *win);
-void u_thmeter(ELEMENT *el,WINDOW *win, char *message);
-
 
 #endif
