@@ -16,8 +16,10 @@
 #include "file.h"
 #include "mqtt.h"
 
+#ifndef WINDOWS
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#endif
 #include <SDL/SDL.h>
 //#include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
@@ -25,17 +27,19 @@
 int init_sdl() {
   static int done=0;
   if(done) return(0);
+#ifndef WINDOWS
   XInitThreads();
+#endif
 //  if(SDL_Init(SDL_INIT_VIDEO) < 0 ) return -1;
   if(SDL_Init(SDL_INIT_EVERYTHING) < 0 ) return -1;
   
-  //Initialize SDL_ttf
-    if( TTF_Init() == -1 ) return -1;
+  /* Initialize SDL_ttf  */
+    if(TTF_Init()==-1) return -1;
   
   atexit(SDL_Quit);
   
   /* Enable Unicode translation */
-  SDL_EnableUNICODE( 1 );
+  SDL_EnableUNICODE(1);
   done=1;
   return(0);
 }

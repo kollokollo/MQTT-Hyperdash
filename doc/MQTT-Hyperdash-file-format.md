@@ -3,13 +3,19 @@
 --- for MQTT Hyperdash ---
 
 
-A dash file consists of UTF-8 encoded ASCII text. 
+MQTT Hyperdash runs so-called dash-files. Dash-files are simple text files, 
+consisting of UTF-8 encoded ASCII text. They can be edited by any text editor.  
 
-Each line contains one element. 
+Each line contains the definition of one element. If te last charackter of the
+line is a '\' (backslash), the next line will be linked to this line. You can use 
+this to better format the dash files, e.g. to split the definition of one 
+element over mutliple real lines. 
 
 A line with an element definition has following structure: 
 
 elementname : one or more KEY=VALUE pairs separated by whitespace.
+
+All keywords are case insensitive. 
 
 The order of KEY=VALUE pairs is irrelevant. They are all optional. 
 If missing, default values apply.
@@ -21,14 +27,88 @@ Comments are marked with a '#' at the beginning of a line.
 
 Empty lines will be ignored. 
 
-Each file must contain a "PANEL" element and a "BROKER" element. 
+Each dash file must contain excactly one "PANEL" element and 
+one "BROKER" element. 
 
 Currently there exist following element types:
+
+
+|Element       |   Recognized keyvalues                      |
+|--------------|:-------------------------------------------:|
+|PANEL         | W H TITLE FGC BGC                           |
+|BROKER        | URL USER PASSWD                             |
+|BOX           | X Y W H FGC                                 |
+|PBOX          | X Y W H FGC BGC                             |
+|CIRCLE        | X Y W H FGC                                 |
+|PCIRCLE       | X Y W H FGC BGC                             |
+|LINE          | X Y X2 Y2 FGC                               |
+|FRAME         | X Y W H REVERT                              |
+|FRAMETOGGLE   | X Y W H                                     |
+|BITMAP        | X Y BITMAP FGC                              | 
+|ICON          | X Y ICON                                    |
+|TEXT          | X Y H TEXT FGC FONT FONTSIZE                |
+|TOPICSTRING   | X Y H TOPIC FGC BGC FONT FONTSIZE           |
+|TOPICNUMBER   | X Y H TOPIC FGC BGC FONT FONTSIZE FORMAT    |
+|HBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX           |
+|VBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX           |
+|TOPICMETER    | X Y W H TOPIC FGC BGC AGC MIN MAX AMIN AMAX |
+|TOPICVMETER   | X Y W H TOPIC FGC BGC AGC MIN MAX           |
+|TOPICHMETER   | X Y W H TOPIC FGC BGC AGC MIN MAX           |
+|TEXTLABEL     | X Y H TOPIC BGC FONT FONTSIZE TEXT[n]       |
+|BITMAPLABEL   | X Y TOPIC BGC BITMAP[n]                     |
+|FRAMELABEL    | X Y W H TOPIC MATCH                         |
+|SHELLCMD      | X Y W H CMD                                 |
+|DASH          | X Y W H DASH                                |
+|TOPICINAREA   | X Y W H TOPIC VALUE QOS                     |
+|TOPICINSTRING | X Y W H TOPIC QOS                           |
+|TOPICINNUMBER | X Y W H TOPIC FORMAT MIN MAX QOS            |
+|TOPICHSCALER  | X Y W H TOPIC FORMAT MIN MAX QOS            |
+|TOPICVSCALER  | X Y W H TOPIC FORMAT MIN MAX QOS            |
+|TICKER        | X Y W H TOPIC TIC FORMAT MIN MAX QOS        |
+
+
+0. Common keyvalue formats
+==========================
+* X=<pixels> Horizontal position of upper right corner of the element in pixels
+* Y=<pixels> Vertical position of upper right corner of the element in pixels
+* X2=<pixels> Horizontal position of the endpoint of a line in pixel coordinates
+* Y2=<pixels> Vertical position  of the endpoint of a line in pixel coordinates
+* W=<pixels> Width of the element in pixels
+* H=<pixels> Height of the element in pixels
+* TITLE=<String> Title of the dashbord window.
+* URL=<String> URL of the broker to connect to. Example: URL="tcp://localhost:1883"
+* USER=<String> Username for connection
+* PASSWD=<String> Password for connection
+* FGC=<color value> Foreground color. The color values are 32bit RGBA. 
+  They can be specified using a hey value $rrggbbaa:
+  e.g. FGC=$ff4532FF  
+* BGC=<color value> Background color. 
+* BITMAP=<filename> Specify a bitmap file name relative to the bitmap path. The
+  bitmap files need to be in .xbm (X-Window bitmap) format and can be generated 
+  and edited with the simple application "bitmap". 
+* ICON=<filename> Specify an image file name relative to the icon path. These 
+  files must be .png (Potable network grapics) files.
+* TEXT=<String> Specify a text to be shown.
+* FONT=<fontname> Specify a text font to use. These fonts must be TrueType Fonts
+  usually installed in the standard path /usr/share/fonts/truetype/msttcorefonts
+  There a file with .ttf ending is searched. 
+* FONTSIZE=<value> Specify the size of the font. This defaults to 16.
+* TOPIC=<TompicName> The name of the topic of a dynamic element. 
+* REVERT=<0 or 1> Specifys if the frame is drawn in revert state.
+* MATCH=<String> A String to match the topics content.
+* TEXT[n] Are one or multiple Labeldefinitions of the form 
+  TEXT[n]="<match>|<text>|<fgc>". E.g. TEXT[0]="0|Hello|$ffffffff"
+* BITMAP[n] Are one or multiple Labeldefinitions of the form 
+  BITMAP[n]="<match>|<bitmapfile>|<fgc>". E.g. BITMAP[0]="0|SmallTriangle|$ff0000ff"
+* VALUE=<String> A String to apply to a topic.
+* QOS=<0,1 or 2> Qiality of service for publication to the broker. Defaults to 0.
+* TIC=<number> An increment used by the ticker. The increment can aswell be negative.
+
 
 1. Static elements 
 ==================
 Static elements are just drawing primitives. They do noch change with topics 
-contens.
+contents.
 
 PANEL: TITLE=<title> W=<width in pixels> H=<height in pixels> FGC=<colorspec> BGC=<colorspec>
 

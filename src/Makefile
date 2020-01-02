@@ -96,7 +96,12 @@ LINKFLAGS =
 WINLINKFLAGS = -L./WINDOWS/lib 
 
 LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx  -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
-WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL -lSDL_gfx
+WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL 
+
+MYWINLIBS = WINDOWS/lib/libgfx.lib 
+
+
+
 
 all :    hyperdash
 
@@ -116,8 +121,9 @@ hyperdash :  $(MAINOBJS)
 
 # Make the exe for MS WINDOWS
 
-hyperdash.exe: main.c $(MYWINLIBS)
-	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) main.c -o $@ $(MYWINLIBS) \
+hyperdash.exe: $(CSRC) $(MYWINLIBS)
+	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) $(CSRC) \
+	-o $@ $(MYWINLIBS) \
 	 $(WINLIBS)
 	strip $@
 

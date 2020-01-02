@@ -11,7 +11,9 @@
 #include <string.h>
 #include <stdint.h>
 
+#ifndef WINDOWS
 #include <gtk/gtk.h>
+#endif
 
 #include "basics.h"
 #include "graphics.h"
@@ -20,12 +22,8 @@
 #include "input.h"
 
 
-/*TODO: 
-
-The last message ssen cannot be received from the broker, 
-so one has to store them on reception. This involves a more difficult handling of
-incoming messages...
-
+/*
+TODO: 
 
 SAVE and RESTORE Buttons in the dialog which can save a value on a per topic basis for
 later restore.
@@ -36,8 +34,9 @@ What about portability?
 
 */
 
-static int re_button=0;
 
+static int re_button=0;
+#ifndef WINDOWS
 static void on_button_clicked (GtkWidget *widget, gpointer data) {
   re_button=(int)(((char *)data)[0]-'0');
 }
@@ -64,7 +63,9 @@ static gboolean delete_event( GtkWidget *widget,
 static void ddestroy(GtkWidget *widget, gpointer data ) {
     gtk_main_quit ();
 }
+#endif
 int message_dialog(char *title,char *text, int anzbut) {
+#ifndef WINDOWS
   GtkWidget *window;
   GtkWidget *button,*button2,*textarea;
   GtkWidget *box1 = gtk_hbox_new (FALSE, 0);
@@ -99,7 +100,7 @@ int message_dialog(char *title,char *text, int anzbut) {
   
   gtk_widget_show_all (window);
   gtk_main ();
-
+#endif
   return(re_button);
 }
 
@@ -109,6 +110,7 @@ int message_dialog(char *title,char *text, int anzbut) {
 static volatile int fileselect_return;
 static char fileselect_name[256];
 
+#ifndef WINDOWS
 /* Get the selected filename and print it to the console */
 static void file_ok_sel (GtkWidget *w, GtkFileSelection *fs) {
   strcpy(fileselect_name,gtk_file_selection_get_filename (GTK_FILE_SELECTION (fs)));
@@ -119,14 +121,14 @@ static void file_ok_sel (GtkWidget *w, GtkFileSelection *fs) {
 void destroy (GtkWidget *w, gpointer *data) {
   gtk_main_quit();
 }
-
+#endif
 
 int fileselect_dialog(char *filename, const char *path, const char *mask) {
   char buf[256];
   sprintf(buf,"%s/%s",path,filename);
   fileselect_return=0;
 
-
+#ifndef WINDOWS
 
 /* Create a new file selection widget */
     GtkWidget *filew = gtk_file_selection_new("Dashboard file selection");
@@ -158,7 +160,7 @@ int fileselect_dialog(char *filename, const char *path, const char *mask) {
     gtk_widget_show_all (filew);
     fileselect_return=0;
     gtk_main ();
-
+#endif
     if(fileselect_return>0) {
       strcpy(filename,fileselect_name);
     }
@@ -167,18 +169,19 @@ int fileselect_dialog(char *filename, const char *path, const char *mask) {
 static volatile int input_return;
 static char input_value[256];
 
+#ifndef WINDOWS
 static void inputOK_clicked (GtkWidget *widget, gpointer data) {
   input_return=1;
   strcpy(input_value,gtk_entry_get_text( GTK_ENTRY(data)));
   g_print(input_value);
 }
-
+#endif
 int input_dialog(const char *topic, char *value, char *def) {
   char buf[256];
   sprintf(buf,"Enter Value for Topic\n%s:\n",topic);
 
 
-
+#ifndef WINDOWS
   GtkWidget *window;
   GtkWidget *button,*button2,*textarea,*inputarea;
   GtkWidget *box1 = gtk_hbox_new (FALSE, 0);
@@ -216,12 +219,10 @@ int input_dialog(const char *topic, char *value, char *def) {
   input_return=0;
   gtk_widget_show_all (window);
   gtk_main ();
-
-    if(input_return>0) {
-      strcpy(value,input_value);
-      return(1);
-    }
-
-
+#endif
+  if(input_return>0) {
+    strcpy(value,input_value);
+    return(1);
+  }
   return(0);
 }

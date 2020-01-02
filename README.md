@@ -1,21 +1,28 @@
-Hyper-Dash
-    
-VERSION 1.27
+## MQTT-Hyperdash
+<pre>
+VERSION 1.00
 
 (C) 2019-2020 by Markus Hoffmann
 (kollo@users.sourceforge.net)
 
-Name        : Hyper-Dash
-Version     : 1.00                              Vendor: Markus Hoffmann
-Group       : Development/Languages             License: GPL
+Name        : MQTT-Hyperdash
+Version     : 1.00                              Author: Markus Hoffmann
+Group       : Development/Languages             License: GPLv2
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
-Summary     : A MQTT Dashboard
+Summary     : A universal MQTT Dashboard.
 Description :
 
 This is a fast and efficient dashboard (GUI) for the MQTT framework. It uses
-the SDL library for graphics rendering. Except for the paho library no other
-special library is needed. The dashboard runs on linux, but a port to other
-operating systems should be easy. 
+the SDL library for graphics rendering, the paho library for communication and
+the gtk2 framework for User-Unput. The dashboard runs on linux, 
+but a port to other operating systems should be easy. 
+
+Special features: 
+* Very simple and basic set of base elements. 
+* animated analog input elements, potentiometers.
+* Fast update rates of 20 Hz are possible.
+* Easy to use: Each Panel/Dashboard is configured in a single .dash file.
+</pre>
 
 There are two applications included: 
 
