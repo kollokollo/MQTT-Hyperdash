@@ -8,8 +8,6 @@
  
  
  /*TODO: 
-   1. Ticker elements (frametoggle) HTIC,VTIC: MIN,MAX,TIC=
-   right-click opens a box where one can choose 10x or 1x tics.
    2. Scaler elements HSCALER, VSCALER, MIN, MAX, RANGE, TIC
    right-click opens a box where one can choose different ranges
    (full, medium (30%), fine (10%)) and where one can set the value 
@@ -285,9 +283,24 @@ void i_tinnumber(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","20"));
   el->h=atoi(key_value(pars,"H","20"));
   el->revert=atoi(key_value(pars,"QOS","0"));
-  el->format=strdup(key_value(pars,"FORMAT","###.###"));
+  el->format=strdup(key_value(pars,"FORMAT","%g"));
+  el->min=myatof(key_value(pars,"MIN","-1"));
+  el->max=myatof(key_value(pars,"MAX","1"));
 }
 
+void i_tticker(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","20"));
+  el->h=atoi(key_value(pars,"H","20"));
+  el->revert=atoi(key_value(pars,"QOS","0"));
+  /* MIN MAX */
+  el->min=myatof(key_value(pars,"MIN","-1"));
+  el->max=myatof(key_value(pars,"MAX","1"));
+  el->increment=myatof(key_value(pars,"TIC","0.1"));
+  el->format=strdup(key_value(pars,"FORMAT","%g"));
+}
+void d_subscribe(ELEMENT *el,WINDOW *win) {
+  ELEMENT_SUBSCRIBE();
+}
 
 /* Drawing functions for all elements....*/
 
@@ -494,4 +507,27 @@ void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
 /* User Input (click) functions for all elements....*/
 
 
-
+/* get last known value, add increment, format it and then publish it. */
+int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    char *def=subscriptions[el->subscription].last_value.pointer;
+    double v=myatof(def);
+//    printf("ticker <%s>\n",el->topic);
+//    printf("subscription <%s>\n",subscriptions[el->subscription].topic);
+//    printf("minmax %g/%g\n",el->min,el->max);
+//    printf("increment: %g\n",el->increment);
+//    printf("last value is: <%s> : %g\n",def,v);
+    v+=el->increment;
+    if(v>el->max) v=el->max;
+    if(v<el->min) v=el->min;
+//    printf("New value is: %g\n",v);
+    STRING format;
+    format.pointer=el->format;
+    format.len=strlen(format.pointer);
+    STRING a=do_using(v,format);
+    mqtt_publish(el->topic,a,el->revert,1);
+    free(a.pointer);
+   // return(1); Do not consume it. There my be other action.... 
+  }
+  return(0);
+}

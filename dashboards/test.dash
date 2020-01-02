@@ -7,8 +7,8 @@ PANEL:  TITLE="Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
-TEXT:   X=60 Y=30       H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=32
-FRAME:  X=50 Y=30 W=244 H=60 
+TEXT:   X=50 Y=30       H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=32
+FRAME:  X=40 Y=30 W=244 H=60 
 
 # This is a simple button allowing to input the value of a topic
 # Note that when you enter ON or OFF also the states f the buttons change...
@@ -22,12 +22,31 @@ FRAMETOGGLE: X=108 Y=150 W=104 H=34
 # e.g. for ON/OFF Switches The Buttons also show the actual state.
 #
 
+PBOX: x=40 y=100 w=50 h=30 bgc=$444444ff
 PBOX: x=100 y=100 w=50 h=30 bgc=$444444ff
 PBOX: x=160 y=100 w=50 h=30 bgc=$444444ff
+TEXT: x=45 y=100 w=30 h=30 TEXT="AUTO" fgc=$0078ffff FONT="Arial"
 TEXT: x=110 y=100 w=30 h=30 TEXT="OFF" fgc=$ff0000ff FONT="Arial"
 TEXT: x=170 y=100 w=30 h=30 TEXT="ON" fgc=$00ff00ff FONT="Arial"
+TOPICINAREA: x=40 y=100 w=50 h=30 TOPIC=TEST VALUE="AUTO"
 TOPICINAREA: x=100 y=100 w=50 h=30 TOPIC=TEST VALUE="OFF"
 TOPICINAREA: x=160 y=100 w=50 h=30 TOPIC=TEST VALUE="ON"
+FRAMELABEL: TOPIC=TEST x=40 y=100 w=50 h=30 MATCH="AUTO"
 FRAMELABEL: TOPIC=TEST x=100 y=100 w=50 h=30 MATCH="OFF"
 FRAMELABEL: TOPIC=TEST x=160 y=100 w=50 h=30 MATCH="ON"
+
+
+PBOX:        x=50 y=210 w=30 h=30 bgc=$444444ff
+BITMAP:      x=59 y=218 BITMAP="SmallTriagUp" FGC=$ffffffff
+TICKER:      X=48 Y=208 W=34 H=34 TOPIC=TESTT TIC=0.2 MIN=0 MAX=4
+FRAMETOGGLE: X=48 Y=208 W=34 H=34
+
+PBOX:        x=50 y=290 w=30 h=30 bgc=$444444ff
+BITMAP:      x=59 y=298 BITMAP="SmallTriagDown" FGC=$ffffffff
+TICKER:      X=48 Y=288 W=34 H=34 TOPIC=TESTT TIC=-0.2 MIN=0 MAX=4
+FRAMETOGGLE: X=48 Y=288 W=34 H=34
+
+TOPICSTRING: X=10 Y=252 W=100 H=30 TOPIC=TESTT FGC=$00ffffff BGC=$00ff
+TOPICINNUMBER:  X=10 Y=252 W=100 H=30 TOPIC=TESTT FORMAT="%g"
+FRAMETOGGLE: X=8 Y=250 W=104 H=34
 

@@ -49,6 +49,7 @@ typedef struct {
   char *filename;
   char *format;
   double min,max;
+  double increment;
   double amin,amax;
   STRING label[10];
   STRING data[10];

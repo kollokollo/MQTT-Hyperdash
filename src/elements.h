@@ -88,3 +88,7 @@ void u_thmeter(ELEMENT *el,WINDOW *win, char *message);
 
 void i_shellcmd(ELEMENT *el,char *pars);
 void i_subdash(ELEMENT *el,char *pars);
+
+void i_tticker(ELEMENT *el,char *pars);
+int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b);
+void d_subscribe(ELEMENT *el,WINDOW *win);

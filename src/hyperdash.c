@@ -349,6 +349,8 @@ int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     int rc=input_dialog(el->topic,buf,def);
     if(rc>0) {
       double v=myatof(buf);
+      if(v>el->max) v=el->max;
+      if(v<el->min) v=el->min;
       STRING format;
       format.pointer=el->format;
       format.len=strlen(format.pointer);
@@ -430,10 +432,12 @@ const ELDEF eltyps[]= {
  {EL_INPUT,"SHELLCMD",i_shellcmd,NULL,NULL,c_shellcmd},
  {EL_INPUT,"DASH"    ,i_subdash ,NULL,NULL,c_subdash},
  {EL_INPUT|EL_DYNAMIC,"TOPICINAREA"    ,i_tinarea ,NULL,NULL,c_tinarea},
- {EL_INPUT|EL_DYNAMIC,"TOPICINSTRING"  ,i_tinstring ,NULL,NULL,c_tinstring},
- {EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER"  ,i_tinnumber ,NULL,NULL,c_tinnumber},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINSTRING"  ,i_tinstring ,d_subscribe,NULL,c_tinstring},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER"  ,i_tinnumber ,d_subscribe,NULL,c_tinnumber},
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICHSCALER"  ,i_tinstring ,NULL,NULL,c_tinstring},
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICVSCALER"  ,i_tinstring ,NULL,NULL,c_tinstring},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER"    ,i_tticker ,d_subscribe,NULL,c_tticker},
+
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
