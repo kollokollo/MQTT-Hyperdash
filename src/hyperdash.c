@@ -535,12 +535,12 @@ void free_element(ELEMENT *el) {
 
 void close_dash(DASH *dash) {
   int i;
+  mqtt_unsubscribe_all();
+  mqtt_disconnect();  /* Verbindung zum Broker trennen. */ 
   for(i=0;i<dash->anzelement;i++) {
     free_element(&(dash->tree[i]));
   }
   clear_all_fonts();
-  mqtt_unsubscribe_all();
-  mqtt_disconnect();  /* Verbindung zum Broker trennen. */ 
 }
 
 

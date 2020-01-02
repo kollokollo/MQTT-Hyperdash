@@ -300,8 +300,8 @@ locale_t old = uselocale(safe_locale);
       for(i=0;i<dest.len;i++) dest.pointer[i]='*';    
     }
   } 
-   uselocale(old);
-
+  uselocale(old);
+  freelocale(safe_locale);
   return(dest);
 }
 

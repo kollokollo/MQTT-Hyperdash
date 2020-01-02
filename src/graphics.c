@@ -43,6 +43,8 @@ int init_sdl() {
 }
 
 void close_window(WINDOW *win) {
+  if(win->title) free(win->title);
+  if(win->info) free(win->info);
   free(win);
 }
 
