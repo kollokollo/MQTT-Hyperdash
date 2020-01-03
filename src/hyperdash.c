@@ -434,9 +434,10 @@ const ELDEF eltyps[]= {
  {EL_INPUT|EL_DYNAMIC,"TOPICINAREA"    ,i_tinarea ,NULL,NULL,c_tinarea},
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINSTRING"  ,i_tinstring ,d_subscribe,NULL,c_tinstring},
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER"  ,i_tinnumber ,d_subscribe,NULL,c_tinnumber},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICHSCALER"  ,i_tinstring ,NULL,NULL,c_tinstring},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICVSCALER"  ,i_tinstring ,NULL,NULL,c_tinstring},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER"    ,i_tticker ,d_subscribe,NULL,c_tticker},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICHSCALER"  ,i_scaler ,d_hscaler,u_hscaler,c_hscaler},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICVSCALER"  ,i_scaler ,d_vscaler,u_vscaler,c_vscaler},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER"        ,i_tticker ,d_subscribe,NULL,c_tticker},
+ {EL_VISIBLE|EL_DYNAMIC,"PLOT",i_meter,d_meter,u_meter,NULL},
 
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
@@ -444,7 +445,7 @@ const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
 static int click_element(ELEMENT *el, WINDOW *win, int x, int y,int b) {
   int j=(el->type&0xff);
-  printf("click element %d with %d. %s\n",j,b,eltyps[j].name);
+  if(verbose>0) printf("click element %d with %d. %s\n",j,b,eltyps[j].name);
   if(eltyps[j].click) return( (eltyps[j].click)(el,win,x,y,b));
   return(0);
 }

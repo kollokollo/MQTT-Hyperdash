@@ -12,7 +12,7 @@
    right-click opens a box where one can choose different ranges
    (full, medium (30%), fine (10%)) and where one can set the value 
    explicitly. Also the arrow keys should be active for tics.
-
+   3. Plot element.
 
   */
 #include <stdio.h>
@@ -269,6 +269,20 @@ void i_tinstring(ELEMENT *el,char *pars) {
   el->h=atoi(key_value(pars,"H","20"));
   el->revert=atoi(key_value(pars,"QOS","0"));
 }
+void i_scaler(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","20"));
+  el->h=atoi(key_value(pars,"H","20"));
+  el->revert=atoi(key_value(pars,"QOS","0"));
+  el->min=myatof(key_value(pars,"MIN","0"));
+  el->max=myatof(key_value(pars,"MAX","1"));
+  el->amin=myatof(key_value(pars,"AMIN","-1"));
+  el->amax=myatof(key_value(pars,"AMAX","-1"));
+  el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
+  el->fgc=(long)myatof(key_value(pars,"FGC","$808080ff"));
+  el->agc=(long)myatof(key_value(pars,"AGC","$ffffffff"));
+  el->increment=myatof(key_value(pars,"TIC","0"));
+  el->format=strdup(key_value(pars,"FORMAT","%g"));
+}
 void i_tinnumber(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","20"));
   el->h=atoi(key_value(pars,"H","20"));
@@ -276,6 +290,8 @@ void i_tinnumber(ELEMENT *el,char *pars) {
   el->format=strdup(key_value(pars,"FORMAT","%g"));
   el->min=myatof(key_value(pars,"MIN","-1"));
   el->max=myatof(key_value(pars,"MAX","1"));
+  el->increment=myatof(key_value(pars,"TIC","0.1"));
+  el->format=strdup(key_value(pars,"FORMAT","%g"));
 }
 
 void i_tticker(ELEMENT *el,char *pars) {
@@ -285,7 +301,7 @@ void i_tticker(ELEMENT *el,char *pars) {
   /* MIN MAX */
   el->min=myatof(key_value(pars,"MIN","-1"));
   el->max=myatof(key_value(pars,"MAX","1"));
-  el->increment=myatof(key_value(pars,"TIC","0.1"));
+  el->increment=myatof(key_value(pars,"TIC","0"));
   el->format=strdup(key_value(pars,"FORMAT","%g"));
 }
 void d_subscribe(ELEMENT *el,WINDOW *win) {
@@ -388,6 +404,14 @@ void d_thmeter(ELEMENT *el,WINDOW *win) {
 }
 void d_meter(ELEMENT *el,WINDOW *win) {
   u_meter(el,win,"NaN");
+  ELEMENT_SUBSCRIBE();
+}
+void d_hscaler(ELEMENT *el,WINDOW *win) {
+  u_hscaler(el,win,"NaN");
+  ELEMENT_SUBSCRIBE();
+}
+void d_vscaler(ELEMENT *el,WINDOW *win) {
+  u_vscaler(el,win,"NaN");
   ELEMENT_SUBSCRIBE();
 }
 void d_tstring(ELEMENT *el,WINDOW *win) {
@@ -498,33 +522,203 @@ void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y0,el->x+el->w,el->y+y0,el->agc);
 }
+void u_hscaler(ELEMENT *el,WINDOW *win, char *message) {
+  double v=myatof(message);
+  int scalerbw=el->w/10;
+  if(scalerbw<el->h)  scalerbw=el->h;
+  if(scalerbw<8) scalerbw=8;
+  boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
+  rectangleColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->agc);
+  if(!isnan(v)) {
+    double m=(v-el->min)/(el->max-el->min);
+    if(m<0) m=0;
+    if(m>1) m=1;
+    int x=(int)(m*(double)(el->w-scalerbw)+0.5);
+    boxColor(win->display,el->x+x,el->y,el->x+x+scalerbw,el->y+el->h,el->fgc);
+    ELEMENT e;
+    e.x=el->x+x;
+    e.y=el->y;
+    e.w=scalerbw;
+    e.h=el->h;
+    e.revert=0;
+    d_frame(&e,win);
+    e.revert=1;
+    e.x=el->x+x+scalerbw/3+1;
+    e.y=el->y+3;
+    e.h=el->h-6;
+    e.w=scalerbw/3;
+    d_frame(&e,win);
+  }
+}
 
+void u_vscaler(ELEMENT *el,WINDOW *win, char *message) {
+  double v=myatof(message);
+  int scalerbh=el->h/10;
+  if(scalerbh<el->w)  scalerbh=el->w;
+  if(scalerbh<8) scalerbh=8;
+  boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
+  rectangleColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->agc);
+  if(!isnan(v)) {
+    double m=(v-el->min)/(el->max-el->min);
+    if(m<0) m=0;
+    if(m>1) m=1;
+    int y=(int)((1-m)*(double)(el->h-scalerbh)+0.5);
+    boxColor(win->display,el->x,el->y+y,el->x+el->w,el->y+y+scalerbh,el->fgc);
+    ELEMENT e;
+    e.x=el->x;
+    e.y=el->y+y;
+    e.h=scalerbh;
+    e.w=el->w;
+    e.revert=0;
+    d_frame(&e,win);
+    e.revert=1;
+    e.y=el->y+y+scalerbh/3+1;
+    e.x=el->x+3;
+    e.w=el->w-6;
+    e.h=scalerbh/3;
+    d_frame(&e,win);
 
+  }
+}
 
 /* User Input (click) functions for all elements....*/
 
-
-/* get last known value, add increment, format it and then publish it. */
-int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b) {
-  if(b==1) {
-    char *def=subscriptions[el->subscription].last_value.pointer;
-    double v=myatof(def);
-//    printf("ticker <%s>\n",el->topic);
-//    printf("subscription <%s>\n",subscriptions[el->subscription].topic);
-//    printf("minmax %g/%g\n",el->min,el->max);
-//    printf("increment: %g\n",el->increment);
-//    printf("last value is: <%s> : %g\n",def,v);
-    v+=el->increment;
-    if(v>el->max) v=el->max;
-    if(v<el->min) v=el->min;
-//    printf("New value is: %g\n",v);
+void element_publish(ELEMENT *el, double v,double old_v) {
+  if(v>el->max) v=el->max;
+  if(v<el->min) v=el->min;
+  if(v!=old_v) {
+    if(verbose>0) printf("New value is: %g\n",v);
     STRING format;
     format.pointer=el->format;
     format.len=strlen(format.pointer);
     STRING a=do_using(v,format);
     mqtt_publish(el->topic,a,el->revert,1);
     free(a.pointer);
+  }
+}
+
+/* get last known value, add increment, format it and then publish it. */
+int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    char *def=subscriptions[el->subscription].last_value.pointer;
+    double v=myatof(def);
+    double old_v=v;
+//    printf("ticker <%s>\n",el->topic);
+//    printf("subscription <%s>\n",subscriptions[el->subscription].topic);
+//    printf("minmax %g/%g\n",el->min,el->max);
+//    printf("increment: %g\n",el->increment);
+//    printf("last value is: <%s> : %g\n",def,v);
+    v+=el->increment;
+    element_publish(el,v,old_v);  /* Final publish */
    // return(1); Do not consume it. There my be other action.... 
   }
+  return(0);
+}
+
+
+int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  char *def=subscriptions[el->subscription].last_value.pointer;
+  double v=myatof(def);
+  double old_v=v;
+  double old2_v;
+  int d=0;
+  double diff=0;
+  int scalerbw=el->w/10;
+  if(scalerbw<el->h)  scalerbw=el->h;
+  if(scalerbw<8) scalerbw=8;
+  double m=(v-el->min)/(el->max-el->min);
+  if(m<0) m=0;
+  if(m>1) m=1;
+  int x0=(int)(m*(double)(el->w-scalerbw)+0.5);
+
+  if(b==4) {           /* Scrollwheel up --> Ticker up */
+    v+=el->increment;
+  } else if(b==5) {    /* Scrollwheel down --> Ticker down */
+    v-=el->increment;
+  } else if(x>el->x+x0 && x<el->x+x0+scalerbw) {
+    ELEMENT lose=*el;
+    lose.revert=0;   /* Make QoS = 0 for intermediate pushes */
+    SDL_Event event;
+    while(SDL_WaitEvent(&event)!=0) { 
+      if(event.type!=SDL_MOUSEBUTTONUP) { 
+        // printf(" at %d,%d : %d %d.\n",event.button.x,event.button.y,event.button.button,event.button.state);
+        d=event.button.x-x; /* rel. movement */
+	diff=(double)d/(double)(el->w-scalerbw)*(el->max-el->min);
+	/* Now shall we allow only ticker resolution ?*/
+	diff=round(diff/el->increment)*el->increment;
+	old2_v=v;
+	v=old_v+diff;
+        if(v>el->max) v=el->max;
+        if(v<el->min) v=el->min;
+	element_publish(&lose,v,old2_v);
+      } else {
+        if(verbose) printf("Button was released at %d,%d.\n",event.button.x,event.button.y);
+	d=event.button.x-x; /* rel. movement */
+	diff=(double)d/(double)(el->w-scalerbw)*(el->max-el->min);
+	diff=round(diff/el->increment)*el->increment;
+	v=old_v+diff;
+        break;
+      }
+    }
+
+
+  } else if(b==1) {    /* Click outside knob --> input */
+    return(c_tinnumber(el,win,x,y,b));
+  }
+  element_publish(el,v,old_v);  /* Final publish */
+  return(0);
+}
+int c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  char *def=subscriptions[el->subscription].last_value.pointer;
+  double v=myatof(def);
+  double old_v=v;
+  double old2_v;
+  int d=0;
+  double diff=0;
+  int scalerbh=el->h/10;
+  if(scalerbh<el->w)  scalerbh=el->w;
+  if(scalerbh<8) scalerbh=8;
+  double m=(v-el->min)/(el->max-el->min);
+  if(m<0) m=0;
+  if(m>1) m=1;
+  int y0=(int)((1-m)*(double)(el->h-scalerbh)+0.5);
+    
+  if(b==4) {    /* Scrollwheel up --> Ticker up */
+    v+=el->increment;
+  } else if(b==5) {    /* Scrollwheel down --> Ticker down */
+    v-=el->increment;
+  } else if(y>el->y+y0 && y<el->y+y0+scalerbh) {  
+ 
+    ELEMENT lose=*el;
+    lose.revert=0;   /* Make QoS = 0 for intermediate pushes */
+    SDL_Event event;
+    while(SDL_WaitEvent(&event)!=0) { 
+      if(event.type!=SDL_MOUSEBUTTONUP) { 
+        // printf(" at %d,%d : %d %d.\n",event.button.x,event.button.y,event.button.button,event.button.state);
+        d=-(event.button.y-y); /* rel. movement */
+	diff=(double)d/(double)(el->h-scalerbh)*(el->max-el->min);
+	/* Now shall we allow only ticker resolution ?*/
+	diff=round(diff/el->increment)*el->increment;
+	old2_v=v;
+	v=old_v+diff;
+        if(v>el->max) v=el->max;
+        if(v<el->min) v=el->min;
+	element_publish(&lose,v,old2_v);
+      } else {
+        if(verbose) printf("Button was released at %d,%d.\n",event.button.x,event.button.y);
+	d=-(event.button.y-y); /* rel. movement */
+	diff=(double)d/(double)(el->h-scalerbh)*(el->max-el->min);
+	diff=round(diff/el->increment)*el->increment;
+	v=old_v+diff;
+        break;
+      }
+    }
+
+ 
+    
+  } else if(b==1) {    /* Click outside knob --> input */
+    return(c_tinnumber(el,win,x,y,b));
+  }
+  element_publish(el,v,old_v);  /* Final publish */
   return(0);
 }

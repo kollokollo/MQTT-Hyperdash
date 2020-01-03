@@ -92,3 +92,12 @@ void i_subdash(ELEMENT *el,char *pars);
 void i_tticker(ELEMENT *el,char *pars);
 int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b);
 void d_subscribe(ELEMENT *el,WINDOW *win);
+void i_scaler(ELEMENT *el,char *pars);
+void d_hscaler(ELEMENT *el,WINDOW *win);
+void d_vscaler(ELEMENT *el,WINDOW *win);
+void u_hscaler(ELEMENT *el,WINDOW *win, char *message);
+void u_vscaler(ELEMENT *el,WINDOW *win, char *message);
+int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b);
+

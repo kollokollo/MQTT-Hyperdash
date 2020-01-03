@@ -2,17 +2,18 @@
 # Global settings and default values
 #
 BROKER: URL="tcp://localhost:1883"
-PANEL:  TITLE="Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
+PANEL:  TITLE="Button Test Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
 
 #
 # Static drawing
 #
-TEXT:   X=50 Y=30       H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=32
-FRAME:  X=40 Y=30 W=244 H=60 
+TEXT:   X=20 Y=10 H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=36
+
+BOX: x=20 y=80 w=200 h=120 FGC=$ff00ffff
+TEXT: x=30 y=80 H=20 TEXT="Radio Button Group" FGC=$ffff00ff
 
 # This is a simple button allowing to input the value of a topic
 # Note that when you enter ON or OFF also the states f the buttons change...
-
 
 TOPICINSTRING: TOPIC="TEST" x=110 y=152 w=100 h=30
 TOPICSTRING: X=110 Y=152 W=100 H=30 TOPIC=TEST FGC=$ffffffff BGC=$00ff
@@ -47,6 +48,18 @@ TICKER:      X=48 Y=288 W=34 H=34 TOPIC=TESTT TIC=-0.2 MIN=0 MAX=4
 FRAMETOGGLE: X=48 Y=288 W=34 H=34
 
 TOPICSTRING: X=10 Y=252 W=100 H=30 TOPIC=TESTT FGC=$00ffffff BGC=$00ff
-TOPICINNUMBER:  X=10 Y=252 W=100 H=30 TOPIC=TESTT FORMAT="%g"
+TOPICINNUMBER:  X=10 Y=252 W=100 H=30 TOPIC=TESTT FORMAT="%g" MIN=0 MAX=4 
 FRAMETOGGLE: X=8 Y=250 W=104 H=34
 
+TOPICVMETER: x=250 y=100 w=25 h=140 MIN=0 MAX=4 \
+             AGC=$444444ff BGC=$000000ff FGC=$ffffffff TOPIC=TESTT
+
+TOPICMETER:  x=350 y=100 w=100 h=100 MIN=0 MAX=4 \
+             AGC=$444444ff BGC=$000040ff FGC=$ffffffff TOPIC=TESTT
+
+PBOX:         x=90 y=290 w=220 h=36 BGC=$808080ff FGC=$0
+FRAME:        x=90 y=290 w=220 h=36 
+TOPICHSCALER: x=100 y=300 w=200 h=16 TOPIC=TESTT MIN=0 MAX=4 TIC=0.05 AGC=$0
+FRAME:        x=98 y=298 w=204 h=20 REVERT=1
+
+TOPICVSCALER: x=300 y=30 w=20 h=200 TOPIC=TESTT MIN=0 MAX=4  TIC=0.05
