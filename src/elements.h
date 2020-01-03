@@ -36,6 +36,7 @@ void d_circle(ELEMENT *el,WINDOW *win);
 
 void i_frame(ELEMENT *el,char *pars);
 void d_frame(ELEMENT *el,WINDOW *win);
+int  c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b);
 
 void i_framelabel(ELEMENT *el,char *pars);
 void d_framelabel(ELEMENT *el,WINDOW *win);
@@ -87,17 +88,23 @@ void d_thmeter(ELEMENT *el,WINDOW *win);
 void u_thmeter(ELEMENT *el,WINDOW *win, char *message);
 
 void i_shellcmd(ELEMENT *el,char *pars);
+int  c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y, int b);
+
 void i_subdash(ELEMENT *el,char *pars);
+int  c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b);
 
 void i_tticker(ELEMENT *el,char *pars);
-int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int  c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b);
 void d_subscribe(ELEMENT *el,WINDOW *win);
 void i_scaler(ELEMENT *el,char *pars);
 void d_hscaler(ELEMENT *el,WINDOW *win);
 void d_vscaler(ELEMENT *el,WINDOW *win);
 void u_hscaler(ELEMENT *el,WINDOW *win, char *message);
 void u_vscaler(ELEMENT *el,WINDOW *win, char *message);
-int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
-int c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
-int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int  c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int  c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int  c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b);
+void i_plot(ELEMENT *el,char *pars);
+void d_plot(ELEMENT *el,WINDOW *win);
+void u_plot(ELEMENT *el,WINDOW *win, char *message);
 

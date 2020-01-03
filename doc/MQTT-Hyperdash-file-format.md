@@ -1,6 +1,6 @@
 ## The .dash file format
 
---- for MQTT Hyperdash ---
+for MQTT Hyperdash V.1.00 (c) by Markus Hoffmann
 
 
 MQTT Hyperdash runs so-called dash-files. Dash-files are simple text files, 
@@ -30,45 +30,50 @@ Empty lines will be ignored.
 Each dash file must contain excactly one "PANEL" element and 
 one "BROKER" element. 
 
+
+### Element types
+
 Currently there exist following element types:
 
 
-|Element       |   Recognized keyvalues                      |
-|--------------|:-------------------------------------------:|
-|PANEL         | W H TITLE FGC BGC                           |
-|BROKER        | URL USER PASSWD                             |
-|BOX           | X Y W H FGC                                 |
-|PBOX          | X Y W H FGC BGC                             |
-|CIRCLE        | X Y W H FGC                                 |
-|PCIRCLE       | X Y W H FGC BGC                             |
-|LINE          | X Y X2 Y2 FGC                               |
-|FRAME         | X Y W H REVERT                              |
-|FRAMETOGGLE   | X Y W H                                     |
-|BITMAP        | X Y BITMAP FGC                              | 
-|ICON          | X Y ICON                                    |
-|TEXT          | X Y H TEXT FGC FONT FONTSIZE                |
-|TOPICSTRING   | X Y H TOPIC FGC BGC FONT FONTSIZE           |
-|TOPICNUMBER   | X Y H TOPIC FGC BGC FONT FONTSIZE FORMAT    |
-|HBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX           |
-|VBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX           |
-|TOPICMETER    | X Y W H TOPIC FGC BGC AGC MIN MAX AMIN AMAX |
-|TOPICVMETER   | X Y W H TOPIC FGC BGC AGC MIN MAX           |
-|TOPICHMETER   | X Y W H TOPIC FGC BGC AGC MIN MAX           |
-|TEXTLABEL     | X Y H TOPIC BGC FONT FONTSIZE TEXT[n]       |
-|BITMAPLABEL   | X Y TOPIC BGC BITMAP[n]                     |
-|FRAMELABEL    | X Y W H TOPIC MATCH                         |
-|SHELLCMD      | X Y W H CMD                                 |
-|DASH          | X Y W H DASH                                |
-|TOPICINAREA   | X Y W H TOPIC VALUE QOS                     |
-|TOPICINSTRING | X Y W H TOPIC QOS                           |
-|TOPICINNUMBER | X Y W H TOPIC FORMAT MIN MAX QOS            |
-|TOPICHSCALER  | X Y W H TOPIC FORMAT MIN MAX QOS            |
-|TOPICVSCALER  | X Y W H TOPIC FORMAT MIN MAX QOS            |
-|TICKER        | X Y W H TOPIC TIC FORMAT MIN MAX QOS        |
+|Element       |   Recognized keyvalues                        |
+|--------------|:----------------------------------------------|
+|PANEL         | W H TITLE FGC BGC                             |
+|BROKER        | URL USER PASSWD                               |
+|BOX           | X Y W H FGC                                   |
+|PBOX          | X Y W H FGC BGC                               |
+|CIRCLE        | X Y W H FGC                                   |
+|PCIRCLE       | X Y W H FGC BGC                               |
+|LINE          | X Y X2 Y2 FGC                                 |
+|FRAME         | X Y W H REVERT                                |
+|FRAMETOGGLE   | X Y W H                                       |
+|BITMAP        | X Y BITMAP FGC                                | 
+|ICON          | X Y ICON                                      |
+|TEXT          | X Y H TEXT FGC FONT FONTSIZE                  |
+|TOPICSTRING   | X Y H TOPIC FGC BGC FONT FONTSIZE                         |
+|TOPICNUMBER   | X Y H TOPIC FGC BGC FONT FONTSIZE FORMAT                  |
+|HBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX                         |
+|VBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX                         |
+|METER         | X Y W H TOPIC FGC BGC AGC MIN MAX AMIN AMAX 	           |
+|VMETER        | X Y W H TOPIC FGC BGC AGC MIN MAX		           |
+|HMETER        | X Y W H TOPIC FGC BGC AGC MIN MAX		           |
+|TEXTLABEL     | X Y H TOPIC BGC FONT FONTSIZE TEXT[n]                     |
+|BITMAPLABEL   | X Y TOPIC BGC BITMAP[n]                                   |
+|FRAMELABEL    | X Y W H TOPIC MATCH                                       |
+|SHELLCMD      | X Y W H CMD                                               |
+|DASH          | X Y W H DASH                                              |
+|TOPICINAREA   | X Y W H TOPIC VALUE QOS                                   |
+|TOPICINSTRING | X Y W H TOPIC QOS                                         |
+|TOPICINNUMBER | X Y W H TOPIC FORMAT MIN MAX QOS                          |
+|HSCALER       | X Y W H TOPIC FORMAT MIN MAX TIC QOS BGC FGC AGC          |
+|VSCALER       | X Y W H TOPIC FORMAT MIN MAX TIC QOS BGC FGC AGC          |
+|TICKER        | X Y W H TOPIC FORMAT MIN MAX TIC QOS                      |
+|PLOT          | X Y W H TOPIC TYPE N OFFSET MIN MAX AMIN AMAX BGC FGC AGC |
 
 
-0. Common keyvalue formats
-==========================
+### Common keyvalue formats
+
+<pre>
 * X=<pixels> Horizontal position of upper right corner of the element in pixels
 * Y=<pixels> Vertical position of upper right corner of the element in pixels
 * X2=<pixels> Horizontal position of the endpoint of a line in pixel coordinates
@@ -103,10 +108,13 @@ Currently there exist following element types:
 * VALUE=<String> A String to apply to a topic.
 * QOS=<0,1 or 2> Qiality of service for publication to the broker. Defaults to 0.
 * TIC=<number> An increment used by the ticker. The increment can aswell be negative.
+* TYPE=<number> The type of the plot.
+* OFFSET=<number> ignore the first n numbers of the toic content.
+* N=<number> use only n numbers of the toic content.
+</pre>
 
+### Static elements 
 
-1. Static elements 
-==================
 Static elements are just drawing primitives. They do noch change with topics 
 contents.
 
@@ -151,8 +159,7 @@ Draws a monochrome bitmap image using the color specified. Bitmaps are drawn wit
 background, so one can 
 draw multiple bitmaps one after another to combine more complicated graphics.
 
-2. Dynamic output Elements
-==========================
+### Dynamic output Elements
 
 Dynamic elements are controlled by the content of a topic. They change appearance when the topic content
 changes. But they cannot take user input. They are used to display data. 
@@ -170,9 +177,17 @@ TopicFrame:  X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MATCH=<content>
 
 Draws a Frame, and if the topics content matches MATCH-content, it is drawn in reversed state. 
 
-TopicMeter: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MIN=<value> MAX=<value>
+#### Meter: X= Y= W= H= TOPIC= MIN= MAX= AMIN= AMAX=
 
-Draws a meter using the topics content interpreted as a value between min and max. 
+Draws a round meter using the topics content interpreted as a value between min and max. 
+
+#### HMeter: X= Y= W= H= TOPIC= MIN= MAX=
+
+Draws a horizontal meter using the topics content interpreted as a value between min and max. 
+
+#### VMeter: X= Y= W= H= TOPIC= MIN= MAX=
+
+Draws a vertical  meter using the topics content interpreted as a value between min and max. 
 
 TopicVBar: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MIN=<value> MAX=<value> FGC=<colorspec> BGC=<colorspec>
 
@@ -196,51 +211,70 @@ According to the content of the topic, which is interpreted as integer value (0,
 corresponding monochrome bitmap with the given color is displayed. 
 This way status indicators can be implemented. The whole set of bitmaps all use the same background color.
 
-3. Dynamic input Elements
-=========================
+#### Plot: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> 
+The topic content is expected to be a comma separated or space separated list of
+number values. If OFFSET is specified, the first offset numbers will be ignored. 
+If N is specified, only at maximum n values are used. 
+These are then plotted into a graph. With TYPE you specify the
+type of graph produced. e.g. Type=0 only plots dots, TYPE=1 impulses, 
+TYPE=2 histogram lines, TYPE=3 normal lines, and so on. 
+The horizontal scaling can be influenced using AMIN and AMAX, the vertical
+scaling is controlled by MIN and MAX. You can specify a background color (BGC), a 
+foreground color (FGC) and a color for frame and axis (AGC). 
+
+### Dynamic input Elements
 
 They are like the dynamic output elements with the extra feature that they allow user input.
 You can enter numbers, change states etc... 
 
-TopicInString: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> 
+#### TopicInString: X= Y= W= H= TOPIC= [QOS=]
 
 Clicking in this area,  
 the user can enter a string which is then published to the topic using QOS2.
 
-TopicInNumber: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MIN=<value> MAX=<value> USING=<formatter>
+#### TopicInNumber: X= Y= W= H= TOPIC= MIN= MAX= FORMAT= [TIC=] [QOS=]
 
 Clicking in this area,  
 the user can enter a number which is then published to the topic using QOS2.
+The range of the entered number is checked against MIN and MAX and clipped
+if necessary. The topic contend is finally formatted using the FORMAT pattern.
 
-TopicInNumberVScaler: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic>  MIN=<value> MAX=<value> USING=<formatter> EPS=<step>
+#### VScaler: X= Y= W= H= TOPIC= MIN= MAX= TIC= FORMAT= [QOS=] [FGC BGC AGC]
 
-Clicking in this area,  
-the user can slide a vertical scaler to produce a number between min and max 
-which is then published to the topic using QOS2.
-The eps value can specify the smalles change which can be applies by Up and Down tickers. 
+This element draws a vertical scaler. A foreground color (FGC) a 
+background color (BGC) as well as a frame color (AGC) can be specified. 
+The user can slide the scaler to change the number of the topics content. 
+The user can also click into the scalers background, and a dialog to enter
+the number will be offered. 
+The range of the entered number is checked against MIN and MAX and clipped
+if necessary. The topic content is finally formatted using the FORMAT pattern.
+During sliding, the values are published to the TOPIC at each move of the mouse
+if the results produced are bigger than TIC. During sliding the values are 
+always published with QOS=0. Only the final value (after releasing the sliders
+knob) will be published with the Quality of Sevice specified. 
 
-TopicInNumberHScaler: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic>  MIN=<value> MAX=<value> USING=<formatter> EPS=<step>
+#### HScaler:  X= Y= W= H= TOPIC= MIN= MAX= TIC= FORMAT= [QOS=] [FGC BGC AGC]
 
-Clicking in this area,  
-the user can slide a horizontal scaler to produce a number between min and max 
-which is then published to the topic using QOS2.
-The eps value can specify the smalles change which can be applies by Up and Down tickers. 
-
-
-
-TopicInArea: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> HIT=<content>
-
-If the user clicks in the area, the content <content> will be published to the topic using QOS2.
-
-TopicInFrame: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> HIT=<content>
-
-If the user clicks in the area, the content <content> will be published to the topic using QOS2.
-Also a FrameToggle will apply. If the content matches HIT, the Frame stays reversed.
+This element draws a horizontal scaler. A foreground color (FGC) a 
+background color (BGC) as well as a frame color (AGC) can be specified. 
+The user can slide the scaler to change the number of the topics content. 
+The user can also click into the scalers background, and a dialog to enter
+the number will be offered. 
+The range of the entered number is checked against MIN and MAX and clipped
+if necessary. The topic content is finally formatted using the FORMAT pattern.
+During sliding, the values are published to the TOPIC at each move of the mouse
+if the results produced are bigger than TIC. During sliding the values are 
+always published with QOS=0. Only the final value (after releasing the sliders
+knob) will be published with the Quality of Sevice specified. 
 
 
+#### TopicInArea: X= Y= W= H= TOPIC= VALUE= [QOS=] 
 
-4. Elements for Application control
-===================================
+If the user clicks in the area, the content VALUE will be published to the 
+TOPIC with the specified Quality of Service (QOS).
+
+
+### Elements for Application control
 
 ApplicationClickArea: X=<x> Y=<y> W=<w> H=<h> CMD=<shell command>
 

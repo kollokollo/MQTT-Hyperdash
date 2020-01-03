@@ -8,11 +8,13 @@
  
  
  /*TODO: 
-   2. Scaler elements HSCALER, VSCALER, MIN, MAX, RANGE, TIC
+   1. TOPICINNUMBER: round to TIC value. 
+                     allow to set the QoS in the input dialog.
+   2. Scaler elements
    right-click opens a box where one can choose different ranges
    (full, medium (30%), fine (10%)) and where one can set the value 
    explicitly. Also the arrow keys should be active for tics.
-   3. Plot element.
+   3. Plot element --> different plot types...
 
   */
 #include <stdio.h>
@@ -175,6 +177,30 @@ void i_meter(ELEMENT *el,char *pars) {
   el->amin=myatof(key_value(pars,"AMIN","-225"));
   el->amax=myatof(key_value(pars,"AMAX","45"));
 }
+void i_plot(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","64"));
+  el->h=atoi(key_value(pars,"H","32"));
+  
+  el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
+  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
+  el->agc=(long)myatof(key_value(pars,"AGC","$ffffffff"));
+  /* MIN MAX */
+  el->min=myatof(key_value(pars,"MIN","-1"));
+  el->max=myatof(key_value(pars,"MAX","1"));
+  el->amin=myatof(key_value(pars,"AMIN","-1"));
+  el->amax=myatof(key_value(pars,"AMAX","-1"));
+  el->x2=myatof(key_value(pars,"N","-1"));
+  el->y2=myatof(key_value(pars,"OFFSET","0"));
+  el->revert=myatof(key_value(pars,"TYPE","0"));
+  if(el->amin<0 || el->amax<0) {
+    el->amin=0;
+    el->amax=el->w;
+  }
+  if(el->x2<0) el->x2=el->w;
+}
+
+
+
 void i_textlabel(ELEMENT *el,char *pars) {
   int i;
   char p[256];
@@ -434,6 +460,10 @@ void d_tnumber(ELEMENT *el,WINDOW *win) {
   put_font_text(win->display,el->fontnr,el->format,el->x,el->y,el->fgc,el->h);
   ELEMENT_SUBSCRIBE();
 }
+void d_plot(ELEMENT *el,WINDOW *win) {
+  u_plot(el,win,"");
+  ELEMENT_SUBSCRIBE();
+}
 
 
 /* Update drawing functions for all dynamic elements....*/
@@ -577,9 +607,61 @@ void u_vscaler(ELEMENT *el,WINDOW *win, char *message) {
     e.w=el->w-6;
     e.h=scalerbh/3;
     d_frame(&e,win);
-
   }
 }
+
+void u_plot(ELEMENT *el,WINDOW *win, char *message) {
+  boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
+  rectangleColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->agc);
+  if(message && strlen(message)) {
+    char *p1=message;
+    char *p2;
+    int i=0;
+    double v;
+    int x,y=el->y+el->h,ox=0,oy=el->y+el->h;
+//    int data[el->x2];
+//    printf("Message: <%s>\n",message);
+    while(*p1) {
+      while(*p1 && isspace(*p1)) p1++;
+      if(*p1==0) break;
+      p2=p1;
+      while(*p2 && !isspace(*p2)) p2++;
+      if(*p2) *p2++=0;
+      if(i>=el->y2+el->x2) break;
+      x=i-el->y2;
+      if(x>=0) { /* offset */
+	x=(int)round((double)x/(el->amax-el->amin)*(double)el->w);
+	if(x>=0 && x<=el->w) {
+          v=myatof(p1);
+	  y=el->y+el->h-v/(el->max-el->min)*(double)el->h;
+	  if(y<el->y) y=el->y;
+	  if(y>el->y+el->h) y=el->y+el->h;
+	
+	  if((el->revert&0xf)==1) {
+            lineColor(win->display,el->x+x,el->y+el->h,el->x+x,y,el->fgc);
+	  } else if((el->revert&0xf)==2) {
+	    lineColor(win->display,el->x+ox,oy,el->x+ox,y,el->fgc);
+	    lineColor(win->display,el->x+ox,y,el->x+x,y,el->fgc);
+          } else if((el->revert&0xf)==3){
+	    lineColor(win->display,el->x+ox,oy,el->x+x,y,el->fgc);
+	  }
+	  if((el->revert&0x70)==0x40) circleColor(win->display,el->x+x,y,2,el->fgc);
+          else if((el->revert&0x70)==0x0) lineColor(win->display,el->x+x,y,el->x+x,y,el->fgc);
+          if((el->revert&0x10)==0x10) lineColor(win->display,el->x+x-1,y,el->x+x+1,y,el->fgc);
+          if((el->revert&0x20)==0x20) lineColor(win->display,el->x+x,y-1,el->x+x,y+1,el->fgc);
+        }
+      }
+      ox=x;
+      oy=y;
+      i++;
+      p1=p2;
+    }
+  }
+}
+
+
+
+
 
 /* User Input (click) functions for all elements....*/
 
@@ -610,7 +692,7 @@ int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 //    printf("last value is: <%s> : %g\n",def,v);
     v+=el->increment;
     element_publish(el,v,old_v);  /* Final publish */
-   // return(1); Do not consume it. There my be other action.... 
+   // return(1); Do not consume it. There may be other action.... 
   }
   return(0);
 }
@@ -630,7 +712,6 @@ int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(m<0) m=0;
   if(m>1) m=1;
   int x0=(int)(m*(double)(el->w-scalerbw)+0.5);
-
   if(b==4) {           /* Scrollwheel up --> Ticker up */
     v+=el->increment;
   } else if(b==5) {    /* Scrollwheel down --> Ticker down */
@@ -660,8 +741,6 @@ int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
         break;
       }
     }
-
-
   } else if(b==1) {    /* Click outside knob --> input */
     return(c_tinnumber(el,win,x,y,b));
   }
@@ -687,8 +766,7 @@ int c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     v+=el->increment;
   } else if(b==5) {    /* Scrollwheel down --> Ticker down */
     v-=el->increment;
-  } else if(y>el->y+y0 && y<el->y+y0+scalerbh) {  
- 
+  } else if(y>el->y+y0 && y<el->y+y0+scalerbh) { 
     ELEMENT lose=*el;
     lose.revert=0;   /* Make QoS = 0 for intermediate pushes */
     SDL_Event event;
@@ -713,12 +791,42 @@ int c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
         break;
       }
     }
-
- 
-    
   } else if(b==1) {    /* Click outside knob --> input */
     return(c_tinnumber(el,win,x,y,b));
   }
   element_publish(el,v,old_v);  /* Final publish */
+  return(0);
+}
+int c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    el->revert=1;
+    d_frame(el,win);
+    SDL_Flip(win->display);
+    /* Wait for mouse releasse*/
+    waitmouse(win);
+    el->revert=0;
+    d_frame(el,win);
+    SDL_Flip(win->display);
+   // return(1); Do not consume it. There my be other action.... 
+  }
+  return(0);
+}
+int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  char buf[256];
+  if(b==1) {
+    if(exist(el->text))  sprintf(buf,"hyperdash %s.dash &",el->text);
+    else sprintf(buf,"hyperdash %s/%s.dash &",dashboarddir,el->text);
+    printf("Dash start: <%s>\n",el->text);
+    if(system(buf)==-1) printf("Error: system\n");  
+    return(1);
+  }
+  return(0);
+}
+int c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    printf("Shell cmd : <%s>\n",el->text);
+    if(system(el->text)==-1) printf("Error: system\n");
+    return(1);
+  }
   return(0);
 }

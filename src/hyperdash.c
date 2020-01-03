@@ -316,14 +316,6 @@ message_dialog("MQTT Hyperdash Info","MQTT Hyperdash Version 1.00\nby Markus Hof
   }
   return(0);
 }
-int c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y, int b) {
-  if(b==1) {
-    printf("Shell cmd : <%s>\n",el->text);
-    if(system(el->text)==-1) printf("Error: system\n");
-    return(1);
-  }
-  return(0);
-}
 int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
     printf("input string for topic <%s>\n",el->topic);
@@ -375,69 +367,65 @@ int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   return(0);
 }
 
-int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
-  char buf[256];
-  if(b==1) {
-    if(exist(el->text))  sprintf(buf,"hyperdash %s.dash &",el->text);
-    else sprintf(buf,"hyperdash %s/%s.dash &",dashboarddir,el->text);
-    printf("Dash start: <%s>\n",el->text);
-    if(system(buf)==-1) printf("Error: system\n");  
-    return(1);
-  }
-  return(0);
-}
-int c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b) {
-  if(b==1) {
-    el->revert=1;
-    d_frame(el,win);
-    SDL_Flip(win->display);
-    /* Wait for mouse releasse*/
-    waitmouse(win);
-    el->revert=0;
-    d_frame(el,win);
-    SDL_Flip(win->display);
-   // return(1); Do not consume it. There my be other action.... 
-  }
-  return(0);
-}
 
-/* Here all element types are defined. */
+/* Element definitions for all element types. 
+   You cann add new types or define aliases, if you want, but
+   keep in mind that this should stay simple and too many 
+   element types slows the dashboards down. 
 
+Each element can have the flags:
+  EL_VISIBLE  -- The element is visible, something needs to be drawn
+  EL_DYNAMIC  -- The element updates with changing topic content
+  EL_INPUT    -- The element takes user input (via mouse or keyboard)
+  EL_BROKER   -- The element is a broker element
+  EL_PANEL    -- The element is a panel element
+  
+And you must provide following functions for each element: 
 
+  void i_element(ELEMENT *,char *)                  -- an initializing function
+  void d_element(ELEMENT *,WINDOW *)                -- a drawing function
+  void u_element(ELEMENT *,WINDOW *, char *)        -- an update function
+  int  c_element(ELEMENT *,WINDOW *,int, int, int)  -- a click function
+  
+  */
 
 const ELDEF eltyps[]= {
-// {EL_IGNORE,"#",NULL,NULL,NULL},
- {EL_BROKER,"BROKER",i_broker,NULL,NULL},
- {EL_VISIBLE,"BOX",i_box,d_box,NULL},
- {EL_VISIBLE,"CIRCLE",i_box,d_circle,NULL},
- {EL_VISIBLE,"LINE",i_line,d_line,NULL},
- {EL_PANEL|EL_VISIBLE|EL_INPUT, "PANEL",i_panel,d_panel,NULL,c_panel},
- {EL_VISIBLE,"PBOX",i_pbox,d_pbox,NULL},
- {EL_VISIBLE,"PCIRCLE",i_pbox,d_pcircle,NULL},
- {EL_VISIBLE,"FRAME",i_frame,d_frame,NULL},
+ {EL_BROKER,                     "BROKER", i_broker,NULL,NULL},
+ {EL_VISIBLE,                    "BOX",    i_box,d_box,NULL},
+ {EL_VISIBLE,                    "CIRCLE", i_box,d_circle,NULL},
+ {EL_VISIBLE,                    "LINE",   i_line,d_line,NULL},
+ {EL_PANEL|EL_VISIBLE|EL_INPUT,  "PANEL",  i_panel,d_panel,NULL,c_panel},
+ {EL_VISIBLE,                    "PBOX",   i_pbox,d_pbox,NULL},
+ {EL_VISIBLE,                    "PCIRCLE",i_pbox,d_pcircle,NULL},
+ {EL_VISIBLE,                    "FRAME",  i_frame,d_frame,NULL},
  {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",i_frame,d_frame,NULL,c_frame},
- {EL_VISIBLE,"BITMAP",i_bitmap,d_bitmap,NULL},
- {EL_VISIBLE,"ICON",i_icon,d_icon,NULL},
- {EL_VISIBLE,"TEXT",i_string,d_string,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"TOPICSTRING",i_tstring,d_tstring,u_tstring},
- {EL_VISIBLE|EL_DYNAMIC,"TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
- {EL_VISIBLE|EL_DYNAMIC,"HBAR",i_bar,d_hbar,u_hbar,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"VBAR",i_bar,d_vbar,u_vbar,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"TOPICMETER",i_meter,d_meter,u_meter,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"TOPICVMETER",i_bar,d_tvmeter,u_tvmeter,NULL}, 
- {EL_VISIBLE|EL_DYNAMIC,"TOPICHMETER",i_bar,d_thmeter,u_thmeter,NULL}, 
- {EL_VISIBLE|EL_DYNAMIC,"TEXTLABEL",i_textlabel,d_textlabel,u_textlabel,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"BITMAPLABEL",i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL},
- {EL_VISIBLE|EL_DYNAMIC,"FRAMELABEL",i_framelabel,d_framelabel,u_framelabel,NULL},
- {EL_INPUT,"SHELLCMD",i_shellcmd,NULL,NULL,c_shellcmd},
- {EL_INPUT,"DASH"    ,i_subdash ,NULL,NULL,c_subdash},
- {EL_INPUT|EL_DYNAMIC,"TOPICINAREA"    ,i_tinarea ,NULL,NULL,c_tinarea},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINSTRING"  ,i_tinstring ,d_subscribe,NULL,c_tinstring},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER"  ,i_tinnumber ,d_subscribe,NULL,c_tinnumber},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICHSCALER"  ,i_scaler ,d_hscaler,u_hscaler,c_hscaler},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICVSCALER"  ,i_scaler ,d_vscaler,u_vscaler,c_vscaler},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER"        ,i_tticker ,d_subscribe,NULL,c_tticker},
- {EL_VISIBLE|EL_DYNAMIC,"PLOT",i_meter,d_meter,u_meter,NULL},
+ {EL_VISIBLE,                    "BITMAP", i_bitmap,d_bitmap,NULL},
+ {EL_VISIBLE,                    "ICON",   i_icon,d_icon,NULL},
+ {EL_VISIBLE,                    "TEXT",   i_string,d_string,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICSTRING",i_tstring,d_tstring,u_tstring},
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
+ {EL_VISIBLE|EL_DYNAMIC,         "HBAR",   i_bar,d_hbar,u_hbar,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,         "VBAR",         i_bar,d_vbar,u_vbar,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICMETER"   ,i_meter,d_meter,u_meter,NULL}, /* obsolete */
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICVMETER"  ,i_bar,d_tvmeter,u_tvmeter,NULL},  /* obsolete */
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICHMETER"  ,i_bar,d_thmeter,u_thmeter,NULL},  /* obsolete */
+ {EL_VISIBLE|EL_DYNAMIC,         "METER"        ,i_meter,d_meter,u_meter,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,         "VMETER"       ,i_bar,d_tvmeter,u_tvmeter,NULL}, 
+ {EL_VISIBLE|EL_DYNAMIC,         "HMETER"       ,i_bar,d_thmeter,u_thmeter,NULL}, 
+ {EL_VISIBLE|EL_DYNAMIC,         "TEXTLABEL"    ,i_textlabel,d_textlabel,u_textlabel,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,         "BITMAPLABEL"  ,i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL},
+ {EL_VISIBLE|EL_DYNAMIC,         "FRAMELABEL"   ,i_framelabel,d_framelabel,u_framelabel,NULL},
+ {EL_INPUT,                      "SHELLCMD"     ,i_shellcmd,NULL,NULL,c_shellcmd},
+ {EL_INPUT,                      "DASH"         ,i_subdash ,NULL,NULL,c_subdash},
+ {EL_INPUT|EL_DYNAMIC,           "TOPICINAREA",  i_tinarea ,NULL,NULL,c_tinarea},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINSTRING",i_tinstring,d_subscribe,NULL,     c_tinstring},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER",i_tinnumber,d_subscribe,NULL,     c_tinnumber},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICHSCALER", i_scaler,   d_hscaler,  u_hscaler,c_hscaler}, /* obsolete */
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICVSCALER", i_scaler,   d_vscaler,  u_vscaler,c_vscaler}, /* obsolete */
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"HSCALER",      i_scaler,   d_hscaler,  u_hscaler,c_hscaler},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"VSCALER",      i_scaler,   d_vscaler,  u_vscaler,c_vscaler},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER",       i_tticker,  d_subscribe,NULL,     c_tticker},
+ {EL_VISIBLE|EL_DYNAMIC,         "PLOT",         i_plot,     d_plot,     u_plot,   NULL},
 
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
