@@ -22,6 +22,10 @@ implementing them there is a simple API.
 If you are a programmer with C skills, you are welcome to debug and improve the 
 code.
 
+If you know how to make a package for WINDOWS including all the necessary 
+dynamic object files of SDL and gtk, please help! It would be really cool 
+if we could run hyperdash on WINDOWS. 
+
 If you like to design the dashboards itself, please feel free to donate 
 your .dash file, so we can include them in our example collection. 
 
@@ -32,9 +36,9 @@ bitmaps and color icons.
 More things left to do:
 =======================
 - test the thing and find more bugs,
-- Optimize a bit more, improve performance,
-- The WINDOWS-Version needs more work,
-- work on the sound system,
+- optimize a bit more, improve performance,
+- the WINDOWS-version needs more work,
+- work on the sound system, invent a cool SOUND element,
 - documentation needs more work,
 - translate the user manual into other languares (german, french,...)
 - port it to apple ipad/iphone,

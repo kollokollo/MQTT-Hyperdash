@@ -37,7 +37,7 @@ from topic lists so one has a good starting point to work with.
 
 hyperdash-autocreate will do this job (in future). 
 
-The project is still in alpha phase. Please see the CONTRIBUTING.md how you can
+The project is still in beta phase. Please see the CONTRIBUTING.md how you can
 help to improve the project. 
 
 I had the impression, an application like this was still missing in 2019. 

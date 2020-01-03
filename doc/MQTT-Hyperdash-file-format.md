@@ -50,7 +50,7 @@ Currently there exist following element types:
 |BITMAP        | X Y BITMAP FGC                                | 
 |ICON          | X Y ICON                                      |
 |TEXT          | X Y H TEXT FGC FONT FONTSIZE                  |
-|TOPICSTRING   | X Y H TOPIC FGC BGC FONT FONTSIZE                         |
+|TOPICSTRING   | X Y W H TOPIC FGC BGC FONT FONTSIZE                       |
 |TOPICNUMBER   | X Y H TOPIC FGC BGC FONT FONTSIZE FORMAT                  |
 |HBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX                         |
 |VBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX                         |
@@ -118,64 +118,101 @@ Currently there exist following element types:
 Static elements are just drawing primitives. They do noch change with topics 
 contents.
 
-PANEL: TITLE=<title> W=<width in pixels> H=<height in pixels> FGC=<colorspec> BGC=<colorspec>
+#### Panel: TITLE= W= H= [FGC= BGC=]
 
 This sets the title of the window/screen and specifies its fixed size in pixels. 
-Also a default foreground and background color can be specified. 
+Also a default foreground (FGC) and background color (BGC) can be specified. 
+Each dash file must contain exactly one panel element. 
 
-BROKER: URL=<broker url> USER=<username> PASSWD=<password>
+#### Broker: URL= [USER= PASSWD=]
 
 This sets the mqtt broker url, and also username and password if required. 
+Each dash file must contain exactly one broker element. 
 
-LINE: X=<x-coordinate> Y=<y-coordinate> X2=<x-coordinate> Y2=<y-coordinate> FGC=<colorspec> LINEWIDTH=<line width in pixels>
+#### Line: X= Y= X2= Y2= FGC= LINEWIDTH=
 
-Draws a simple line of given width in given color. 
+Draws a simple line of given width in given color from (x,y) to (x2,y2). 
 
-TEXT: X=<x-coordinate> Y=<y-coordinate> H=<height> FGC=<colorspec> FGC=<colorspec> TEXT=<the text> FONT=<fontspec> FONTSIZE=<size>
+#### Text: X= Y= [H=] FGC= TEXT= FONT= FONTSIZE=
 
 Draws a text at coordinates (X,Y) in given color with a given font. Fonts are
-true type fonts (.ttf). The size (height) if the Charackters can be specified with
-FONTSIZE. H defines the textbox height. The text will be vertically centered to this height.
+true type fonts (.ttf). The size (height) of the charackters can be specified 
+with FONTSIZE. H defines the textbox height. The text will be vertically 
+centered to this height. If H is not specified this defaults to the Font height 
+of the specified font. If the specified font cannot be found or loaded the 
+font defaults to an ugly 8x8 pixel monospaced font. If not specified, the 
+FONTSIZE defaults to 16. The text is transparent and has no background. This 
+way, you can stuff multiple charackters or texts on top of a bitmap or other
+graphical elements. 
 
-BOX: X=<x-coordinate> Y=<y-coordinate>  W=<width in pixels> H=<height in pixels> FGC=<colorspec> LINEWIDTH=<line width in pixels>
+#### Box: X= Y=  W= H= FGC= [LINEWIDTH=]
 
-Draws a simple box. 
+Draws a simple box with the given foreground color. 
 
-PBOX:  X=<x-coordinate> Y=<y-coordinate>  W=<width in pixels> H=<height in pixels> FGC=<colorspec> BGC=<colorspec> LINEWIDTH=<line width in pixels>
+#### Circle: X= Y=  W= H= FGC= [LINEWIDTH=]
 
-Draws a filled box. 
+Draws a simple ellipse fitting in the box X,Y,W,H with the given 
+foreground color. 
 
-FRAME: X=<x-coordinate> Y=<y-coordinate>  W=<width in pixels> H=<height in pixels>  REVERT=<0/1>
+#### PBox:  X= Y=  W= H= FGC= BGC= [LINEWIDTH=]
 
-Draws a shadowed frame.
+Draws a filled box. Fill color is BGC, border color is FGC. 
 
-ICON: X=<x-coordinate> Y=<y-coordinate>  NAME=<icon name>
+#### PCircle:  X= Y=  W= H= FGC=  BGC= [LINEWIDTH=]
 
-Draws an image, usually a png-file.
+Draws a filled ellipse fitting in the box X,Y,W,H with the given 
+foreground color. Fill color is BGC. 
 
-BITMAP: X=<x-coordinate> Y=<y-coordinate>  NAME=<bitmap name> FGC=<colorspec>
 
-Draws a monochrome bitmap image using the color specified. Bitmaps are drawn with transparent
+#### Frame: X= Y= W= H= [REVERT=]
+
+Draws a shadowed frame. Revert can be 0 or 1. If REVERT=1, the frame is 
+drawn in reverted state. This element can be used do draw buttons or other
+stylistic 3D effects around other elements. 
+
+
+#### Icon: X= Y= ICON=
+
+Draws an image, usually a png-file, at position x and y. The file name must be
+specified with ICON. The file is searched for in the iconpath. 
+
+#### Bitmap: X= Y= BITMAP= FGC=
+
+Draws a monochrome bitmap image using the FGC color specified. 
+Bitmaps are drawn with transparent
 background, so one can 
-draw multiple bitmaps one after another to combine more complicated graphics.
+draw multiple bitmaps on top of another to combine more complicated graphics.
+The file name must be
+specified with BITMAP. The file is searched for in the bitmappath.
 
 ### Dynamic output Elements
 
-Dynamic elements are controlled by the content of a topic. They change appearance when the topic content
+Dynamic elements are controlled by the content of a topic. They change 
+their appearance when the topic content
 changes. But they cannot take user input. They are used to display data. 
 
-TopicString: X=<x> Y=<y> TOPIC=<topic> FGC=<colorspec> BGC=<colorspec> FONT=<fontspec>
+#### TopicString: X= Y= W= [H=] TOPIC= FGC= BGC= FONT= FONTSIZE=
 
-Displays the topic messages as they are. 
+Displays the topic messages as they arrive using the specified FONT. When new
+data arrives, the old text need to be cleared, therefor a width (and Height) of 
+the box to be cleared with background color (BGC) need to be specified. 
+If H is ommitted, the font height is used. 
 
-TopicNumber: X=<x> Y=<y> TOPIC=<topic> FGC=<colorspec> BGC=<colorspec> FONT=<fontspec> USING=<formatter>
+#### TopicNumber: X= Y= [W=] [H=] TOPIC= FGC= BGC= FONT= FORMAT=
 
-Evaluates the topic message as a number and then uses formatter to display them. The Formatter should
-be a string also used in BASIC PRINT USING statements. 
+Evaluates the topic message as a number and then uses FORMAT to display them. 
+The Formatter should
+either be a string also used in BASIC PRINT USING statements (also EXCEL) or 
+a C style printf() format string. When new
+data arrives, the old text need to be cleared, therefor a width (and Height) of 
+the box to be cleared with background color (BGC) need to be specified. 
+If H is ommitted, the font height is used. If W is ommitted, the size of the
+FORMAT string is used.  
 
-TopicFrame:  X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MATCH=<content> 
+#### FrameLabel:  X= Y= W= H= TOPIC= MATCH= 
 
-Draws a Frame, and if the topics content matches MATCH-content, it is drawn in reversed state. 
+Draws a Frame, and if the topics content matches MATCH, it is drawn in 
+reversed state, otherwise in normal state. 
 
 #### Meter: X= Y= W= H= TOPIC= MIN= MAX= AMIN= AMAX=
 
@@ -189,27 +226,36 @@ Draws a horizontal meter using the topics content interpreted as a value between
 
 Draws a vertical  meter using the topics content interpreted as a value between min and max. 
 
-TopicVBar: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MIN=<value> MAX=<value> FGC=<colorspec> BGC=<colorspec>
+#### VBar: X= Y= W= H= TOPIC= MIN= MAX= FGC= BGC= AGC=
 
-Draws a vertial bar, which is filled by the percentage of the topics content interpreted as a value
-between min and max. 
+Draws a vertial bar, which is filled by the percentage of the topics content 
+interpreted as a value between min and max. 
 
-TopicHBar: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> MIN=<value> MAX=<value> FGC=<colorspec> BGC=<colorspec>
+#### HBar: X= Y= W= H= TOPIC= MIN= MAX= FGC= BGC= AGC=
 
 Draws a horizontal bar, which is filled by the percentage of the topics content interpreted as a value
 between min and max. 
 
 
-TopicTextLabel: TEXTLABEL=[text0,text1,text2,text3]
+#### TextLabel: X= Y= W= H= TOPIC= BGC= FONT= FONTSIZE= TEXT[n]="match|text|color"
 
-According to the content of the topic, which is interpreted as integer value (0,1,2,....) the 
-corresponding text is displayed. If the integer does not match any text index, nothing is displayed. 
+According to the content of the topic, 
+corresponding text is displayed. If one of the match strings given in 
+TEXT[n] matches the content, then the corresponding text is displayed in the 
+corresponding color.  
+If the topics content doesnt match at all, nothing is displayed. 
+n can be 0 to 9.
 
-TopicBitmapLabel: BITMAPLABEL=[bitmap1,<colorspec1>;bitmap2,<colorspec2>;bitmap3,<colorspec3>;] BGC=<colorspec>
+#### BitmapLabel: X= Y= TOPIC= BGC= BITMAP[n]="match|filename|color"
 
-According to the content of the topic, which is interpreted as integer value (0,1,2,....) the 
-corresponding monochrome bitmap with the given color is displayed. 
-This way status indicators can be implemented. The whole set of bitmaps all use the same background color.
+According to the content of the topic, 
+a corresponding bitmap is displayed. If one of the match strings given in 
+BITMAP[n] matches the content, then the corresponding bitmap is displayed in the 
+corresponding color.  
+If the topics content doesnt match at all, nothing is displayed. 
+n can be 0 to 9.
+This way status indicators can be implemented. The whole set of bitmaps all 
+use the same background color.
 
 #### Plot: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> 
 The topic content is expected to be a comma separated or space separated list of
@@ -273,22 +319,35 @@ knob) will be published with the Quality of Sevice specified.
 If the user clicks in the area, the content VALUE will be published to the 
 TOPIC with the specified Quality of Service (QOS).
 
+#### Ticker: X= Y= W= H= TOPIC= TIC= MIN= MAX= [FORMAT=] [QOS=] 
+
+If the user clicks in the area, the content of the TOPIC will be interpreted
+as a number, incremented by TIC, formated and finally applied to the TOPIC 
+with the specified Quality of Service (QOS). TIC can be negative. The range of 
+the values will be checked against MIN and MAX and the number will be clipped
+if necessary.
+
 
 ### Elements for Application control
 
-ApplicationClickArea: X=<x> Y=<y> W=<w> H=<h> CMD=<shell command>
+#### FrameToggle: X= Y= W= H=
 
-An invisible click area. When the user clicks it, a shell command will be excecuted.
+This element draws a frame in normal state. When clicked with the mouse it 
+changes to reverse state until the mouse button is released. This element is
+used to make buttons which the user can click on. It gives visual feedback on 
+the click. Thats all. Usually this element will be combined with TopicInArea 
+or one of the following elements: 
 
-ApplicationClickFrame: X=<x> Y=<y> W=<w> H=<h> CMD=<shell command>
+#### ShellCmd: X= Y W= H= CMD=
 
-The same as ApplicationClickArea but when the user clicks it, a frame toggle will be shown. 
-This way a button can be simulated. 
+An invisible click area. When the user clicks it, a shell command will be 
+excecuted.
 
-DashClickArea: X=<x> Y=<y> W=<w> H=<h> DASH=<dashbord name>
-DashClickFrame: X=<x> Y=<y> W=<w> H=<h> DASH=<dashbord name>
+#### Dash: X= Y= W= H= DASH=
 
-Same, but it opens another window with another dashboard.
+An invisible click area. When the user clicks it, 
+another window with another dashboard opens. The file name must 
+be specified with DASH. The files are searched for in the dashboardpath.
 
 
 More element types can be thought of, but our goal is to keep everything as simple
