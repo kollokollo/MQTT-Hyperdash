@@ -45,19 +45,46 @@ So I started this project. Please let me know, if I am right....
 
 ## Installation
 
-First you should make sure, that all necessary packages are installed. In doubt, 
-do a 
+### Preparation
 
-sudo apt-get install libsdl-gfx1.2-dev libsdl1.2-dev libsdl-ttf2.0-dev
+First you should make sure, that all necessary packages are installed. 
+In doubt, do a 
 
+ sudo apt-get install libsdl-gfx1.2-dev libsdl1.2-dev libsdl-ttf2.0-dev
+ sudo apt-get install libgtk2.0-dev 
 
-You can simply do a 
+Also, it is essential, that the eclipse paho library 
+(for the MQTT communication) is installed. 
+Here is their homepage: https://www.eclipse.org/paho/
 
-cd src/
+You will need the "C client library". Eclipse provides a download link
+and installation instructions. However, if you do not want to install
+binary packages, it is totally fine to strat from the git repository:
+https://github.com/eclipse/paho.mqtt.c
 
-make
+The "Build instructions for GNU Make" worked for me. Especially you should 
+install the package libssl-dev.
 
-sudo make install
+ sudo apt-get install libssl-dev
+ 
+ 
+And finally, you may want to install the core set of true type fonts:
+
+sudo apt-get install ttf-mscorefonts-installer
+
+(If you do not have this package installed, you can still use MQTT Hyperdash, 
+but it would be necessary to specify an alternative font path.)
+
+### Compilation
+
+When this is prepared, to make MQTT-Hyperdash, 
+you can simply do a 
+
+ cd src/
+
+ make
+
+ sudo make install
 
 ## Test run
 
