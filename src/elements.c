@@ -82,15 +82,12 @@ void i_pbox(ELEMENT *el,char *pars) {
   el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
 }
 void i_string(ELEMENT *el,char *pars) {
-  char buf[32];
   el->text=strdup(key_value(pars,"TEXT","TEXT"));
   el->font=strdup(key_value(pars,"FONT","SMALL"));
   el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
   ELEMENT_FONT();
-  sprintf(buf,"%d",(int)strlen(el->text)*fonts[el->fontnr].height+5);
-  el->w=atoi(key_value(pars,"W",buf));
-  sprintf(buf,"%d",fonts[el->fontnr].height);
-  el->h=atoi(key_value(pars,"H",buf));
+  el->w=atoi(key_value(pars,"W","-1"));
+  el->h=atoi(key_value(pars,"H","-1"));
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
@@ -199,8 +196,7 @@ void i_textlabel(ELEMENT *el,char *pars) {
   el->font=strdup(key_value(pars,"FONT","SMALL"));
   el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
   ELEMENT_FONT();
-  sprintf(p,"%d",fonts[el->fontnr].height);
-  el->h=atoi(key_value(pars,"H",p));
+  el->h=atoi(key_value(pars,"H","-1"));
   el->w=atoi(key_value(pars,"W","32"));
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
 }
@@ -238,28 +234,22 @@ void i_bitmaplabel(ELEMENT *el,char *pars) {
 }
 
 void i_tstring(ELEMENT *el,char *pars) {
-  char buf[32];
   el->font=strdup(key_value(pars,"FONT","SMALL"));
   el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
   ELEMENT_FONT();
-  sprintf(buf,"%d",(int)strlen(el->topic)*fonts[el->fontnr].height+5);
-  el->w=atoi(key_value(pars,"W",buf));
-  sprintf(buf,"%d",fonts[el->fontnr].height);
-  el->h=atoi(key_value(pars,"H",buf));
+  el->w=atoi(key_value(pars,"W","-1"));
+  el->h=atoi(key_value(pars,"H","-1"));
   /* FGC BGC  */  
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
 void i_tnumber(ELEMENT *el,char *pars) {
-  char buf[32];
   el->format=strdup(key_value(pars,"FORMAT","###.###"));
   el->font=strdup(key_value(pars,"FONT","SMALL"));
   el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
   ELEMENT_FONT();
-  sprintf(buf,"%d",(int)strlen(el->format)*fonts[el->fontnr].height+5);
-  el->w=atoi(key_value(pars,"W",buf));
-  sprintf(buf,"%d",fonts[el->fontnr].height);
-  el->h=atoi(key_value(pars,"H",buf));
+  el->w=atoi(key_value(pars,"W","-1"));
+  el->h=atoi(key_value(pars,"H","-1"));
   /* FGC BGC  */
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
@@ -326,6 +316,8 @@ void d_pcircle(ELEMENT *el,WINDOW *win) {
 }
 
 void d_string(ELEMENT *el,WINDOW *win) {
+  if(el->w<0) el->w=(int)strlen(el->text)*fonts[el->fontnr].height;
+  if(el->h<0) el->h=fonts[el->fontnr].height;
   put_font_text(win->display,el->fontnr,el->text,el->x,el->y,el->fgc,el->h);
 }
 
@@ -399,16 +391,21 @@ void d_meter(ELEMENT *el,WINDOW *win) {
   ELEMENT_SUBSCRIBE();
 }
 void d_tstring(ELEMENT *el,WINDOW *win) {
- // put_font_text(win,el->font,el->fontsize,el->topic,el->x,el->y,el->fgc);
+  if(el->w<0) el->w=(int)strlen(el->topic)*fonts[el->fontnr].height;
+  if(el->h<0) el->h=fonts[el->fontnr].height;
   ELEMENT_SUBSCRIBE();
 }
 void d_textlabel(ELEMENT *el,WINDOW *win) {
+  if(el->h<0) el->h=fonts[el->fontnr].height;
   if(el->data[0].pointer) {
     put_font_text(win->display,el->fontnr,el->data[0].pointer,el->x,el->y,el->labelcolor[0],el->h);
   }
   ELEMENT_SUBSCRIBE();
 }
 void d_tnumber(ELEMENT *el,WINDOW *win) {
+  if(el->w<0) el->w=(int)strlen(el->format)*fonts[el->fontnr].height;
+  if(el->h<0) el->h=fonts[el->fontnr].height;
+
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   put_font_text(win->display,el->fontnr,el->format,el->x,el->y,el->fgc,el->h);
   ELEMENT_SUBSCRIBE();
