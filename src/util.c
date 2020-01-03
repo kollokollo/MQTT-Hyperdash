@@ -51,6 +51,7 @@ TODO: Hier koennte man noch einen Flag zurückliefern, ob es ein real oder imagi
 */
 double myatof(char *n) {
   double sign=1.0;
+  if(!n || *n==0) return(0);
   while (w_space(*n) ) n++;  /* Skip leading white space, if any. */
   if(*n=='-') { /*  Get sign, if any.  */
     sign=-1.0;
