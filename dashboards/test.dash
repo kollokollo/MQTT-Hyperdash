@@ -1,13 +1,26 @@
 #
+# Button Test Dashboard -- for MQTT-Hyperdash
+# this is an example how to create buttons and potentiometers to
+# manipulate MQTT topics with the mouse
+#
 # Global settings and default values
 #
 BROKER: URL="tcp://localhost:1883"
 PANEL:  TITLE="Button Test Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
 
 #
-# Static drawing
+# Static drawing, headline etc...
 #
 TEXT:   X=20 Y=10 H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=36
+
+
+##########################################################################
+# Demonstration of a Radio-Button Group consisting of three buttons which
+# can be clicked to apply a specific value to the topic and which reflect
+# the current state of the value. Note that all state changes appear on 
+# every panel opened simultnously, even on different computers, as long as
+# they use the same broker.
+#
 
 BOX: x=20 y=80 w=200 h=120 FGC=$ff00ffff
 TEXT: x=30 y=80 H=20 TEXT="Radio Button Group" FGC=$ffff00ff
@@ -36,6 +49,11 @@ FRAMELABEL: TOPIC=TEST x=40 y=100 w=50 h=30 MATCH="AUTO"
 FRAMELABEL: TOPIC=TEST x=100 y=100 w=50 h=30 MATCH="OFF"
 FRAMELABEL: TOPIC=TEST x=160 y=100 w=50 h=30 MATCH="ON"
 
+##########################################################################
+# Demonstration of a Ticker-Button Group which can be clicked to increment 
+# or decrement a value (number) of a specific topic. 
+#
+
 
 PBOX:        x=50 y=210 w=30 h=30 bgc=$444444ff
 BITMAP:      x=59 y=218 BITMAP="SmallTriagUp" FGC=$ffffffff
@@ -51,15 +69,34 @@ TOPICSTRING: X=10 Y=252 W=100 H=30 TOPIC=TESTT FGC=$00ffffff BGC=$00ff
 TOPICINNUMBER:  X=10 Y=252 W=100 H=30 TOPIC=TESTT FORMAT="%g" MIN=0 MAX=4 
 FRAMETOGGLE: X=8 Y=250 W=104 H=34
 
+
+#
+# These Meters shall demonstrate that the values changed with the tickers 
+# immediately also change the meters.
+#
+#
+
+
 VMETER:  X=250 Y=100 W=25 H=140 MIN=0 MAX=4 \
          AGC=$444444FF BGC=$000000ff FGC=$ffffffff TOPIC=TESTT
 
 METER:   X=350 Y=100 W=100 H=100 MIN=0 MAX=4 \
          AGC=$444444FF BGC=$000040ff FGC=$ffffffff TOPIC=TESTT
 
+
+##########################################################################
+# Demonstration of a Scaler (potentiometer) which
+# can be clicked and draged to change a specific value (number) of the topic 
+# and which reflect the current state of the value. Note that all changes 
+# appear on every panel opened simultnously, even on different computers, 
+# as long as they use the same broker.
+#
+
 PBOX:    X=90 Y=290 W=220 H=36 BGC=$808080ff FGC=$0
 FRAME:   X=90 Y=290 W=220 H=36 
 HSCALER: X=100 Y=300 W=200 H=16 TOPIC=TESTT MIN=0 MAX=4 TIC=0.05 AGC=$0
 FRAME:   X=98 Y=298 W=204 H=20 REVERT=1
+
+# This is a raw scaler wthout "decoration"
 
 VSCALER: X=300 Y=30 W=20 H=200 TOPIC=TESTT MIN=0 MAX=4  TIC=0.05

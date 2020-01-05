@@ -2,22 +2,24 @@ Guide to contributing to MQTT-Hyperdash
 =======================================
 
 MQTT-Hyperdash was started in 2019 from the fact that there did not exist any 
-straight forward easy to use dashbord applications for linux, with which one 
+straight forward easy to use dashboard applications for linux, with which one 
 could quickly design a graphical user interface for MQTT parameters.
 
-However, such an application should not be too complicated and for performance 
-reasons it whould be written in C. (There existed other dashboards written in 
+However, such an application is not too complicated and for performance 
+reasons it was written in C. (There existed other dashboards written in 
 Java-script and other languages, but they turned out to be way much too 
-complicated to install and use.) 
+complicated to install and use, however very versatile but relatively 
+slow in excecution.) Instead, the dashboards user interfaces should be fast
+and performant for fast updates and low latency.
 
 However, for designing a panel, a simple text editor shall be used. 
 The panels will be made from simple primitives. Some are static, some dynamic, 
 which means that they change their appearance according to the content of a 
 mqtt topic. Some allow user input, like buttons, potentiometers etc.
 
-So there are things you can to. If you like, you can specify new dynamic elements
-to be implemented. First they should be described in the doc section, and for 
-implementing them there is a simple API.
+So there are things you can to. If you like, you can specify new dynamic
+elements to be implemented. First they should be described in the doc section,
+and for  implementing them there is a simple API.
 
 If you are a programmer with C skills, you are welcome to debug and improve the 
 code.
@@ -27,7 +29,8 @@ dynamic object files of SDL and gtk, please help! It would be really cool
 if we could run hyperdash on WINDOWS. 
 
 If you like to design the dashboards itself, please feel free to donate 
-your .dash file, so we can include them in our example collection. 
+your .dash file, so we can include them in our example collection. Do you have
+ideas for cool combination of the base elements into element-groups to be used?
 
 If you are a graphics designer we are happy to receive nice monochrome 
 bitmaps and color icons. 
@@ -39,8 +42,14 @@ More things left to do:
 - optimize a bit more, improve performance,
 - the WINDOWS-version needs more work,
 - work on the sound system, invent a cool SOUND element,
-- documentation needs more work,
+- what about using regular expressions instead of only exact match in 
+  BITMAPLABEL, TEXTLABEL and FRAMELABEL?
+- do you want to program a graphical dashboard designer, with drag and 
+  drop features and a predefined library of element groups to be used?
+- the documentation needs more work,
 - translate the user manual into other languares (german, french,...)
+- make and maintain a debian package for Ubuntu and OpenSuse, 
+- make and maintain a debian package for Rasbian, 
 - port it to apple ipad/iphone,
 (etc. etc.)
 

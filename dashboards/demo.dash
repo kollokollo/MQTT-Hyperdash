@@ -8,12 +8,12 @@ PANEL:  TITLE="Home Power" W=420 H=300 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
-TEXT:   X=62 Y=15 H=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" \
-        FONT="Arial_Bold" FONSIZE=24
-FRAME:  X=50 Y=15 W=254 H=40 
+TEXT:   X=10 Y=5 H=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" \
+        FONT="Arial" FONTSIZE=22
+#FRAME:  X=50 Y=15 W=254 H=40 
 
-LINE:   X=0 Y=0 X2=32 Y2=32 FGC=$ffffffff
-LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
+#LINE:   X=0 Y=0 X2=32 Y2=32 FGC=$ffffffff
+#LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
 
 TOPICSTRING: X=320 Y=32 W=100 H=10 TOPIC=HOME/ENVIRONMENT/PRESSURE \
         FGC=$ffff00ff BGC=$40ff
@@ -61,13 +61,11 @@ TEXT:  x=340 y=260 w=80 h=25 TEXT="-> Solar" FGC=$ffffffff FONT="Arial"
 FRAMETOGGLE: x=330 y=260 w=80 h=25 
 
 
-#
-# These VBARs are currently the only graphic way to show the values.
-# infuture we want to have a METER element and maybe other fancy ones... 
+# 
 #
 
 
-TEXT: X=352  Y=215 FGC=$ffffFFFF TEXT="E  G  W"
+TEXT: X=352  Y=220 FGC=$ffffFFFF TEXT="E  G  W"
 
 VMETER: x=350 y=100 w=20 h=120 MIN=0 MAX=3000 \
       AGC=$555500ff BGC=$000040ff FGC=$ffffffff \

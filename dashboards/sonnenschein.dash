@@ -3,7 +3,7 @@
 # Global settings and default values
 #
 BROKER: URL="tcp://sonnenschein:1883"
-PANEL:  TITLE="Solar Power Station" W=512 H=400 FGC=$ffffffff BGC=$000040ff
+PANEL:  TITLE="Solar Power Station" W=512 H=440 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
@@ -48,25 +48,21 @@ BITMAP[1]="0|SmallCircle|$222222ff"
 # Weiterfuehrende Buttons
 #
 
-PBOX:        x=240 y=360 w=100 h=25 BGC=$444444ff 
-DASH:        x=240 y=360 w=100 h=25 DASH="feinstaub"
-TEXT:        x=250 y=360 w=100 h=25 TEXT="Feinstaub" FGC=$ffffffff FONT="Arial" FONTSIZE=16
-FRAMETOGGLE: x=240 y=360 w=100 h=25 
+PBOX:        x=240 y=400 w=100 h=25 BGC=$444444ff 
+DASH:        x=240 y=400 w=100 h=25 DASH="feinstaub"
+TEXT:        x=250 y=400 w=100 h=25 TEXT="Feinstaub" FGC=$ffffffff FONT="Arial" FONTSIZE=16
+FRAMETOGGLE: x=240 y=400 w=100 h=25 
 
-PBOX:        x=20  y=360 w=100 h=25 BGC=$444444ff 
-DASH:        x=20  y=360 w=100 h=25 DASH="gaspower"
-TEXT:        x=25  y=360 w=100 h=25 TEXT="Home Power" FGC=$ffffffff FONT="Arial" FONTSIZE=16
-FRAMETOGGLE: x=20  y=360 w=100 h=25 
+PBOX:        x=20  y=400 w=100 h=25 BGC=$444444ff 
+DASH:        x=20  y=400 w=100 h=25 DASH="gaspower"
+TEXT:        x=25  y=400 w=100 h=25 TEXT="Home Power" FGC=$ffffffff FONT="Arial" FONTSIZE=16
+FRAMETOGGLE: x=20  y=400 w=100 h=25 
 
-PBOX:        x=130 y=360 w=100 h=25 BGC=$444444ff 
-DASH:        x=130 y=360 w=100 h=25 DASH="podcast"
-TEXT:        x=140 y=360 w=100 h=25 TEXT="-> Podcast" FGC=$ffffffff FONT="Arial" FONTSIZE=16
-FRAMETOGGLE: x=130 y=360 w=100 h=25 
+PBOX:        x=130 y=400 w=100 h=25 BGC=$444444ff 
+DASH:        x=130 y=400 w=100 h=25 DASH="podcast"
+TEXT:        x=140 y=400 w=100 h=25 TEXT="-> Podcast" FGC=$ffffffff FONT="Arial" FONTSIZE=16
+FRAMETOGGLE: x=130 y=400 w=100 h=25 
 
-PBOX:        x=370 y=360 w=80 h=25 BGC=$444444ff 
-DASH:        x=370 y=360 w=80 h=25 DASH="main"
-TEXT:        x=380 y=360 w=80 h=25 TEXT="-> Home" FGC=$ffffffff FONT="Arial" FONTSIZE=16
-FRAMETOGGLE: x=370 y=360 w=80 h=25 
 
 #
 #
@@ -74,30 +70,17 @@ FRAMETOGGLE: x=370 y=360 w=80 h=25
 
 
 
+TOPICNUMBER: X=10 Y=242 W=100 H=10 TOPIC=HOME/SOLAR/SUN_COUNTER FORMAT="#####.# Ah" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=8  Y=240 W=103 H=13 REVERT=1
 
+TOPICNUMBER: X=130 Y=372 W=90 H=10 TOPIC=HOME/SOLAR/BAT_COUNTER FORMAT="#####.# Ah" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=128 Y=370 W=93 H=13 REVERT=1
 
-TOPICNUMBER: X=10 Y=112 W=100 H=10 TOPIC=HOME/SOLAR/CELL1 FORMAT="##.### V" FGC=$ffff00ff BGC=$772222ff
-FRAME:       X=8 Y=110 W=103 H=13 REVERT=1
+TOPICNUMBER: X=250 Y=372 W=90 H=10 TOPIC=HOME/SOLAR/USE_COUNTER FORMAT="#####.# Ah" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=248 Y=370 W=93 H=13 REVERT=1
 
-TOPICNUMBER: X=130 Y=112 W=90 H=10 TOPIC=HOME/SOLAR/CELL2 FORMAT="##.### V" FGC=$ffff00ff BGC=$772222ff
-FRAME:       X=128 Y=110 W=93 H=13 REVERT=1
-
-TOPICNUMBER: X=250 Y=112 W=90 H=10 TOPIC=HOME/SOLAR/CELL3 FORMAT="##.### V" FGC=$ffff00ff BGC=$772222ff
-FRAME:       X=248 Y=110 W=93 H=13 REVERT=1
-
-
-
-TOPICNUMBER: X=10 Y=132 W=100 H=10 TOPIC=HOME/SOLAR/SUN_COUNTER FORMAT="#####.# Ah" FGC=$ffff00ff BGC=$772222ff
-FRAME:       X=8  Y=130 W=103 H=13 REVERT=1
-
-TOPICNUMBER: X=130 Y=132 W=90 H=10 TOPIC=HOME/SOLAR/BAT_COUNTER FORMAT="#####.# Ah" FGC=$ffff00ff BGC=$772222ff
-FRAME:       X=128 Y=130 W=93 H=13 REVERT=1
-
-TOPICNUMBER: X=250 Y=132 W=90 H=10 TOPIC=HOME/SOLAR/USE_COUNTER FORMAT="#####.# Ah" FGC=$ffff00ff BGC=$772222ff
-FRAME:       X=248 Y=130 W=93 H=13 REVERT=1
-
-TOPICNUMBER: X=250 Y=152 W=90 H=10 TOPIC=HOME/SOLAR/NETZ_COUNTER FORMAT="#####.# Ah" FGC=$ffff00ff BGC=$772222ff
-FRAME:       X=248 Y=150 W=93 H=13 REVERT=1
+TOPICNUMBER: X=30 Y=372 W=90 H=10 TOPIC=HOME/SOLAR/NETZ_COUNTER FORMAT="#####.# Ah" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=28 Y=370 W=93 H=13 REVERT=1
 
 
 
@@ -116,21 +99,21 @@ TOPICSTRING: X=190 Y=333 W=80 H=10 TOPIC=HOME/SOLAR/USE FGC=$ffff00ff BGC=$40ff
 # e.g. for ON/OFF Switches The Buttons also show the actual state.
 #
 
-PBOX:        x=60 y=160 w=50 h=25 bgc=$444444ff
-PBOX:        x=120 y=160 w=50 h=25 bgc=$444444ff
-PBOX:        x=180 y=160 w=50 h=25 bgc=$444444ff
+PBOX:        x=60 y=120 w=50 h=25 bgc=$444444ff
+PBOX:        x=120 y=120 w=50 h=25 bgc=$444444ff
+PBOX:        x=180 y=120 w=50 h=25 bgc=$444444ff
 
-TEXT:        x=70 y=160 w=30 h=25 TEXT="auto" fgc=$00ffffff FONT="Arial"
-TEXT:        x=130 y=160 w=30 h=25 TEXT="OFF" fgc=$ff0000ff FONT="Arial"
-TEXT:        x=190 y=160 w=30 h=25 TEXT="ON" fgc=$00ff00ff FONT="Arial"
-TOPICINAREA: x=60 y=160 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS VALUE="AUTO"
-TOPICINAREA: x=120 y=160 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS VALUE="OFF"
-TOPICINAREA: x=180 y=160 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS VALUE="ON"
-FRAMELABEL:  x=60 y=160 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS MATCH="AUTO"
-FRAMELABEL:  x=120 y=160 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS MATCH="OFF"
-FRAMELABEL:  x=180 y=160 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS MATCH="ON"
+TEXT:        x=70 y=120 w=30 h=25 TEXT="auto" fgc=$00ffffff FONT="Arial"
+TEXT:        x=130 y=120 w=30 h=25 TEXT="OFF" fgc=$ff0000ff FONT="Arial"
+TEXT:        x=190 y=120 w=30 h=25 TEXT="ON" fgc=$00ff00ff FONT="Arial"
+TOPICINAREA: x=60 y=120 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS VALUE="AUTO"
+TOPICINAREA: x=120 y=120 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS VALUE="OFF"
+TOPICINAREA: x=180 y=120 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS VALUE="ON"
+FRAMELABEL:  x=60 y=120 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS MATCH="AUTO"
+FRAMELABEL:  x=120 y=120 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS MATCH="OFF"
+FRAMELABEL:  x=180 y=120 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS MATCH="ON"
 
-TEXT:        x=10 y=160 w=30 h=25 TEXT="Netz:" fgc=$ffffffff FONT="Arial_Bold"
+TEXT:        x=10  y=120 w=30 h=25 TEXT="Netz:" fgc=$ffffffff FONT="Arial_Bold"
 
 #
 #
@@ -145,7 +128,15 @@ TOPICSTRING: X=85 Y=343 W=70 H=10 TOPIC=HOME/SOLAR/NETZ FGC=$ffff00ff BGC=$40ff
 BITMAP:      X=50 y=310 BITMAP="GridPlug" FGC=$ffffffff
 BITMAP:      X=50 y=260 BITMAP="PVModule" FGC=$ffffffff
 BITMAP:      X=27 y=260 BITMAP="PVModule" FGC=$ffffffff
-METER:       X=10 Y=200 W=100 H=100 TOPIC=HOME/SOLAR/SUN MIN=0 MAX=2 AMIN=180 AMAX=0 fgc=$ffff44ff bgc=$40ff
+
+# We force the background of the TOPICNUMBER to be transparent. 
+# This works, because at each update of the topic the METER is drawn first 
+# (because it is defined here first). Works only if the TOPIC is the same.
+
+METER:       X=10 Y=180 W=100 H=100 TOPIC=HOME/SOLAR/SUN MIN=0 MAX=2 AMIN=180 AMAX=0 fgc=$ffff44ff bgc=$40ff
+TOPICNUMBER: X=30 Y=195 W=70 H=10 TOPIC=HOME/SOLAR/SUN FORMAT="##.### A" \
+             FGC=$ffff00ff BGC=$0 FONT="Courier_New" FONTSIZE=12
+
 BITMAPLABEL: x=83 y=321 BGC=$000040ff TOPIC=HOME/SOLAR/LADE/STATUS \
   BITMAP[0]="-1|SmallCircle|$ff00ff" \
   BITMAP[1]="0|SmallCircle|$222222ff" 
@@ -163,6 +154,7 @@ TEXT:        X=165 y=333 FGC=$ffffffff TEXT="AGM" FONT="Arial" FONTSIZE=10
 
 BITMAP:      X=210 y=300 BITMAP="RightArrow" FGC=$ffaaaaff
 BITMAP:      X=245 y=260 BITMAP="UpArrow" FGC=$ffaaaaff
+BITMAP:      X=245 y=225 BITMAP="Bulb" FGC=$ffffffff
 
 BITMAP:      X=280 y=300 BITMAP="RightArrow" FGC=$ffaaaaff
 TOPICNumber: X=255 Y=333 W=80 H=10 TOPIC=HOME/SOLAR/LIION_IN_CURRENT format="###.## A" FGC=$ffff00ff BGC=$40ff
@@ -178,9 +170,21 @@ TEXT:   X=351 y=327 FGC=$ffffffff TEXT="LiIon" FONT="Arial" FONTSIZE=10
 
 BITMAP:      X=400 y=300 BITMAP="RightArrow" FGC=$ffaaaaff
 TOPICSTRING: X=375 Y=333 W=80 H=10 TOPIC=HOME/SOLAR/LIION_OUT_CURRENT FGC=$ffff00ff BGC=$40ff
+BITMAP:      X=450 y=300 BITMAP="Bulb" FGC=$ffffffff
 
 # Experimental: 
 
 #PCIRCLE:    X=220 Y=175 W=120 H=80 FGC=$ffffffff BGC=$ffffffff 
 #PBOX: X=220 Y=215 W=120 H=40 FGC=$40ff BGC=$40ff
 #METER: X=230 Y=185 W=100 H=60 TOPIC=HOME/SOLAR/SUN MIN=0 MAX=2 AMIN=180 AMAX=0
+
+
+
+TOPICNUMBER: X=400 Y=242 W=80 H=10 TOPIC=HOME/SOLAR/CELL1 FORMAT="##.### V" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=398 Y=240 W=83 H=13 REVERT=1
+
+TOPICNUMBER: X=400 Y=262 W=80 H=10 TOPIC=HOME/SOLAR/CELL2 FORMAT="##.### V" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=398 Y=260 W=83 H=13 REVERT=1
+
+TOPICNUMBER: X=400 Y=282 W=80 H=10 TOPIC=HOME/SOLAR/CELL3 FORMAT="##.### V" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=398 Y=280 W=83 H=13 REVERT=1
