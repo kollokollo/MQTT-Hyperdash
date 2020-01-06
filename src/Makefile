@@ -54,7 +54,7 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS) `pkg-config --cflags gtk+-2.0`
 # these are objects which are compiled to binary
 
 MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
-          bitmap.o input.o elements.o
+          bitmap.o input.o elements.o subscribe.o
 
 CSRC=    $(MAINOBJS:.o=.c)
 
@@ -63,7 +63,7 @@ DEPSRC=  $(CSRC)
 # Headerfiles which should be added to the distribution
 
 HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
-       input.h elements.h
+       input.h elements.h subscribe.h
 
 # example dash files 
 
@@ -127,6 +127,17 @@ hyperdash.exe: $(CSRC) $(MYWINLIBS)
 	-o $@ $(MYWINLIBS) \
 	 $(WINLIBS)
 	strip $@
+
+# This defines the compile sequence for .rule files
+
+% : %.rule rule-engine.c mqtt.o subscribe.o util.o
+	$(CC) -DRULE=\"$<\" rule-engine.c mqtt.o subscribe.o  util.o \
+	-o $@ -lm -lpaho-mqtt3c 
+
+#
+# Installation sequences
+#
+
 
 install : hyperdash hyperdash.desktop 
 	install -m 644 hyperdash.desktop $(DESKTOPDIR)/

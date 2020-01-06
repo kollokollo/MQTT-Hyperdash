@@ -62,7 +62,7 @@ void i_panel(ELEMENT *el,char *pars) {
 
 /* Initialize Static drawing elements */
 #define ELEMENT_FONT() el->fontnr=add_font(el->font,el->fontsize)
-#define ELEMENT_SUBSCRIBE() el->subscription=add_subscription(el->topic)
+#define ELEMENT_SUBSCRIBE() el->subscription=add_subscription(el->topic,0)
 
 
 void i_line(ELEMENT *el,char *pars) {

@@ -35,6 +35,22 @@ user input with the mouse to manipulate topics contents.
 <img src="screenshots/Haussteuerung.png">
 
 
+#### rule-engine
+
+Rule engines are ment to be applications running completely in the background. 
+They do not interact directly with user. Their function is to subscribe to a 
+set of topics, watch their updates and trigger a routine, which calculates 
+something based on the input topics and finally puplish the result to output
+topics, which then can trigger other rules or rule engines. They also can
+perform actions on the machine they are running, like excecuting shell scripts
+when a topic content matches a certain pattern. With multuple rule engines
+running even on different computers using the same broker, one can implmenent a
+full automation control, which would create the Internet of Things. However the
+concept of rule engines is not new and can be found in other automation
+concepts as well. This  implementation is focused on high performance quick
+reaction, and reliablility. And the realization is not very complicated. 
+Please read the the rule engine howto in the doc/ section.
+
 The project is still in beta phase. Please see the CONTRIBUTING.md how you can
 help to improve the project. 
 

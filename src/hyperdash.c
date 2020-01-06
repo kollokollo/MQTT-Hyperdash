@@ -528,7 +528,8 @@ void free_element(ELEMENT *el) {
 
 void close_dash(DASH *dash) {
   int i;
-  mqtt_unsubscribe_all();
+  mqtt_unsubscribe_all();     /* unsubscribe from all subscriptions */
+  clear_all_subscriptions();  /* free the subscription list */
   mqtt_disconnect();  /* Verbindung zum Broker trennen. */ 
   for(i=0;i<dash->anzelement;i++) {
     free_element(&(dash->tree[i]));
@@ -546,14 +547,14 @@ void draw_dash(DASH *dash, WINDOW *win) {
   SDL_Flip(win->display); 
   mqtt_subscribe_all();
 }
-void update_dash(char *topic, STRING message) {
+void update_topic_message(int sub, STRING message) {
   DASH *dash=global_dash;
   WINDOW *win=global_window;
   int i;
  // printf("update_dash: <%s>...\n",topic);
   for(i=0;i<dash->anzelement;i++) {
     if((dash->tree[i].type&EL_DYNAMIC)==EL_DYNAMIC) {
-      if(!strcmp(topic,dash->tree[i].topic)) update_element(&(dash->tree[i]),win,message);
+      if(dash->tree[i].subscription==sub) update_element(&(dash->tree[i]),win,message);
     } 
   }
   SDL_Flip(win->display);

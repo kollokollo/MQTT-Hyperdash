@@ -1,0 +1,109 @@
+/* COMMANDER.RULE (c) Markus Hoffmann  */
+
+/* This file is part of MQTT-Hyperdash, the MQTT Dashboard 
+ * ============================================================
+ * MQTT-Hyperdash is free software and comes with NO WARRANTY - read the file
+ * COPYING for details
+ */
+
+/* Commander   ######## THIS IS JUST A TEMPLATE ##################
+   listens on changes of a topic, by default "CMD_DS" 
+   and excecutes shell commands according to the settings.
+ */
+
+/* Specify the Broker with URL, USERNAME and PASSWORD if needed.*/
+
+#define BROKER "tcp://localhost:1883"
+#define USER NULL
+#define PASSWD NULL
+
+/* Define a name for this rule engine */
+
+#define CLIENT "Commander"
+
+
+/* Define a TOPIC where the activity of this engine is reported to
+   every second as long the process is running.
+ */
+
+#define ACTIVITY_TOPIC "COMMANDER/ACTIVITY_DM"
+
+
+/* Define input and output topics for the rule 
+   The commander has no output rules (except for the ACTIVITY topic).
+ */
+
+#define TRIGGER_NUMBER  0  /* alias for first parameter*/
+#define TRIGGER_COMMAND 1  /* alias for second parameter*/
+
+PARMDEF cmd_rule_parms[]={
+  {PARM_IN|PARM_TRIGGER|PARM_ISNUMBER,"HOME/SOLAR/LADE/CMD_DC",0,0,NULL},
+  {PARM_IN|PARM_TRIGGER,              "HOME/SOLAR/LADE/CMD_SC",0,0,NULL}
+};
+
+
+
+/* define the rule(s) for this rule engine. You can define multiple rules but
+   in most cases you would only have one.
+   The commander has only one rule.
+   The main rule function (here cmd_rule) need to be defined. It can use 
+   any other C function it creates if necessary.
+ */
+
+void cmd_rule(int trig,PARMBUF *parms);
+
+RULEDEF rules[]={
+  {cmd_rule_parms,sizeof(cmd_rule_parms)/sizeof(PARMDEF),NULL,cmd_rule}
+};
+
+/* These are specific for the Commander rule. We define a set of matches and
+   a list of shell commands which shall be excecuted if the Topic content
+   matches them.
+   */
+
+static char *match[]={"ON","OFF"};
+static char *shellcmd[]={
+  "sudo python /home/pi/box/steckdose.py 1 1",
+  "sudo python /home/pi/box/steckdose.py 1 0"
+};
+static int anzmatch=sizeof(match)/sizeof(char *);
+
+/* This function will be called whenever a parameter of the rule 
+   getzs an update and(!) this parameter was defined with PARM_TRIGGER
+   The current/actual content of all parameters (PARM_IN and PARM_OUT)
+   have been collected in a snapshot and is refered to by parms.
+   The number of the parameter which has triggerd the rule is passed to
+   trig.
+   
+   The function is expected to put the results of its calculation into the
+   Snapshot parms is pointing to. If PARM_ISNUMBER is set, the 
+   value should be a double and put into parms[i].value. Otherwise the 
+   result is expected as a STRING in parms[i].string. Note that the 
+   string should not be dynamically allocated, since it would not be freed.
+   You must take care of this memory. 
+   All parameters which are defined with 
+   PARM_OUT will be pushed to their TOPICS afterwards, but only if the value
+   has changes. Otherwise it is not pushed. Note that there remains a 
+   retained value. 
+ */
+
+void cmd_rule(int trig,PARMBUF *parms) {
+  int i;
+  printf("cmd_rule triggered by #%d....\n",trig);
+  if(trig==TRIGGER_NUMBER) {
+    printf("Value of #%d is %g\n",trig,parms[trig].value);
+    if(parms[trig].value==0) system(shellcmd[0]);
+    else if(parms[trig].value==1) system(shellcmd[1]);
+  } else if(trig==TRIGGER_COMMAND) {
+    printf("Command of #%d is <%s>\n",trig,parms[trig].string.pointer);
+
+    for(i=0;i<anzmatch;i++) {
+      if(!strncmp(parms[trig].string.pointer,match[i],parms[trig].string.len)) {
+        printf("Have a match on %s\n",match[i]);
+        printf("Excecute %s\n",shellcmd[i]);
+        system(shellcmd[i]);
+      }
+    }
+  }
+  /* No output parameter is filled.*/
+}

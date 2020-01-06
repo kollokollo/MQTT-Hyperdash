@@ -1,0 +1,97 @@
+/* DEMO.RULE (c) Markus Hoffmann  */
+
+/* This file is part of MQTT-Hyperdash, the MQTT Dashboard 
+ * ============================================================
+ * MQTT-Hyperdash is free software and comes with NO WARRANTY - read the file
+ * COPYING for details
+ */
+
+/* Demo Adder   ######## THIS IS JUST A TEMPLATE ##################
+   listens on changes of two numerical topics, and then calculates
+   the sum of these numbers and publishes the output to an output 
+   Parameter. 
+ */
+
+/* Specify the Broker with URL, USERNAME and PASSWORD if needed.*/
+
+#define BROKER "tcp://localhost:1883"
+#define USER NULL
+#define PASSWD NULL
+
+/* Define a name for this rule engine */
+
+#define CLIENT "Demo-Adder"
+
+
+/* Define a TOPIC where the activity of this engine is reported to
+   every second as long the process is running.
+ */
+
+#define ACTIVITY_TOPIC "DEMO/ACTIVITY_DM"
+
+
+/* Define input and output topics for the rule 
+ */
+
+#define SUMMAND_A       0  /* alias for first parameter*/
+#define SUMMAND_B       1  /* alias for second parameter*/
+#define RESULT_C        2  /* alias for third (output) parameter*/
+
+PARMDEF my_rule_parms[]={
+  {PARM_IN|PARM_TRIGGER|PARM_ISNUMBER,"DEMO/A",0,0,NULL},
+  {PARM_IN|PARM_TRIGGER|PARM_ISNUMBER,"DEMO/B",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,            "DEMO/C",0,0,NULL}
+};
+
+
+
+/* define the rule(s) for this rule engine. You can define multiple rules but
+   in most cases you would only have one.
+   This demo has only one rule.
+   The main rule function (here cmd_rule) need to be defined. It can use 
+   any other C function it creates if necessary.
+ */
+
+void my_rule(int trig,PARMBUF *parms);
+
+RULEDEF rules[]={
+  {my_rule_parms,sizeof(my_rule_parms)/sizeof(PARMDEF),NULL,my_rule}
+};
+
+
+/* This function will be called whenever a parameter of the rule 
+   getzs an update and(!) this parameter was defined with PARM_TRIGGER
+   The current/actual content of all parameters (PARM_IN and PARM_OUT)
+   have been collected in a snapshot and is refered to by parms.
+   The number of the parameter which has triggerd the rule is passed to
+   trig.
+   
+   The function is expected to put the results of its calculation into the
+   Snapshot parms is pointing to. If PARM_ISNUMBER is set, the 
+   value should be a double and put into parms[i].value. Otherwise the 
+   result is expected as a STRING in parms[i].string. Note that the 
+   string should not be dynamically allocated, since it would not be freed.
+   You must take care of this memory. 
+   All parameters which are defined with 
+   PARM_OUT will be pushed to their TOPICS afterwards, but only if the value
+   has changes. Otherwise it is not pushed. Note that there remains a 
+   retained value. 
+ */
+
+void my_rule(int trig,PARMBUF *parms) {
+  printf("my_rule triggered by #%d....\n",trig);
+
+  /* We do not really care which of the SUMMANDs have triggerd, 
+   * we just calculate the result: 
+   */
+
+  parms[RESULT_C].value=parms[SUMMAND_A].value+parms[SUMMAND_B].value;
+
+   /* and thats really it ! */
+
+  printf("We have added %g + %g --> %g\n",
+    parms[SUMMAND_A].value,
+    parms[SUMMAND_B].value,
+    parms[RESULT_C].value);
+
+}

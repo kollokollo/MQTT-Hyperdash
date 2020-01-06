@@ -16,6 +16,25 @@
 #include "hyperdash.h"
 #include "util.h"
 
+
+
+
+
+STRING create_string(const char *n) {
+  STRING ergeb;
+  if(n) {
+    ergeb.len=strlen(n);
+    ergeb.pointer=strdup(n);
+  } else {
+    ergeb.len=0;
+    ergeb.pointer=malloc(1);
+    ergeb.pointer[0]=0;
+  }
+  return(ergeb);
+}
+
+
+
 /* Decode hexadecimal number to int  */
 static int atohex(char *n) {
   int value=0;
@@ -103,7 +122,7 @@ double myatof(char *n) {
 }
 
 
-static STRING double_string(const STRING *a) {
+STRING double_string(const STRING *a) {
   STRING b;
   b.len=a->len;
   b.pointer=malloc(b.len+1);

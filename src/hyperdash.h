@@ -16,12 +16,7 @@
 #define EL_VISIBLE 0x400
 #define EL_TYPMASK 0xf00
 
-
-typedef struct {
-  char *topic;
-  int anz;
-  STRING last_value;
-} SUBSCRIPTION;
+#include "subscribe.h"
 
 
 typedef struct {
@@ -87,5 +82,6 @@ void init_dash(DASH *dash);
 void close_dash(DASH *dash);
 void draw_dash(DASH *dash, WINDOW *win);
 int handle_dash(DASH *dash, WINDOW *win);
+void update_topic_message(int sub, STRING message);
 
 #endif

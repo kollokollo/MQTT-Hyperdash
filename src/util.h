@@ -17,3 +17,5 @@ STRING do_using(double num,STRING format);
 #define w_space(c) ((c) == ' ' || (c) == '\t')
 #define v_digit(c) ((c) >= '0' && (c) <= '9')
 double myatof(char *n);
+STRING create_string(const char *n);
+STRING double_string(const STRING *a);

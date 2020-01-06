@@ -32,66 +32,13 @@ application must take appropriate action, such as trying to reconnect or reporti
 function is executed on a separate thread to the one on which the client application is running.
 */
 
-SUBSCRIPTION subscriptions[256];
-int anzsubscriptions;
-
-int find_subscription(const char *topic) {
-  int ret=-1;
-  int i;
-  if(anzsubscriptions>0) {
-    for(i=0;i<anzsubscriptions;i++) {
-      if(!strcmp(topic,subscriptions[i].topic)) return(i); 
-    }
-  }
-  return(ret);
-}
-void clear_subscription(int idx) {
-  if(idx>=0 && idx<anzsubscriptions) {
-    subscriptions[idx].anz=0;
-    free(subscriptions[idx].topic);
-    subscriptions[idx].topic=NULL;
-    free(subscriptions[idx].last_value.pointer);
-    subscriptions[idx].last_value.len=0;
-    subscriptions[idx].last_value.pointer=NULL;
-    if(idx==anzsubscriptions-1) anzsubscriptions--;
-  }
-  while(anzsubscriptions>0 && subscriptions[anzsubscriptions-1].anz==0) {
-     anzsubscriptions--;
-  }
-}
-void clear_all_subscriptions() {
-  int i;
-  if(anzsubscriptions>0) {
-    for(i=0;i<anzsubscriptions;i++) {
-      subscriptions[i].anz=0;
-      free(subscriptions[i].topic);
-      subscriptions[i].topic=NULL;
-      free(subscriptions[i].last_value.pointer);
-      subscriptions[i].last_value.len=0;
-      subscriptions[i].last_value.pointer=NULL;  
-    }
-  }
-  anzsubscriptions=0;
-}
-int add_subscription(const char *topic) {
-  int i=find_subscription(topic);
-  if(i>=0) subscriptions[i].anz++;
-  else {
-    i=anzsubscriptions;
-    anzsubscriptions++;
-    subscriptions[i].anz=1;
-    subscriptions[i].topic=strdup(topic);
-  }
-  return(i);
-}
-
 
 void mqtt_subscribe_all() {
   if(mqtt_isconnected && anzsubscriptions>0) {
     int i;
     for(i=0;i<anzsubscriptions;i++) {
       if(subscriptions[i].anz>0) {
-        mqtt_subscribe(subscriptions[i].topic,0);
+        mqtt_subscribe(subscriptions[i].topic,subscriptions[i].qos);
       }
     }
   }
@@ -102,7 +49,6 @@ void connlost(void *context, char *cause) {
   mqtt_isconnected=0;
 }
 
-extern void update_dash(char *topic, STRING message);
 /* This callback is called in a separate thread, when a message for a
    subscribed topic is received.
  */
@@ -121,9 +67,9 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
     subscriptions[sub].last_value.len=message->payloadlen;
     subscriptions[sub].last_value.pointer=realloc(subscriptions[sub].last_value.pointer,message->payloadlen+1);
     memcpy(subscriptions[sub].last_value.pointer,buf,m.len+1);
+    update_topic_message(sub,m);
   }
-  else printf("ERROR: Topic was not subscribed!\n");
-  update_dash(topicName,m);
+  else printf("ERROR: Topic %s was not subscribed!\n",topicName);
   MQTTClient_freeMessage(&message);
   MQTTClient_free(topicName);
   return 1;  /* Message successfully consumed. */
@@ -174,7 +120,7 @@ int mqtt_broker(char *url,char *user, char *passwd) {
   MQTTClient_willOptions will_opts;
   
   mqtt_exit(); /* Alte Verbindung beenden.*/
-  sprintf(clientID,"MQTT-Hyperdash-Panelname-%ld",clock()); /* Make a unique client ID */
+  sprintf(clientID,"MQTT-Hyperdash-%ld",clock()); /* Make a unique client ID */
   MQTTClient_create(&client,url, clientID,MQTTCLIENT_PERSISTENCE_NONE, NULL);
   conn_opts.keepAliveInterval = 20;
   conn_opts.cleansession = 1;
@@ -212,8 +158,6 @@ void mqtt_unsubscribe_all() {
       if(subscriptions[i].anz>0) mqtt_unsubscribe(subscriptions[i].topic);
     }
   }
-  /* free the subscription list */
-  clear_all_subscriptions();
 }
 void mqtt_disconnect() {
   if(mqtt_isconnected) {

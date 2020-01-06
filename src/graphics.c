@@ -104,10 +104,10 @@ int handle_event(WINDOW *w,SDL_Event *event) {
     break;
   case SDL_ACTIVEEVENT: 
     if(event->active.state&SDL_APPACTIVE) {
-        if ( event->active.gain ) {
-            printf("App activated\n");
+        if(event->active.gain) {
+            if(verbose>0) printf("App activated\n");
         } else {
-            printf("App iconified\n");
+            if(verbose>0) printf("App iconified\n");
         }
     }
   #ifdef SDL_WINDOWEVENT
@@ -166,7 +166,6 @@ int mouseevent(WINDOW *window, int *x, int *y, int *b, int *s) {
   while(event.type!=SDL_MOUSEBUTTONDOWN && event.type!=SDL_MOUSEBUTTONUP) { 
      if(handle_event(window,&event)==-1) return(-1);
      if(SDL_WaitEvent(&event)==0) return(0);
-//     printf("Event-Loop\n");
      /* Here we can check if the connection to he broker is still ok.*/
      if(!mqtt_isconnected) return(-2); /*Connection lost */  
   }
@@ -331,7 +330,7 @@ int add_font(const char *name, int size) {
   return(i);
 }
 void open_all_fonts() {
-  printf("Open_all_fonts:\nwe have %d fonts:\n",anzfonts);
+  if(verbose>0) printf("Open_all_fonts:\nwe have %d fonts:\n",anzfonts);
   if(anzfonts>0) {
     char fontname[256];
     int i;
@@ -343,7 +342,7 @@ void open_all_fonts() {
           fonts[i].font=NULL;
 	  fonts[i].height=8;
         } else {
-  	  printf("%d: %s : %d\n",i,fontname,fonts[i].size);
+  	  if(verbose>0) printf("%d: %s : %d\n",i,fontname,fonts[i].size);
           fonts[i].font=TTF_OpenFont(fontname,fonts[i].size);
           if(fonts[i].font==NULL) {
 	    printf("ERROR: could not open font <%s> size=%d\n",fontname,fonts[i].size);
