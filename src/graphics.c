@@ -178,6 +178,7 @@ int mouseevent(WINDOW *window, int *x, int *y, int *b, int *s) {
 
 
 void put_graphics(WINDOW *window, STRING data,int x,int y,unsigned int w, unsigned int h, unsigned long int tgc) {
+  if(data.len==0 || !data.pointer) return;
   SDL_RWops *rw=SDL_RWFromMem(data.pointer,data.len);
   SDL_Surface *bmpdata=SDL_LoadBMP_RW(rw,1);
   SDL_Surface *image=SDL_DisplayFormat(bmpdata);

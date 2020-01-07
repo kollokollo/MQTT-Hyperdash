@@ -12,8 +12,6 @@
 #include <locale.h> 
 #include <math.h> 
 #include "basics.h"
-#include "graphics.h"
-#include "hyperdash.h"
 #include "util.h"
 
 
@@ -188,8 +186,10 @@ STRING do_using(double num,STRING format) {
   int a=0,b=0,p,r=0,i,j,ex=0,v=0; 
   int neg;
   char des[32+format.len];
+#ifndef WINDOWS
 locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
 locale_t old = uselocale(safe_locale);
+#endif
 //  struct lconv *lc;
   
 //  lc=localeconv();
@@ -320,8 +320,10 @@ locale_t old = uselocale(safe_locale);
       for(i=0;i<dest.len;i++) dest.pointer[i]='*';    
     }
   } 
+#ifndef WINDOWS
   uselocale(old);
   freelocale(safe_locale);
+#endif
   return(dest);
 }
 
@@ -331,7 +333,7 @@ char *key_value(const char *a, const char *b, const char *def) {
   char kv[256];
   char key[256];
   char val[256];
-  strcpy(par,a);
+  strncpy(par,a,sizeof(par));
   int e=wort_sep(par,' ',1,kv,par);
   int e2;
   while(e>0) {
@@ -340,14 +342,14 @@ char *key_value(const char *a, const char *b, const char *def) {
        if(!strcmp(key,b)) {
          if(val[0]=='\"') {
 	   if(strlen(val)>0) val[strlen(val)-1]=0;
-	   strcpy(value,val+1);
-	 } else strcpy(value,val);
+	   strncpy(value,val+1,sizeof(value));
+	 } else strncpy(value,val,sizeof(value));
 	 return(value);
        }
     }  
     e=wort_sep(par,' ',1,kv,par);
   }
-  strcpy(value,def);
+  strncpy(value,def,sizeof(value));
   return(value);
 }
 

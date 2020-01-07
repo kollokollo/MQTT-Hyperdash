@@ -113,7 +113,7 @@ static char fileselect_name[256];
 #ifndef WINDOWS
 /* Get the selected filename and print it to the console */
 static void file_ok_sel (GtkWidget *w, GtkFileSelection *fs) {
-  strcpy(fileselect_name,gtk_file_selection_get_filename (GTK_FILE_SELECTION (fs)));
+  strncpy(fileselect_name,gtk_file_selection_get_filename (GTK_FILE_SELECTION (fs)),sizeof(fileselect_name));
   fileselect_return=1;
   gtk_main_quit();
 }
@@ -172,7 +172,7 @@ static char input_value[256];
 #ifndef WINDOWS
 static void inputOK_clicked (GtkWidget *widget, gpointer data) {
   input_return=1;
-  strcpy(input_value,gtk_entry_get_text( GTK_ENTRY(data)));
+  strncpy(input_value,gtk_entry_get_text( GTK_ENTRY(data)),sizeof(input_value));
   // g_print(input_value);
 }
 #endif

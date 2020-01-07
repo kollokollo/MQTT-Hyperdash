@@ -14,9 +14,11 @@
 #include <time.h>
 #include "config.h"
 #include "basics.h"
-#include "graphics.h"
-#include "hyperdash.h"
+#include "subscribe.h"
 #include "mqtt.h"
+
+void update_topic_message(int sub, STRING message);
+extern int verbose; 
 
 
 char clientID[64];

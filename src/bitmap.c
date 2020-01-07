@@ -12,6 +12,9 @@
 #include <string.h>
 #include <stdint.h>
 #include "basics.h"
+#ifdef WINDOWS
+  #include <windows.h>
+#endif
 #include "bitmap.h"
 #include "lodepng.h"
 
