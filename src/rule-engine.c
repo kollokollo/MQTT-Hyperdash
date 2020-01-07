@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
     while(mqtt_isconnected) {
       sleep(1);
       /* publisg ACTivity_dm */
-      sprintf(buffer,"%d",cnt);
+      snprintf(buffer,sizeof(buffer),"%d",cnt);
       a.len=strlen(a.pointer);
       mqtt_publish(ACTIVITY_TOPIC,a,0,1);
       cnt++;

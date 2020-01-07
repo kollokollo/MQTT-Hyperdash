@@ -43,10 +43,6 @@ TOPICNUMBER: X=110 Y=170 W=80  TOPIC=HOME/GAS/POWER FORMAT="####.# l/h" BGC=$44f
 TEXT:        X=10  Y=190 FGC=$ffffFFFF TEXT="Water:"
 TOPICNUMBER: X=110 Y=190 W=80  TOPIC=HOME/WASSER/POWER FORMAT="####.# l/h" BGC=$44ff FGC=$ffff00ff
 
-SHELLCMD:    x=10 y=260 w=80 h=25 CMD="xload &"
-PBOX:        x=10 y=260 w=80 h=25 BGC=$444444ff 
-TEXT:        x=20 y=260 w=80 h=25 TEXT="xload" FGC=$ffffffff FONT="Arial"
-FRAMETOGGLE: x=10 y=260 w=80 h=25
 
 DASH:         x=220 y=260 w=80 h=25 DASH="main"
 PBOX:         x=220 y=260 w=80 h=25 BGC=$444444ff 

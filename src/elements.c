@@ -5,24 +5,29 @@
  * MQTT-Hyperdash is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
- 
- 
- /*TODO: 
-   1. TOPICINNUMBER: round to TIC value. 
-                     allow to set the QoS in the input dialog.
-   2. Scaler elements
-   right-click opens a box where one can choose different ranges
-   (full, medium (30%), fine (10%)) and where one can set the value 
-   explicitly. Also the arrow keys should be active for tics.
-   3. Plot element --> different plot types...
-
-  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <ctype.h>
 #include <math.h>
+
+#include "config.h" 
+ 
+ /*TODO: 
+
+   1. TOPICINNUMBER: round to TIC value. 
+                     allow to set the QoS in the input dialog.
+   2. Scaler elements
+   right-click opens a box where one can choose different ranges
+   (full, medium (30%), fine (10%)) and where one can set the value 
+   explicitly. Also the arrow keys should be active for tics.
+
+   3. SOUNDLABEL element --> trigger different sounds
+
+   4. Regular Expressions for MATCH
+
+  */
 
 #include "basics.h"
 #include "graphics.h"
@@ -43,7 +48,11 @@ void i_broker(ELEMENT *el,char *pars) {
   el->h=0;
   /* connect to mqtt broker */
   int rc=mqtt_broker(el->filename,NULL,NULL);
-  if(rc==-1) message_dialog("MQTT Hyperdash Error","ERROR: Could not connect to the MQTT broker.", 1);
+  if(rc==-1) {
+    char buffer[256];
+    snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n%s",el->filename);
+    message_dialog("MQTT Hyperdash Error",buffer, 1);
+  }
 }
 
 /* Initialoize the panel/window, get title and default values... */
@@ -98,16 +107,16 @@ void i_bitmap(ELEMENT *el,char *pars) {
   int w=32,h=32;
   el->filename=strdup(key_value(pars,"BITMAP","bitmap.bmp"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
-  sprintf(f,"%s/%s",bitmapdir,el->filename);
+  snprintf(f,sizeof(f),"%s/%s",bitmapdir,el->filename);
   if(exist(f)) {
     el->data[0]=get_bitmap(f,&w,&h);
     if(verbose>0) printf("Bitmap: %dx%d\n",w,h);
   } else {
     printf("Error: Bitmap %s not found!\n",f);
   }
-  sprintf(f,"%d",w);
+  snprintf(f,sizeof(f),"%d",w);
   el->w=atoi(key_value(pars,"W",f));
-  sprintf(f,"%d",h);
+  snprintf(f,sizeof(f),"%d",h);
   el->h=atoi(key_value(pars,"H",f));
 }
 void i_icon(ELEMENT *el,char *pars) {
@@ -115,15 +124,15 @@ void i_icon(ELEMENT *el,char *pars) {
   int w=32,h=32;
   el->filename=strdup(key_value(pars,"ICON","icon.png"));
   el->agc=(long)myatof(key_value(pars,"TGC","$00"));  /* Transparent color */
-  sprintf(f,"%s/%s",icondir,el->filename);
+  snprintf(f,sizeof(f),"%s/%s",icondir,el->filename);
   if(exist(f)) {
     el->data[0]=get_icon(f,&w,&h);
   } else {
     printf("Error: Icon %s not found!\n",f);
   }
-  sprintf(f,"%d",w);
+  snprintf(f,sizeof(f),"%d",w);
   el->w=atoi(key_value(pars,"W",f));
-  sprintf(f,"%d",h);
+  snprintf(f,sizeof(f),"%d",h);
   el->h=atoi(key_value(pars,"H",f));
 }
 
@@ -208,7 +217,7 @@ void i_textlabel(ELEMENT *el,char *pars) {
   char w1[256],w2[256],w3[256];
 
   for(i=0;i<10;i++) {
-    sprintf(p,"TEXT[%d]",i);
+    snprintf(p,sizeof(p),"TEXT[%d]",i);
     a=key_value(pars,p,p);
     wort_sep(a,'|',0,w1,w2);
     wort_sep(w2,'|',0,w2,w3);
@@ -234,14 +243,14 @@ void i_bitmaplabel(ELEMENT *el,char *pars) {
   char f[256];
   int w=32,h=32;
   for(i=0;i<10;i++) {
-    sprintf(p,"BITMAP[%d]",i);
+    snprintf(p,sizeof(p),"BITMAP[%d]",i);
     a=key_value(pars,p,p);
     wort_sep(a,'|',0,w1,w2);
     wort_sep(w2,'|',0,w2,w3);
     el->label[i].pointer=strdup(w1);
     el->label[i].len=strlen(el->label[i].pointer);
     if(*w2) {
-    sprintf(f,"%s/%s",bitmapdir,w2);
+    snprintf(f,sizeof(f),"%s/%s",bitmapdir,w2);
     if(exist(f)) {
       el->data[i]=get_bitmap(f,&w,&h);
       if(verbose>0) printf("Bitmap: <%s> %dx%d\n",f,w,h);
@@ -253,9 +262,9 @@ void i_bitmaplabel(ELEMENT *el,char *pars) {
   }
 
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
-  sprintf(f,"%d",w);
+  snprintf(f,sizeof(f),"%d",w);
   el->w=atoi(key_value(pars,"W",f));
-  sprintf(f,"%d",h);
+  snprintf(f,sizeof(f),"%d",h);
   el->h=atoi(key_value(pars,"H",f));
 }
 
@@ -659,6 +668,217 @@ void u_plot(ELEMENT *el,WINDOW *win, char *message) {
   }
 }
 
+/* This makes a nice looking vertical meter with automatic scala */
+
+void u_tvmeter(ELEMENT *el,WINDOW *win, char *message) {
+  double v=myatof(message);
+  int x=el->x;
+  int y=el->y+35*el->w/120;
+  int w=el->w;
+  int h=el->h-2*35*el->w/120;
+  int y0=h-1-(int)((0-el->min)*(double)h/(el->max-el->min));
+  int y1=h-1-(int)((v-el->min)*(double)h/(el->max-el->min));
+  boxColor(win->display,el->x,el->y,el->x+el->w-1,el->y+el->h-1,el->bgc);
+  y1=min(y1,h);
+  y0=min(y0,h);
+  if(y1<0) y1=0;
+  if(y0<0) y0=0;
+  
+  int i,f;
+  double vv;
+  char buf[32];
+  char *p,*q;
+  double scale=1;
+  while(fabs(scale*el->min)<1 && fabs(scale*el->min)<1 && scale<1e6) scale*=10; 
+  for(i=y;i<y+h;i++) {
+    vv=(el->max-el->min)*(y+h-i)/(double)h+el->min;
+    snprintf(buf,sizeof(buf),"%g",vv*scale);
+    q=p=buf;
+    while(*p) {
+      if(isdigit(*p)) *q++=*p;
+      p++;
+    }
+    *q=0;
+    f=(buf[0])&1;
+    if(f) lineColor(win->display,el->x,i,el->x+el->w/4,i,el->agc);
+    else  lineColor(win->display,el->x,i,el->x+el->w/4,i,el->bgc);
+    f=(buf[1])&1;
+    if(f) lineColor(win->display,el->x+el->w/4,i,el->x+el->w/2,i,el->agc);
+    else  lineColor(win->display,el->x+el->w/4,i,el->x+el->w/2,i,el->bgc);
+  }
+  
+  rectangleColor(win->display,x,y,x+w/2,y+h,el->agc);
+  if(el->min<0 && el->max>0) lineColor(win->display,x,y+y0,x+w/2,y+y0,el->fgc);
+  if(!isnan(v)) {
+    Sint16 vx[7]={-10,33,50,59, 50, 33,-10};
+    Sint16 vy[7]={  0,20,35, 0,-35,-20,  0};
+    for(i=0;i<7;i++) {
+      /* Scale */
+      vx[i]=(Sint16)((double)vx[i]*(double)w/120.0);
+      vy[i]=(Sint16)((double)vy[i]*(double)w/120.0);
+      /* translate*/
+      vx[i]+=x+w/2;
+      vy[i]+=y+y1;
+    }
+    filledPolygonColor(win->display,&vx[0],&vy[0],7,el->fgc);
+  }
+}
+void u_thmeter(ELEMENT *el,WINDOW *win, char *message) {
+  double v=myatof(message);
+  int x=el->x+35*el->h/120;
+  int y=el->y;
+  int w=el->w-2*35*el->h/120;
+  int h=el->h;
+  
+  int x0=(int)((0-el->min)*(double)w/(el->max-el->min));
+  int x1=(int)((v-el->min)*(double)w/(el->max-el->min));
+  boxColor(win->display,el->x,el->y,el->x+el->w-1,el->y+el->h-1,el->bgc);
+  x1=min(x1,w);
+  x0=min(x0,w);
+  if(x1<0) x1=0;
+  if(x0<0) x0=0;
+  
+  int i,f;
+  double vv;
+  char buf[32];
+  char *p,*q;
+  double scale=1;
+  while(fabs(scale*el->min)<1 && fabs(scale*el->min)<1 && scale<1e6) scale*=10; 
+  for(i=x;i<x+w;i++) {
+    vv=(el->max-el->min)*(i-x)/(double)w+el->min;
+    snprintf(buf,sizeof(buf),"%g",vv*scale); 
+    q=p=buf;
+    while(*p) {
+      if(isdigit(*p)) *q++=*p;
+      p++;
+    }
+    *q=0;
+    f=(buf[0])&1;
+    if(f) lineColor(win->display,i,el->y,i,el->y+el->h/4,el->agc);
+    else  lineColor(win->display,i,el->y,i,el->y+el->y/4,el->bgc);
+    f=(buf[1])&1;
+    if(f) lineColor(win->display,i,el->y+el->h/4,i,el->y+el->h/2,el->agc);
+    else  lineColor(win->display,i,el->y+el->h/4,i,el->y+el->h/2,el->bgc);
+  }
+  rectangleColor(win->display,x,y,x+w,y+h/2,el->agc);
+  if(el->min<0 && el->max>0) lineColor(win->display,x+x0,y,x+x0,y+h/2,el->fgc);
+  if(!isnan(v)) {
+    Sint16 vy[7]={-10,33,50,59, 50, 33,-10};
+    Sint16 vx[7]={  0,20,35, 0,-35,-20,  0};
+    for(i=0;i<7;i++) {
+      /* Scale */
+      vx[i]=(Sint16)((double)vx[i]*(double)h/120.0);
+      vy[i]=(Sint16)((double)vy[i]*(double)h/120.0);
+      /* translate*/
+      vx[i]+=x+x1;
+      vy[i]+=y+h/2;
+    }
+    filledPolygonColor(win->display,&vx[0],&vy[0],7,el->fgc);
+  }
+}
+
+
+/*   The (round) Meter element.
+ *  This element simulates an analog meter.
+ *  TODO: auto scala, maybe different style options
+ */
+
+const Sint16 zeigerx[7]={0, 200,400,500, 400,200,  0};
+const Sint16 zeigery[7]={25, 25,100,  0,-100,-25,-25};
+
+void u_meter(ELEMENT *el,WINDOW *win, char *message) {
+  int i;
+  double v=myatof(message);
+  double phi;
+  int lim=(int)(el->amax-el->amin);
+  int flag=1;
+  if(lim<0) {lim=-lim;flag=-1;}
+
+/* SDL cannot draw arcs and segments of a circle, however this can be
+implemented using polygons....
+*/
+  int anz=2+360;
+  Sint16 vx[anz],vy[anz];
+  phi=PI*el->amin/180;
+  for(i=0;i<7;i++) {
+    /* Rotate */
+    vx[i]=(Sint16)( cos(phi)*(double)zeigerx[i]+sin(phi)*(double)zeigery[i]);
+    vy[i]=(Sint16)(-sin(phi)*(double)zeigerx[i]+cos(phi)*(double)zeigery[i]);
+    /* Scale */
+    vx[i]=(Sint16)((double)vx[i]*(double)el->w/1100.0);
+    vy[i]=(Sint16)((double)vy[i]*(double)el->h/1100.0);
+    /* translate*/
+    vx[i]+=el->x+el->w/2;
+    vy[i]+=el->y+el->h/2;
+  }
+  filledPolygonColor(win->display,&vx[0],&vy[0],7,el->bgc);
+  phi=PI*el->amax/180;
+  for(i=0;i<7;i++) {
+    /* Rotate */
+    vx[i]=(Sint16)( cos(phi)*(double)zeigerx[i]+sin(phi)*(double)zeigery[i]);
+    vy[i]=(Sint16)(-sin(phi)*(double)zeigerx[i]+cos(phi)*(double)zeigery[i]);
+    /* Scale */
+    vx[i]=(Sint16)((double)vx[i]*(double)el->w/1100.0);
+    vy[i]=(Sint16)((double)vy[i]*(double)el->h/1100.0);
+    /* translate*/
+    vx[i]+=el->x+el->w/2;
+    vy[i]+=el->y+el->h/2;
+  }
+  filledPolygonColor(win->display,&vx[0],&vy[0],7,el->bgc);
+
+  phi=(v-el->min)/(el->max-el->min);
+  if(phi<0) phi=0;
+  if(phi>1) phi=1;
+  phi=phi*PI/180*(el->amax-el->amin)+PI/180*el->amin;
+
+  
+  vx[0]=el->x+el->w/2;
+  vy[0]=el->y+el->h/2;
+ // printf("flag=%d, lim=%d\n",flag,lim);
+  for(i=0;i<lim;i++) {
+    if(flag>0) {
+      vx[i+1]=el->w/2*cos(PI*((double)i+el->amin)/180);
+      vy[i+1]=-el->h/2*sin(PI*((double)i+el->amin)/180);
+    } else {
+      vx[i+1]=el->w/2*cos(PI*((double)i+el->amax)/180);
+      vy[i+1]=-el->h/2*sin(PI*((double)i+el->amax)/180);
+    }
+    /* translate*/
+    vx[i+1]+=el->x+el->w/2;
+    vy[i+1]+=el->y+el->h/2;
+  }
+  vx[i+1]=el->x+el->w/2;
+  vy[i+1]=el->y+el->h/2;
+  filledPolygonColor(win->display,&vx[0],&vy[0],i+2,el->bgc);
+  
+  polygonColor(win->display,&vx[0],&vy[0],i+2,el->agc);
+  if(el->min<0 && el->max>0) {
+    double phi0=(0-el->min)/(el->max-el->min);
+    phi0=phi0*PI/180*(el->amax-el->amin)+PI/180*el->amin;
+    vx[0]=el->w/2*cos(phi0)+el->x+el->w/2;
+    vy[0]=-el->h/2*sin(phi0)+el->y+el->h/2;
+    vx[1]=el->w/2*0.8*cos(phi0)+el->x+el->w/2;
+    vy[1]=-el->h/2*0.8*sin(phi0)+el->y+el->h/2;
+    lineColor(win->display,vx[0],vy[0],vx[1],vy[1],el->fgc);
+  }
+  if(!isnan(v)) {
+    for(i=0;i<7;i++) {
+      /* Rotate */
+      vx[i]=(Sint16)( cos(phi)*(double)zeigerx[i]+sin(phi)*(double)zeigery[i]);
+      vy[i]=(Sint16)(-sin(phi)*(double)zeigerx[i]+cos(phi)*(double)zeigery[i]);
+      /* Scale */
+      vx[i]=(Sint16)((double)vx[i]*(double)el->w/1100.0);
+      vy[i]=(Sint16)((double)vy[i]*(double)el->h/1100.0);
+      /* translate*/
+      vx[i]+=el->x+el->w/2;
+      vy[i]+=el->y+el->h/2;
+    }
+    filledPolygonColor(win->display,&vx[0],&vy[0],7,el->fgc);
+  }
+  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2/10,el->h/2/10,el->agc);
+  // ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->agc);
+}
+
 
 
 
@@ -678,6 +898,38 @@ void element_publish(ELEMENT *el, double v,double old_v) {
     free(a.pointer);
   }
 }
+
+/* If the click was not consumed before the panel (also) gets it */
+
+int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==2) {
+    message_dialog(PACKAGE_NAME " Info",
+                   PACKAGE_NAME "\n===============\n\n Version " VERSION "\n\n" 
+		   VERSION_DATE "\n\n (c) by Markus Hoffmann et. al.\n",1);
+    return(1);
+  } else if(b==3) {
+    char newdash[256];
+    char buf[256];
+
+    newdash[0]=0;
+    /* open a file selector to select a new dash to display.*/
+    int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
+    if(rc && newdash[0]) {
+      if(exist(newdash))  snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s &",newdash);
+      else snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s/%s.dash &",dashboarddir,newdash);
+      if(verbose>0) printf("Dash start: <%s>\n",newdash);
+      if(system(buf)==-1) printf(MQTT_HYPERDASH_EXECUTABLE_NAME " ERROR: system\n");  
+    }
+    return(1);
+  }
+  return(0);
+}
+
+
+
+
+
+
 
 /* get last known value, add increment, format it and then publish it. */
 int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b) {
@@ -814,8 +1066,8 @@ int c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   char buf[256];
   if(b==1) {
-    if(exist(el->text))  sprintf(buf,"hyperdash %s.dash &",el->text);
-    else sprintf(buf,"hyperdash %s/%s.dash &",dashboarddir,el->text);
+    if(exist(el->text))  snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s.dash &",el->text);
+    else snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s/%s.dash &",dashboarddir,el->text);
     printf("Dash start: <%s>\n",el->text);
     if(system(buf)==-1) printf("Error: system\n");  
     return(1);
@@ -826,6 +1078,55 @@ int c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
     printf("Shell cmd : <%s>\n",el->text);
     if(system(el->text)==-1) printf("Error: system\n");
+    return(1);
+  }
+  return(0);
+}
+int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    printf("topic value cmd : <%s>\n",el->text);
+    STRING a;
+    a.pointer=el->text;
+    a.len=strlen(a.pointer);
+    mqtt_publish(el->topic,a,el->revert,1);
+   // return(1); Do not consume it. There my be other action.... 
+  }
+  return(0);
+}
+int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    printf("input number for topic <%s> with format <%s>\n",el->topic,el->format);
+    STRING a;
+    char buf[256];
+    char *def=subscriptions[el->subscription].last_value.pointer;
+    int rc=input_dialog(el->topic,buf,def);
+    if(rc>0) {
+      double v=myatof(buf);
+      if(v>el->max) v=el->max;
+      if(v<el->min) v=el->min;
+      STRING format;
+      format.pointer=el->format;
+      format.len=strlen(format.pointer);
+      a=do_using(v,format);
+      mqtt_publish(el->topic,a,el->revert,1);
+      free(a.pointer);
+    }
+    return(1);
+  }
+  return(0);
+}
+int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==1) {
+    printf("input string for topic <%s>\n",el->topic);
+    STRING a;
+    char buf[256];
+    char *def=subscriptions[el->subscription].last_value.pointer;
+    int rc=input_dialog(el->topic,buf,def);
+    if(rc>0) {
+      a.pointer=buf;
+      a.len=strlen(a.pointer);
+      mqtt_publish(el->topic,a,el->revert,1);
+    }
     return(1);
   }
   return(0);

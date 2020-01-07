@@ -200,7 +200,7 @@ locale_t old = uselocale(safe_locale);
   
   if (*format.pointer=='%') { /* c-style format */
     char b[32];
-    sprintf(b,format.pointer,num);
+    snprintf(b,sizeof(b),format.pointer,num);
     dest.len=strlen(b);
     dest.pointer=strdup(b);
   } else { /* basic-style format */
@@ -244,7 +244,7 @@ locale_t old = uselocale(safe_locale);
 
    
    if(ex>2) {
-     sprintf(des,"%16.16e",num); 
+     snprintf(des,sizeof(des),"%16.16e",num); 
      // printf("preformat: <%s>\n",des);
      j=i=0;
      while(des[i] && des[i]!='e') i++;
@@ -264,11 +264,11 @@ locale_t old = uselocale(safe_locale);
        for(i=0;i<dest.len;i++) dest.pointer[i]='*';
        return(dest);    
      } else xfill(dest.pointer,&des[i],'^',dest.len);
-   } else sprintf(des,"%16.16f",num);
+   } else snprintf(des,sizeof(des),"%16.16f",num);
    //  printf("preformat: <%s>\n",des); 
      /*Jetzt muss die Zahl gerundet werden.*/
      num=myatof(des)+pow(0.1,a)*0.5;
-     sprintf(des,"%16.16f",num);
+     snprintf(des,sizeof(des),"%16.16f",num);
    //  printf("preformat2: <%s>\n",des); 
     /*Hierzu brauchen wir die Anzahl der tatsaechlichen STellen vor dem Komma*/
     int count=0;

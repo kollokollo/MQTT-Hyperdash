@@ -20,9 +20,9 @@ ICONDIR=$(DATADIR)/icons/hicolor/scalable/apps
 DESKTOPDIR=$(DATADIR)/applications
 MANDIR=${datarootdir}/man
 
-LIBNO=1.00
+LIBNO=1.01
 
-RELEASE=2
+RELEASE=3
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  

@@ -22,7 +22,7 @@
 #include <X11/Xutil.h>
 #endif
 
-int init_sdl() {
+static int init_sdl() {
   static int done=0;
   if(done) return(0);
 #ifndef WINDOWS
@@ -33,9 +33,7 @@ int init_sdl() {
   
   /* Initialize SDL_ttf  */
     if(TTF_Init()==-1) return -1;
-  
-  atexit(SDL_Quit);
-  
+    
   /* Enable Unicode translation */
   SDL_EnableUNICODE(1);
   done=1;
@@ -43,6 +41,7 @@ int init_sdl() {
 }
 
 void close_window(WINDOW *win) {
+  SDL_Quit();
   if(win->title) free(win->title);
   if(win->info) free(win->info);
   free(win);
@@ -51,15 +50,14 @@ void close_window(WINDOW *win) {
 #define WINDOW_DEFAULT_W 512
 #define WINDOW_DEFAULT_H 256
 WINDOW *create_window(const char *title, const char* info,int x,int y,unsigned int w,unsigned int h, int fullscreen) {
-  WINDOW *nw;
-  nw=calloc(sizeof(WINDOW),1);
+  WINDOW *nw=calloc(sizeof(WINDOW),1);
   init_sdl();
   
   if(!(nw->display=SDL_SetVideoMode(w,h, 32,
        SDL_FULLSCREEN*fullscreen |
        SDL_HWSURFACE|SDL_SRCALPHA))) {
       printf("cannot open SDL surface \n");
-      SDL_Quit();
+      close_window(nw);
       return(NULL);
   }
   nw->x=nw->y=0;
@@ -336,7 +334,7 @@ void open_all_fonts() {
     int i;
     for(i=0;i<anzfonts;i++) {
       if(fonts[i].anz>0) {
-        sprintf(fontname,"%s/%s.ttf",fontdir,fonts[i].name);
+        snprintf(fontname,sizeof(fontname),"%s/%s.ttf",fontdir,fonts[i].name);
         if(!exist(fontname)) {
           if(strcmp(fonts[i].name,"SMALL")) printf("ERROR: font not found: <%s>\n",fontname);
           fonts[i].font=NULL;

@@ -16,6 +16,7 @@ void i_broker(ELEMENT *el,char *pars);
 
 void i_panel(ELEMENT *el,char *pars);
 void d_panel(ELEMENT *el,WINDOW *win);
+int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b);
 
 void i_bar(ELEMENT *el,char *pars);
 
@@ -104,6 +105,9 @@ void u_vscaler(ELEMENT *el,WINDOW *win, char *message);
 int  c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
 int  c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
 int  c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b);
 void i_plot(ELEMENT *el,char *pars);
 void d_plot(ELEMENT *el,WINDOW *win);
 void u_plot(ELEMENT *el,WINDOW *win, char *message);

@@ -1,3 +1,4 @@
-#define PACKAGE_VERSION "1.27"
-#define VERSION "1.27"
-#define VERSION_DATE "Tue Dec 17 11:27:05 CET 2019"
+#define PACKAGE_NAME "MQTT-Hyperdash"
+#define PACKAGE_VERSION "1.01"
+#define VERSION "1.01"
+#define VERSION_DATE "Tue Dec 18 11:00:11 CET 2019"

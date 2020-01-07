@@ -100,3 +100,22 @@ FRAME:   X=98 Y=298 W=204 H=20 REVERT=1
 # This is a raw scaler wthout "decoration"
 
 VSCALER: X=300 Y=30 W=20 H=200 TOPIC=TESTT MIN=0 MAX=4  TIC=0.05
+
+##########################################################################
+# Demonstration of a Button which excecutes a shell command on the local
+# machine.
+#
+
+SHELLCMD:    x=10 y=360 w=80 h=25 CMD="xload &"
+PBOX:        x=10 y=360 w=80 h=25 BGC=$444444ff 
+TEXT:        x=20 y=360 w=80 h=25 TEXT="xload" FGC=$ffffffff FONT="Arial"
+FRAMETOGGLE: x=10 y=360 w=80 h=25
+
+##########################################################################
+# Demonstration of a Button which opens another dashboard when clicked.
+#
+
+DASH:        x=110 y=360 w=100 h=25 DASH="main"
+PBOX:        x=110 y=360 w=100 h=25 BGC=$444444ff 
+TEXT:        x=120 y=360 w=100 h=25 TEXT="main.dash" FGC=$ffffffff FONT="Arial"
+FRAMETOGGLE: x=110 y=360 w=100 h=25

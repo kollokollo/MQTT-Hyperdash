@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <MQTTClient.h>
 #include <time.h>
+#include "config.h"
 #include "basics.h"
 #include "graphics.h"
 #include "hyperdash.h"
@@ -120,7 +121,7 @@ int mqtt_broker(char *url,char *user, char *passwd) {
   MQTTClient_willOptions will_opts;
   
   mqtt_exit(); /* Alte Verbindung beenden.*/
-  sprintf(clientID,"MQTT-Hyperdash-%ld",clock()); /* Make a unique client ID */
+  snprintf(clientID,sizeof(clientID),PACKAGE_NAME "-%ld",clock()); /* Make a unique client ID */
   MQTTClient_create(&client,url, clientID,MQTTCLIENT_PERSISTENCE_NONE, NULL);
   conn_opts.keepAliveInterval = 20;
   conn_opts.cleansession = 1;

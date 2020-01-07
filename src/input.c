@@ -51,7 +51,7 @@ static gboolean delete_event( GtkWidget *widget,
      * This is useful for popping up 'are you sure you want to quit?'
      * type dialogs. */
 
-    g_print ("delete event occurred\n");
+   // g_print ("delete event occurred\n");
 
     /* Change TRUE to FALSE and the main window will be destroyed with
      * a "delete-event". */
@@ -125,7 +125,7 @@ void destroy (GtkWidget *w, gpointer *data) {
 
 int fileselect_dialog(char *filename, const char *path, const char *mask) {
   char buf[256];
-  sprintf(buf,"%s/%s",path,filename);
+  snprintf(buf,sizeof(buf),"%s/%s",path,filename);
   fileselect_return=0;
 
 #ifndef WINDOWS
@@ -173,13 +173,12 @@ static char input_value[256];
 static void inputOK_clicked (GtkWidget *widget, gpointer data) {
   input_return=1;
   strcpy(input_value,gtk_entry_get_text( GTK_ENTRY(data)));
-  g_print(input_value);
+  // g_print(input_value);
 }
 #endif
 int input_dialog(const char *topic, char *value, char *def) {
   char buf[256];
-  sprintf(buf,"Enter Value for Topic\n%s:\n",topic);
-
+  snprintf(buf,sizeof(buf),"Enter Value for Topic\n\n%s:\n\n",topic);
 
 #ifndef WINDOWS
   GtkWidget *window;
