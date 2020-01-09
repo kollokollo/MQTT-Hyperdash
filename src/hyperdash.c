@@ -21,12 +21,17 @@
 #include "mqtt.h"
 #include "elements.h"
 
-
+#ifdef WINDOWS
+char icondir[256]="icons";
+char bitmapdir[256]="bitmaps";
+char fontdir[256]="C:/Windows/Fonts";
+char dashboarddir[256]=".";
+#else
 char icondir[256]="/usr/share/hyperdash/icons";
 char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
 char fontdir[256]="/usr/share/fonts/truetype/msttcorefonts";
 char dashboarddir[256]="/usr/share/hyperdash/dashboards";
-
+#endif
 
 /* Element definitions for all element types. 
    You cann add new types or define aliases, if you want, but

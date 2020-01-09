@@ -14,6 +14,9 @@
 #ifndef WINDOWS
 #include <gtk/gtk.h>
 #endif
+//#ifdef WINDOWS
+//  #include <windows.h>
+//#endif
 #include "config.h"
 #include "basics.h"
 #include "graphics.h"
@@ -77,16 +80,26 @@ static void kommandozeile(int anzahl, char *argumente[]) {
 }
 
 extern WINDOW *global_window;  /* TODO */
+
+#ifdef WINDOWS
+#include <windows.h>
+int WINAPI  WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+    PSTR lpCmdLine, INT nCmdShow) {
+int anzahl=0;
+char **argumente= (char **)CommandLineToArgvW(GetCommandLineW(), &anzahl);
+ if( NULL == argumente )
+   {
+      wprintf(L"CommandLineToArgvW failed\n");
+      return 0;
+   }
+#else
 int main(int anzahl, char *argumente[]) {
+#endif
   DASH *maindash;
   WINDOW *mainwindow;
 #ifndef WINDOWS
   gtk_init (&anzahl, &argumente);
 #endif
-  if(anzahl<2) {
-    intro();
-    usage();
-  } else {
     kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
     if(!exist(ifilename)) {
       char buf[strlen(ifilename)+1];
@@ -116,6 +129,5 @@ again:
       }
       free_dash(maindash);
     } else printf(PACKAGE_NAME " ERROR: %s not found !\n",ifilename);
-  }
   return(EX_OK);
 }
