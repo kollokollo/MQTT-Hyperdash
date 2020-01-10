@@ -100,7 +100,7 @@ int main(int anzahl, char *argumente[]) {
 #ifndef WINDOWS
   gtk_init (&anzahl, &argumente);
 #endif
-    kommandozeile(anzahl, argumente);    /* Kommandozeile bearbeiten */
+    kommandozeile(anzahl, argumente);    /* process command line */
     if(!exist(ifilename)) {
       char buf[strlen(ifilename)+1];
       strcpy(buf,ifilename);

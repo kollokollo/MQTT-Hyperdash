@@ -1,0 +1,111 @@
+/* SYSMEASURE.RULE (c) Markus Hoffmann  */
+
+/* This file is part of MQTT-Hyperdash, the MQTT Dashboard 
+ * ============================================================
+ * MQTT-Hyperdash is free software and comes with NO WARRANTY - read the file
+ * COPYING for details
+ */
+
+/* Demo Measurement rule machine  ######## THIS IS A TEMPLATE ############
+   it performs measurements (here the systems load and disk-usage).
+   You can use this engine to monitor the host system, load and disk usage.
+   You can specify the hostname via --prefix on the commandline to make
+   the topics more unique.   
+ */
+
+/* Specify the Broker with URL, USERNAME and PASSWORD if needed.*/
+
+#define BROKER "tcp://localhost:1883"
+#define USER NULL
+#define PASSWD NULL
+
+/* Define a name for this rule engine */
+
+#define CLIENT "Sys-Measure"
+
+
+/* Define a TOPIC where the activity of this engine is reported to
+   every second as long the process is running.
+ */
+
+#define ACTIVITY_TOPIC "SYSMEASURE/ACTIVITY_DM"
+
+
+/* Define input and output topics for the rule 
+ */
+
+enum {
+ SYSLOAD1M,      /* alias for first  (output) parameter*/
+ SYSLOAD5M,      /* alias for 2. (output) parameter*/
+ SYSLOAD15M,     /* alias for 3. (output) parameter*/
+ SYSUPTIME,      /* alias for 4. (output) parameter*/
+ SYSMEMUSAGE,    /* alias for 5. (output) parameter*/
+ SYSDISKUSAGE,   /* alias for 6. (output) parameter*/
+};
+
+PARMDEF my_rule_parms[]={
+  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSLOAD_AM",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSLOAD5M_AM",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSLOAD15M_AM",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSUPTIME_AM",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSMEMUSAGE_AM",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSDISKUSAGE_AM",0,0,NULL}
+};
+
+
+/* define the rule(s) for this rule engine. 
+   This demo has no active rule, it uses only the measurement loop.
+
+  The params for the measure-function must be defined in the first rule. 
+
+ */
+
+
+RULEDEF rules[]={
+  {my_rule_parms,sizeof(my_rule_parms)/sizeof(PARMDEF),NULL,NULL}
+};
+
+
+/* This function will be called in a loop. You are responsible to 
+   yield or delay excecution as necessary. 
+
+   The current/actual content of all parameters (PARM_IN and PARM_OUT)
+   have been collected in a snapshot and is refered to by parms.
+   
+   The function is expected to put the results of its calculation into the
+   Snapshot parms is pointing to. If PARM_ISNUMBER is set, the 
+   value should be a double and put into parms[i].value. Otherwise the 
+   result is expected as a STRING in parms[i].string. Note that the 
+   string should not be dynamically allocated, since it would not be freed.
+   You must take care of this memory. 
+   All parameters which are defined with 
+   PARM_OUT will be pushed to their TOPICS afterwards, but only if the value
+   has changes. Otherwise it is not pushed. Note that there remains a 
+   retained value. 
+ */
+
+#include <sys/sysinfo.h>
+#include <sys/statvfs.h>
+
+void sysmeasure(PARMBUF *parms) {
+  struct sysinfo si;
+  int rc=sysinfo(&si);
+  if(rc!=-1) { 
+    parms[SYSUPTIME].value=(double)si.uptime/3600.0/24;
+    parms[SYSMEMUSAGE].value=100-(double)si.freeram/(double)si.totalram*100;
+    parms[SYSLOAD1M].value=(double)si.loads[0]/ (1 << SI_LOAD_SHIFT);
+    parms[SYSLOAD5M].value=(double)si.loads[1]/ (1 << SI_LOAD_SHIFT);
+    parms[SYSLOAD15M].value=(double)si.loads[2]/ (1 << SI_LOAD_SHIFT);
+  }
+  struct statvfs vfs;
+  rc=statvfs("/",&vfs);
+  if(rc!=-1) { 
+    parms[SYSDISKUSAGE].value=100-(double)vfs.f_bavail*vfs.f_bsize/
+    (double)vfs.f_blocks/(double)vfs.f_frsize*100;
+  }
+  
+  default_measure_loop(NULL); /* it is good to call the default function, if you are
+                             OK with updating ACTIVITY_DM and waiting for 1 Second. 
+			   */
+}
+void (*measure_rule)(PARMBUF *)=sysmeasure;

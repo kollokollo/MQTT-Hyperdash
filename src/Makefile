@@ -103,7 +103,7 @@ MYWINLIBS = WINDOWS/lib/libgfx.lib
 
 
 
-all :    hyperdash
+all :    hyperdash sysmeasure
 
 configure : configure.in
 	autoconf
@@ -164,7 +164,7 @@ uninstall :
 	rm -rf $(DATADIR)/hyperdash/icons
 	rm -rf $(DATADIR)/hyperdash/dashboards
 clean :
-	rm -f *.o a.out Makefile.bak  \
+	rm -f *.o a.out Makefile.bak demo commander sysmeasure \
 	backup-*.tgz *.d
 	rm -rf doc-pak
 moreclean : clean

@@ -47,7 +47,7 @@ void i_broker(ELEMENT *el,char *pars) {
   el->w=0;
   el->h=0;
   /* connect to mqtt broker */
-  int rc=mqtt_broker(el->filename,NULL,NULL);
+  int rc=mqtt_broker(el->filename,NULL,NULL,NULL);
   if(rc==-1) {
     char buffer[256];
     snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n%s",el->filename);

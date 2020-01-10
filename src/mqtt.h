@@ -7,7 +7,7 @@
  */
 void mqtt_init();
 void mqtt_exit();
-int mqtt_broker(char *url,char *user, char *passwd);
+int mqtt_broker(char *url,char *user, char *passwd, char *);
 void mqtt_subscribe(const char *topic,int qos);
 void mqtt_publish(char *topic, STRING payload, int qos, int retain);
 void mqtt_disconnect();

@@ -118,12 +118,14 @@ void mqtt_init() {
   atexit(mqtt_exit);
 }
 
-int mqtt_broker(char *url,char *user, char *passwd) {
+int mqtt_broker(char *url,char *user, char *passwd, char *cid) {
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
   MQTTClient_willOptions will_opts;
+  if(!cid) cid=PACKAGE_NAME;
+  
   
   mqtt_exit(); /* Alte Verbindung beenden.*/
-  snprintf(clientID,sizeof(clientID),PACKAGE_NAME "-%ld",clock()); /* Make a unique client ID */
+  snprintf(clientID,sizeof(clientID),"%s-%ld",cid,clock()); /* Make a unique client ID */
   MQTTClient_create(&client,url, clientID,MQTTCLIENT_PERSISTENCE_NONE, NULL);
   conn_opts.keepAliveInterval = 20;
   conn_opts.cleansession = 1;

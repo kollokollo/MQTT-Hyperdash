@@ -1,0 +1,70 @@
+# if you make and run the sysmeasure rule engine, you can monitor
+# the system status with this little dashboard
+# 
+# start it with
+# sysmeasure --prefix LOCALHOST &
+#
+
+BROKER: URL="tcp://localhost:1883"
+PANEL:  TITLE="Localhost System" W=300 H=200 FGC=$ffffffff BGC=$000040ff
+
+TEXT: TEXT="Localhost:" X=5 Y=10 FONT="Arial" FONTSIZE=20 FGC=$ffffffff
+
+BITMAPLABEL: x=245 y=5 BGC=$000040ff TOPIC=LOCALHOST/SYSMEASURE/ACTIVITY_DM \
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff"
+
+TEXT: X=5 y=40 TEXT="Uptime:"  FGC=$ffffffff 
+TOPICNUMBER: TOPIC="LOCALHOST/SYSMEASURE/SYSUPTIME_AM" FORMAT="####.# days" \
+             X=80 y=40  FGC=$ffff00ff BGC=$000040ff
+
+TEXT: X=5 y=50 TEXT="MemUsage:"  FGC=$ffffffff 
+TOPICNUMBER: TOPIC="LOCALHOST/SYSMEASURE/SYSMEMUSAGE_AM" FORMAT="###.# percent" \
+             X=80 y=50  FGC=$ffff00ff BGC=$000040ff
+
+TEXT: X=5 y=60 TEXT="DiskUsage:"  FGC=$ffffffff 
+TOPICNUMBER: TOPIC="LOCALHOST/SYSMEASURE/SYSDISKUSAGE_AM" FORMAT="###.# percent" \
+             X=80 y=60  FGC=$ffff00ff BGC=$000040ff
+
+TEXT: X=5 y=70 TEXT="Load:"  FGC=$ffffffff 
+TOPICNUMBER: TOPIC="LOCALHOST/SYSMEASURE/SYSLOAD_AM" FORMAT="##.#" \
+             X=80 y=70  FGC=$ffff00ff BGC=$000040ff
+TOPICNUMBER: TOPIC="LOCALHOST/SYSMEASURE/SYSLOAD5M_AM" FORMAT="##.#" \
+             X=80 y=80  FGC=$ffff00ff BGC=$000040ff
+TOPICNUMBER: TOPIC="LOCALHOST/SYSMEASURE/SYSLOAD15M_AM" FORMAT="##.#" \
+             X=80 y=90  FGC=$ffff00ff BGC=$000040ff
+METER: TOPIC="LOCALHOST/SYSMEASURE/SYSMEMUSAGE_AM" \
+       X=10 Y=100 W=100 h=100 FGC=$ff0000ff AGC=$ffffffff BGC=$40FF \
+       MIN=0 MAX=100 AMIN=225 AMAX=-45
+
+METER: TOPIC="LOCALHOST/SYSMEASURE/SYSDISKUSAGE_AM" \
+       X=120 Y=100 W=100 h=100 FGC=$ff0000ff AGC=$ffffffff BGC=$40FF \
+       MIN=0 MAX=100 AMIN=225 AMAX=-45
+      
+VBAR: TOPIC="LOCALHOST/SYSMEASURE/SYSLOAD_AM" FGC=$ff0000ff BGC=$ff \
+      X=230 Y=100 W=25 H=90 MIN=0 MAX=2
+
+
+TEXT: FGC=$ffffffff FONTSIZE=10 FONT="Arial" \
+      X=30 Y=180 TEXT="0"
+TEXT: FGC=$ffffffff FONTSIZE=10 FONT="Arial" \
+      X=45 Y=170 TEXT="Mem"
+TEXT: FGC=$ffffffff FONTSIZE=10 FONT="Arial" \
+      X=70 Y=180 TEXT="100%"
+
+TEXT: FGC=$ffffffff FONTSIZE=10 FONT="Arial" \
+      X=140 Y=180 TEXT="0"
+TEXT: FGC=$ffffffff FONTSIZE=10 FONT="Arial" \
+      X=160 Y=170 TEXT="Disk"
+TEXT: FGC=$ffffffff FONTSIZE=10 FONT="Arial" \
+      X=180 Y=180 TEXT="100%"
+
+TEXT: FGC=$ffffffff FONTSIZE=10 FONT="Arial" \
+      X=260 Y=180 TEXT="0"
+TEXT: FGC=$ffffffff FONTSIZE=10 FONT="Arial" \
+      X=260 Y=100 TEXT="2"
+
+TEXT: FGC=$ffffffff FONTSIZE=14 FONT="Arial" \
+      X=230 Y=80 TEXT="Load:"

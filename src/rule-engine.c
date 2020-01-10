@@ -28,6 +28,12 @@ implementation is focused on high performance quick reaction, and reliablility.
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#if defined WINDOWS
+  #define EX_OK		  0	/* successful termination */
+  #define EX_UNAVAILABLE 69	/* service unavailable */
+#else
+  #include <sysexits.h>
+#endif
 
 #include <MQTTClient.h>
 #include "basics.h"
@@ -65,7 +71,34 @@ typedef struct {
   void (*rule)();     /* The trigger rule */
 } RULEDEF;
 
-int verbose=0;
+
+void (*measure_rule)(PARMBUF *);  /* Measure routine, if NULL, will be ignored.
+Note: we rely on the fact, that global variables will ne initialized with 
+zero by default.*/
+
+#define ACTIVITY_INTERVAL  1  /*  1 Second */
+#define RECONNECTION_PAUSE 2  /*  2 Seconds */
+#define RECONNECTION_TIME 60  /* 60 Seconds */
+
+
+/* Configuration variables */
+
+extern char clientID[];
+int verbose=0;    /* Verbosity level */
+int do_persist=0; /* Shall the engine persist to connect ad infinitum? */
+
+char *topic_prefix=""; /* Can be configured */
+
+static char *make_topic(char *n) {
+  char *buf=malloc(256);
+  if(topic_prefix && *topic_prefix) {
+    strncpy(buf,topic_prefix,256);
+    strncat(buf,"/",256);
+  } else *buf=0;
+  strncat(buf,n,256);
+  return(buf);
+}
+
 
 /* This function shall be used to publish results of a rule... */
 
@@ -88,6 +121,7 @@ void publish_if_different(PARMDEF *pd, PARMBUF *parm) {
     }
     if(message.len!=subscriptions[pd->sub].last_value.len ||
       memcmp(message.pointer,subscriptions[pd->sub].last_value.pointer,message.len)) {
+      if(verbose>0) printf("Publish new value to %s\n",subscriptions[pd->sub].topic);
       mqtt_publish(subscriptions[pd->sub].topic,message,subscriptions[pd->sub].qos,1);
     }
     free(message.pointer);
@@ -95,12 +129,13 @@ void publish_if_different(PARMDEF *pd, PARMBUF *parm) {
 }
 
 
+void default_measure_loop();
+
+/************* include the rule definition **************************/
 #include RULE
+/********************************************************************/
 
 int num_rules=sizeof(rules)/sizeof(RULEDEF);
-
-/* TODO: define client ID */
-// char *clientID=CLIENT;
 
 #define TIMEOUT     10000L
 /*
@@ -109,18 +144,49 @@ int num_rules=sizeof(rules)/sizeof(RULEDEF);
 
   afterwards format output params and publish
  */
+ 
+ 
+ 
+static void publish_results(RULEDEF *rule,PARMBUF *parms) {
+  if(!rule || !parms) return;
+  int k;
+  for(k=0;k<rule->numparms;k++) {
+    if((rule->params[k].type&PARM_OUT)==PARM_OUT) 
+      publish_if_different(&(rule->params[k]), &parms[k]);
+  }
+}
+static PARMBUF *make_snapshot(RULEDEF *rule) {
+  int k;
+  if(!rule) return(NULL);
+  PARMBUF *params=calloc(rule->numparms,sizeof(PARMBUF));
+  for(k=0;k<rule->numparms;k++) {
+    params[k].string=double_string(&(subscriptions[rule->params[k].sub].last_value));
+    if((rule->params[k].type&PARM_ISNUMBER)==PARM_ISNUMBER) {
+      params[k].value=myatof(params[k].string.pointer);
+    }
+    if(verbose>0) printf("Snapshot-entry #%d: <%s> %g\n",k,params[k].string.pointer,params[k].value);
+  }
+  return(params);
+}
+static void free_snapshot(int n,PARMBUF *parms) {
+  int k;
+  if(n>0) {
+    for(k=0;k<n;k++) free(parms[k].string.pointer);
+  }
+  free(parms);
+}
 
 void update_topic_message(int sub, STRING message) {
-  int i,j,k;
+  int i,j;
   if(verbose>0) printf("update_topic_message: %d <%s>\n",sub,message.pointer);
 
   if(num_rules>0) {
     for(i=0;i<num_rules;i++) {
       if(rules[i].numparms>0 && rules[i].params) {
         for(j=0;j<rules[i].numparms;j++) {
-	  if(verbose>0) printf("check rule #%d Parm %d: %s\n",i,j,rules[i].params[j].topic);
+	  if(verbose>1) printf("check rule #%d Parm %d: %s\n",i,j,rules[i].params[j].topic);
 	  if(rules[i].params[j].sub==sub) {
-	    if(verbose>0) printf("Have a topic match.\n");
+	    if(verbose>0) printf("Have a topic match on <%s>\n",subscriptions[rules[i].params[j].sub].topic);
 	    if((rules[i].params[j].type&PARM_TRIGGER)==PARM_TRIGGER) {
 	      if(verbose>0) printf("have trigger match.\n");
 	      break;
@@ -129,39 +195,85 @@ void update_topic_message(int sub, STRING message) {
 	}
 	if(j<rules[i].numparms) {
 	  if(verbose>0) printf("trigger: Rule function shall be called.\n");
-	      /* generate snapshot */
-	  PARMBUF *params=calloc(rules[i].numparms,sizeof(PARMBUF));
-	  for(k=0;k<rules[i].numparms;k++) {
-	    params[k].string=double_string(&(subscriptions[rules[i].params[k].sub].last_value));
-            if((rules[i].params[k].type&PARM_ISNUMBER)==PARM_ISNUMBER) {
-	      params[k].value=myatof(params[k].string.pointer);
-	    }
-	    if(verbose>0) printf("Snapshot-entry #%d: <%s> %g\n",k,params[k].string.pointer,params[k].value);
-	  }
-	  
+	  /* generate snapshot */
+	  PARMBUF *params=make_snapshot(&rules[i]);
 	  
 	  /* call rule function */
-	  (rules[i].rule)(j,params);
+	  if(rules[i].rule) (rules[i].rule)(j,params);
 	  
 	  /* publish results */
-	  for(k=0;k<rules[i].numparms;k++) {
-            if((rules[i].params[k].type&PARM_OUT)==PARM_OUT) publish_if_different(&(rules[i].params[k]), &params[k]);
-	  }
-	  for(k=0;k<rules[i].numparms;k++) free(params[k].string.pointer);
-	  free(params);
+	  publish_results(&rules[i],params);
+	  free_snapshot(rules[i].numparms,params);
 	}
       }
     }
   }
 }
 
-int main(int argc, char* argv[]) {
-  int cnt=0;
-  int rc,i,j;
+
+void default_measure_loop(PARMBUF *dummy) {
+  static int cnt=0;
   char buffer[64];
   STRING a;
   a.pointer=buffer;
-  if(verbose>0) printf("We have %d rules.\n",num_rules);
+
+  /* publisg ACTivity_dm */
+  snprintf(buffer,sizeof(buffer),"%d",cnt);
+  a.len=strlen(a.pointer);
+  char *topic=make_topic(ACTIVITY_TOPIC);
+  mqtt_publish(topic,a,0,1);
+  free(topic);
+  cnt++;
+  if(cnt>=4) cnt=0;
+  sleep(ACTIVITY_INTERVAL); /* It is important to yeald here! */
+}
+
+
+
+
+static void usage() {
+  printf(
+    "\nUsage: %s [-hvq] ---\t%s ruel engine.\n\n"
+    "  -h --help\t\t---\tusage\n"
+    "  --persist\t\t---\tbe persistent even when connection is impossible\t\n"
+    "  --prefix <prefix>\t---\tset topic prefix\t\n"
+    "  -v\t\t\t---\tbe more verbose\n"
+    "  -q\t\t\t---\tbe more quiet\n"
+    ,CLIENT,CLIENT);
+}
+static void kommandozeile(int anzahl, char *argumente[]) {
+  int count,quitflag=0;
+  /* process command line parameters */
+  for(count=1;count<anzahl;count++) {
+    if(!strcmp(argumente[count],"-h") || !strcmp(argumente[count],"--help")) {
+      usage();
+      quitflag=1;
+    } 
+    else if(!strcmp(argumente[count],"--persist"))   do_persist=1; 
+    else if(!strcmp(argumente[count],"--prefix"))    topic_prefix=argumente[++count];
+    else if(!strcmp(argumente[count],"-v"))	     verbose++;
+    else if(!strcmp(argumente[count],"-q"))	     verbose--;
+    else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the rule itself */
+    else {
+      /* do nothing, these could be options for rule itself */
+    }
+  }
+  if(quitflag) exit(EX_OK);
+}
+
+
+
+int main(int argc, char* argv[]) {
+  int has_been_connected=0;
+  int i,j;
+  char *t;
+  kommandozeile(argc, argv);    /* process command line */
+  if(do_persist) has_been_connected++;
+  if(verbose>0) {
+    printf("We have %d rules.\n",num_rules);
+    printf("Persistence mode=%d\n",do_persist);
+    printf("Topic Prefix:    <%s>\n",topic_prefix);
+  }
   if(num_rules>0) {
     for(i=0;i<num_rules;i++) {
       if(verbose>0) printf("Rule #%d: \n",i);
@@ -170,34 +282,50 @@ int main(int argc, char* argv[]) {
         for(j=0;j<rules[i].numparms;j++) {
 	  if(verbose>0) printf("Rule #%d Parm %d: %s\n",i,j,rules[i].params[j].topic);
 	  if(rules[i].params[j].topic) {
-	    rules[i].params[j].sub=add_subscription(rules[i].params[j].topic,rules[i].params[j].qos);
+	    t=make_topic(rules[i].params[j].topic);
+	    rules[i].params[j].sub=add_subscription(t,rules[i].params[j].qos);
+            free(t);
 	  }
 	}
       }
     }
   }
+  int rc;
+  if(!measure_rule) {
+    if(verbose>0) printf("Setting no/default measure rule.\n");
+  } else {
+    if(verbose>0) printf("We have a measure rule.\n");
+  }
   while(1) {
-    int rc=mqtt_broker(BROKER,USER,PASSWD);  /* connect to mqtt broker */
+    again:
+    rc=mqtt_broker(BROKER,USER,PASSWD,CLIENT);  /* connect to mqtt broker */
     if(rc==-1) {
       printf("MQTT Error: Could not connect to the MQTT broker %s.\n",BROKER);
-      exit(0);
+      if(!has_been_connected) {
+        printf("Quit.\n");
+        exit(EX_UNAVAILABLE);
+      } else {
+        printf("Try to reconnect in 1 Minute.\n");
+        sleep(RECONNECTION_TIME);
+	goto again;
+      }
     }
- 
+    has_been_connected++;
     mqtt_subscribe_all();
-    if(verbose>0) printf("INFO: engine up and running.\n");
+    if(verbose>0) printf("INFO: engine up and running. Client Id=<%s>\n",clientID);
+    /* This is the main loop. */
     while(mqtt_isconnected) {
-      sleep(1);
-      /* publisg ACTivity_dm */
-      snprintf(buffer,sizeof(buffer),"%d",cnt);
-      a.len=strlen(a.pointer);
-      mqtt_publish(ACTIVITY_TOPIC,a,0,1);
-      cnt++;
-      if(cnt>=4) cnt=0;
+      if(measure_rule) {
+        PARMBUF *params=make_snapshot(&rules[0]);
+        (measure_rule)(params);
+        publish_results(&rules[0],params); /* publish results */
+        free_snapshot(rules[0].numparms,params);
+      } else default_measure_loop(NULL); 
     }
     mqtt_unsubscribe_all();
-    printf("INFO: try to reconnect in 2 secs...\n");
-    sleep(2);
+    printf("INFO: try to reconnect in %d secs...\n",RECONNECTION_PAUSE);
+    sleep(RECONNECTION_PAUSE);
   }
   mqtt_exit();  /* Verbindung zum Broker trennen. */ 
-  return rc;
+  return(EX_OK);
 }
