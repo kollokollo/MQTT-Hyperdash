@@ -60,6 +60,7 @@ Currently there exist following element types:
 |TEXTLABEL     | X Y H TOPIC BGC FONT FONTSIZE TEXT[n]                     |
 |BITMAPLABEL   | X Y TOPIC BGC BITMAP[n]                                   |
 |FRAMELABEL    | X Y W H TOPIC MATCH                                       |
+|SCMDLABEL     | TOPIC CMD[n]                                              |
 |SHELLCMD      | X Y W H CMD                                               |
 |DASH          | X Y W H DASH                                              |
 |TOPICINAREA   | X Y W H TOPIC VALUE QOS                                   |
@@ -124,14 +125,30 @@ This sets the title of the window/screen and specifies its fixed size in pixels.
 Also a default foreground (FGC) and background color (BGC) can be specified. 
 Each dash file must contain exactly one panel element. 
 
+Example: 
+<pre>
+PANEL:  TITLE="Button Test Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
+</pre>
+
 #### Broker: URL= [USER= PASSWD=]
 
 This sets the mqtt broker url, and also username and password if required. 
 Each dash file must contain exactly one broker element. 
 
+Example: 
+<pre>
+BROKER: URL="tcp://localhost:1883"
+</pre>
+
 #### Line: X= Y= X2= Y2= FGC= LINEWIDTH=
 
 Draws a simple line of given width in given color from (x,y) to (x2,y2). 
+
+Examples:
+<pre>
+LINE:   X=0 Y=0 X2=32 Y2=32 FGC=$ffffffff
+LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
+</pre>
 
 #### Text: X= Y= [H=] FGC= TEXT= FONT= FONTSIZE=
 
@@ -145,24 +162,48 @@ FONTSIZE defaults to 16. The text is transparent and has no background. This
 way, you can stuff multiple charackters or texts on top of a bitmap or other
 graphical elements. 
 
+Example:
+<pre>
+TEXT: X=20 Y=10 H=60 FGC=$FFFFFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=36
+</pre>
+
 #### Box: X= Y=  W= H= FGC= [LINEWIDTH=]
 
 Draws a simple box with the given foreground color. 
+
+Example:
+<pre>
+BOX: X=20 Y=80 W=200 H=120 FGC=$FF00FFFF
+</pre>
 
 #### Circle: X= Y=  W= H= FGC= [LINEWIDTH=]
 
 Draws a simple ellipse fitting in the box X,Y,W,H with the given 
 foreground color. 
 
+Example:
+<pre>
+CIRCLE: X=20 Y=80 W=200 H=120 FGC=$FFFF00FF
+</pre>
+
 #### PBox:  X= Y=  W= H= FGC= BGC= [LINEWIDTH=]
 
 Draws a filled box. Fill color is BGC, border color is FGC. 
+
+Example:
+<pre>
+PBOX: X=40 Y=100 W=50 H=30 BGC=$444444FF
+</pre>
 
 #### PCircle:  X= Y=  W= H= FGC=  BGC= [LINEWIDTH=]
 
 Draws a filled ellipse fitting in the box X,Y,W,H with the given 
 foreground color. Fill color is BGC. 
 
+Example:
+<pre>
+PCIRCLE: X=20 Y=80 W=200 H=120 FGC=$FFFF00FF BGC=$222222FF
+</pre>
 
 #### Frame: X= Y= W= H= [REVERT=]
 
@@ -170,11 +211,20 @@ Draws a shadowed frame. Revert can be 0 or 1. If REVERT=1, the frame is
 drawn in reverted state. This element can be used do draw buttons or other
 stylistic 3D effects around other elements. 
 
+Example:
+<pre>
+FRAME:   X=90 Y=290 W=220 H=36 
+</pre>
 
 #### Icon: X= Y= ICON=
 
 Draws an image, usually a png-file, at position x and y. The file name must be
 specified with ICON. The file is searched for in the iconpath. 
+
+Example:
+<pre>
+ICON: X=320 y=5 ICON="My-logo.png"
+</pre>
 
 #### Bitmap: X= Y= BITMAP= FGC=
 
@@ -184,6 +234,11 @@ background, so one can
 draw multiple bitmaps on top of another to combine more complicated graphics.
 The file name must be
 specified with BITMAP. The file is searched for in the bitmappath.
+
+Example:
+<pre>
+BITMAP:      X=450 y=300 BITMAP="Bulb" FGC=$ffffffff
+</pre>
 
 ### Dynamic output Elements
 
@@ -256,6 +311,26 @@ If the topics content doesnt match at all, nothing is displayed.
 n can be 0 to 9.
 This way status indicators can be implemented. The whole set of bitmaps all 
 use the same background color.
+
+#### SCmdLabel: TOPIC= CMD[n]="match|shell command"
+
+According to the content of the topic, a corresponding shell-command is 
+excecuted. 
+If one of the match strings given in CMD[n] matches the content, then the 
+corresponding shell-command is excecuted. 
+If the topics content doesnt match at all, nothing happens. 
+n can be 0 to 9.
+This is a very versatile but non portable element. You can use it for various 
+things, but currently I can only think of the automatic trigger of sounds by
+calling ogg123 or mplayer. 
+
+Example: 
+
+<pre>
+SCMDLABEL:  TOPIC="SOUND_DC" \
+            CMD[0]="1|mplayer /usr/share/sounds/window-slide.ogg"
+</pre>
+
 
 #### Plot: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> 
 The topic content is expected to be a comma separated or space separated list of

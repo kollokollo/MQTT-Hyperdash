@@ -27,6 +27,9 @@ void i_bitmaplabel(ELEMENT *el,char *pars);
 void d_bitmaplabel(ELEMENT *el,WINDOW *win);
 void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message);
 
+void i_scmdlabel(ELEMENT *el,char *pars);
+void u_scmdlabel(ELEMENT *el,WINDOW *win, char *message);
+
 void i_icon(ELEMENT *el,char *pars);
 void d_icon(ELEMENT *el,WINDOW *win);
 

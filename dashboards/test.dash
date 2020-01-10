@@ -119,3 +119,19 @@ DASH:        x=110 y=360 w=100 h=25 DASH="main"
 PBOX:        x=110 y=360 w=100 h=25 BGC=$444444ff 
 TEXT:        x=120 y=360 w=100 h=25 TEXT="main.dash" FGC=$ffffffff FONT="Arial"
 FRAMETOGGLE: x=110 y=360 w=100 h=25
+
+
+##########################################################################
+# Demonstration how to add sound to the change of a topic. 
+# This is realized via the omnipurpose SHELLCMDLABEL
+# However this might work only on a linux system. Also the soundplayer 
+# (mplayer) needs to be installed, and it is not very quick. 
+# Also the command should only be excecuted on "1", so that the 
+# topic could change to 0 quietly. If the SOUND topic would stay at "1"
+# the sould would be played already when the dashboard opens, because 
+# there is (probably) a retained state on publication, which is not under
+# control of MQTT-Hyperdash. 
+#
+
+SCMDLABEL:  TOPIC="SOUND_DC" \
+            CMD[0]="1|mplayer /usr/share/sounds/ubuntu/stereo/window-slide.ogg"

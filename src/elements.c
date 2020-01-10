@@ -268,6 +268,28 @@ void i_bitmaplabel(ELEMENT *el,char *pars) {
   el->h=atoi(key_value(pars,"H",f));
 }
 
+/* Shell command label. This is currently very universal and flexible, 
+   you can call mpg123 and have a soundlabel.
+ */
+void i_scmdlabel(ELEMENT *el,char *pars) {
+  int i;
+  char p[256];
+  char *a;
+  char w1[256],w2[256];
+
+  for(i=0;i<10;i++) {
+    snprintf(p,sizeof(p),"CMD[%d]",i);
+    a=key_value(pars,p,p);
+    wort_sep(a,'|',1,w1,w2);
+    el->label[i].pointer=strdup(w1);
+    el->label[i].len=strlen(el->label[i].pointer);
+    el->data[i].pointer=strdup(w2);
+    el->data[i].len=strlen(el->data[i].pointer);
+  }
+  el->h=atoi(key_value(pars,"H","32"));
+  el->w=atoi(key_value(pars,"W","32"));
+}
+
 void i_tstring(ELEMENT *el,char *pars) {
   el->font=strdup(key_value(pars,"FONT","SMALL"));
   el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
@@ -503,6 +525,19 @@ void u_textlabel(ELEMENT *el,WINDOW *win, char *message) {
   if(found>=0 && found<10 && el->data[found].pointer) {
     boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
     put_font_text(win->display,el->fontnr,el->data[found].pointer,el->x,el->y,el->labelcolor[found],el->h);
+  }
+}
+void u_scmdlabel(ELEMENT *el,WINDOW *win, char *message) {
+  int i;
+  int found=-1;
+  for(i=0;i<10;i++) {
+    if(el->label[i].pointer) {
+      if(!strcmp(el->label[i].pointer,message)) found=i;   
+    }
+  }
+  if(found>=0 && found<10 && el->data[found].pointer) {
+    if(verbose>0) printf("Shell cmd : <%s>\n",el->data[found].pointer);
+    if(system(el->data[found].pointer)==-1) printf("Error: system\n");
   }
 }
 void u_framelabel(ELEMENT *el,WINDOW *win, char *message) {

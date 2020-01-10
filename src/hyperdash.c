@@ -91,7 +91,7 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"VSCALER",      i_scaler,   d_vscaler,  u_vscaler,c_vscaler},
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER",       i_tticker,  d_subscribe,NULL,     c_tticker},
  {EL_VISIBLE|EL_DYNAMIC,         "PLOT",         i_plot,     d_plot,     u_plot,   NULL},
- {EL_VISIBLE|EL_DYNAMIC,         "SOUNDLABEL"   ,NULL,NULL,NULL,NULL}, /* TODO */
+ {EL_VISIBLE|EL_DYNAMIC,         "SCMDLABEL",    i_scmdlabel,d_subscribe,u_scmdlabel,NULL}, 
 
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
