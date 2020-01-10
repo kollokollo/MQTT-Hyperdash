@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.01
 
-RELEASE=3
+RELEASE=4
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -32,7 +32,7 @@ OPT=-O3
 
 # Additional header file paths
 INC= 
-WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/GMP
+WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/mqtt -I./WINDOWS/include/GMP
 
 # defines for special flavours
 
@@ -96,8 +96,7 @@ DIR33=$(DIR)-bin
 LINKFLAGS = 
 WINLINKFLAGS = -L./WINDOWS/lib 
 
-LIBS =  -lm  -lasound -lpaho-mqtt3c -lSDL -lSDL_gfx  -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
-WINLIBS = -lm  -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32  -lSDL 
+LIBS =  -lm  -lpaho-mqtt3c -lSDL -lSDL_gfx  -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
 
 MYWINLIBS = WINDOWS/lib/libgfx.lib 
 
@@ -123,16 +122,21 @@ hyperdash :  $(MAINOBJS)
 # Make the exe for MS WINDOWS
 
 hyperdash.exe: $(CSRC) $(MYWINLIBS)
-	$(WINCC) -DWINDOWS $(OPT) $(WININC) $(WINLINKFLAGS) $(CSRC) \
-	-o $@ $(MYWINLIBS) \
-	 $(WINLIBS)
-	strip $@
+	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  $(CSRC) \
+	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
 
 # This defines the compile sequence for .rule files
 
 % : %.rule rule-engine.c mqtt.o subscribe.o util.o
 	$(CC) -DRULE=\"$<\" rule-engine.c mqtt.o subscribe.o  util.o \
 	-o $@ -lm -lpaho-mqtt3c 
+
+# This defines the compile sequence for .rule files for WINDOWS
+
+%.exe : %.rule rule-engine.c mqtt.c subscribe.c util.c
+	$(WINCC) $(WININC) $(WINLINKFLAGS) -DWINDOWS -DRULE=\"$<\" \
+	rule-engine.c mqtt.c subscribe.c  util.c \
+	-o $@ -lm -lpaho-mqtt3c
 
 #
 # Installation sequences
@@ -199,10 +203,12 @@ deb :	$(BINDIST) doc-pak
 	sudo checkinstall -D --pkgname hyperdash --pkgversion $(LIBNO) \
 	--pkgrelease $(RELEASE)  \
 	--maintainer "kollo@users.sourceforge.net" \
-        --requires libc6,libasound2,libsdl1.2debian,libsdl-gfx1.2-5 --backup  \
+        --requires libc6,libsdl1.2debian,libsdl-gfx1.2-5,libsdl-ttf2.0-0 \
+	--backup  \
 	--pkggroup interpreters   \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
+	sudo chown 1000 hyperdash_$(LIBNO)-$(RELEASE)_*.deb
 	mv hyperdash_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
 
 
