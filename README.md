@@ -1,12 +1,12 @@
 ## MQTT-Hyperdash
 <pre>
-VERSION 1.00
+VERSION 1.01
 
 (C) 2019-2020 by Markus Hoffmann
 (kollo@users.sourceforge.net)
 
 Name        : MQTT-Hyperdash
-Version     : 1.00                              Author: Markus Hoffmann
+Version     : 1.01                              Author: Markus Hoffmann
 Group       : Development/Languages             License: GPLv2
 Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
 Summary     : A universal MQTT Dashboard.
@@ -15,7 +15,7 @@ Description :
 This is a fast and efficient dashboard (GUI) for the MQTT framework. It uses
 the SDL library for graphics rendering, the paho library for communication and
 the gtk2 framework for user input. The dashboard runs on linux, 
-but a port to other operating systems should be easy. 
+but a port to other operating systems is possible. 
 
 Special features: 
 * Very simple and basic set of base elements. 
@@ -24,18 +24,20 @@ Special features:
 * Easy to use: Each panel/dashboard is configured in a single .dash file.
 </pre>
 
-Currently there is only the main application included: hyperdash. But we are
-working on following complete set of applications: 
+This repository contains following set of applications: 
 
 #### hyperdash 
 hyperdash runs a panel/dashboard, which has been defined in a dash file. It opens
 a window, draws all elements updates wich each new topic message and takes
 user input with the mouse to manipulate topics contents. 
 
-<img src="screenshots/Haussteuerung.png">
+![Smart Home Dashboard](screenshots/Haussteuerung.png)
+
+A description of the [dash file format](doc/MQTT-Hyperdash-file-format.md) can
+be found in the doc/ section.
 
 
-#### rule-engine
+#### rule-engine sysmeasure
 
 Rule engines are ment to be applications running completely in the background. 
 They do not interact directly with user. Their function is to subscribe to a 
@@ -43,16 +45,21 @@ set of topics, watch their updates and trigger a routine, which calculates
 something based on the input topics and finally puplish the result to output
 topics, which then can trigger other rules or rule engines. They also can
 perform actions on the machine they are running, like excecuting shell scripts
-when a topic content matches a certain pattern. With multuple rule engines
-running even on different computers using the same broker, one can implmenent a
-full automation control, which would create the Internet of Things. However the
-concept of rule engines is not new and can be found in other automation
-concepts as well. This  implementation is focused on high performance quick
-reaction, and reliablility. And the realization is not very complicated. 
-Please read the the rule engine howto in the doc/ section.
+when a topic content matches a certain pattern, or perform measurements by
+accessing local hardware cmponents and publish the results to the mqtt network.
 
-The project is still in beta phase. Please see the CONTRIBUTING.md how you can
-help to improve the project. 
+With multuple rule engines running even on different computers using the same
+broker, one can implmenent a full automation control, which would create the
+Internet of Things. 
+
+The concept of rule engines is not new and can be found in other automation
+concepts as well. This  implementation is focused on high performance quick
+reaction, and reliablility. And the realization is not very complicated.  Please
+read the the [rule engine howto](doc/MQTT-rule-engine-howto.md) in
+the doc/ section.
+
+The project is not complete. Please see the file 
+[CONTRIBUTING.md](CONTRIBUTING.md) how you can help to improve the project. 
 
 I had the impression, an application like this was still missing in 2019. 
 So I started this project. Please let me know, if I am right....
