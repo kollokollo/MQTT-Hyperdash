@@ -6,7 +6,7 @@
  * COPYING for details
  */
 
-/* Demo Measurement rule machine  ######## THIS IS A TEMPLATE ############
+/* Demo Measurement rule machine
    it performs measurements (here the systems load and disk-usage).
    You can use this engine to monitor the host system, load and disk usage.
    You can specify the hostname via --prefix on the commandline to make
@@ -38,15 +38,17 @@ enum {
  SYSLOAD1M,      /* alias for first  (output) parameter*/
  SYSLOAD5M,      /* alias for 2. (output) parameter*/
  SYSLOAD15M,     /* alias for 3. (output) parameter*/
- SYSUPTIME,      /* alias for 4. (output) parameter*/
- SYSMEMUSAGE,    /* alias for 5. (output) parameter*/
- SYSDISKUSAGE,   /* alias for 6. (output) parameter*/
+ SYSOVERLOAD,    /* alias for 4. (output) parameter*/
+ SYSUPTIME,      /* alias for 5. (output) parameter*/
+ SYSMEMUSAGE,    /* alias for 6. (output) parameter*/
+ SYSDISKUSAGE,   /* alias for 7. (output) parameter*/
 };
 
 PARMDEF my_rule_parms[]={
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSLOAD_AM",0,0,NULL},
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSLOAD5M_AM",0,0,NULL},
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSLOAD15M_AM",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSOVERLOAD_DM",0,0,NULL},
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSUPTIME_AM",0,0,NULL},
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSMEMUSAGE_AM",0,0,NULL},
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSDISKUSAGE_AM",0,0,NULL}
@@ -96,6 +98,13 @@ void sysmeasure(PARMBUF *parms) {
     parms[SYSLOAD1M].value=(double)si.loads[0]/ (1 << SI_LOAD_SHIFT);
     parms[SYSLOAD5M].value=(double)si.loads[1]/ (1 << SI_LOAD_SHIFT);
     parms[SYSLOAD15M].value=(double)si.loads[2]/ (1 << SI_LOAD_SHIFT);
+    if(parms[SYSLOAD1M].value<1) {
+      parms[SYSOVERLOAD].value=0;
+    } else if(parms[SYSLOAD1M].value<2) {
+      parms[SYSOVERLOAD].value=1;
+    } else {
+      parms[SYSOVERLOAD].value=2;
+    } 
   }
   struct statvfs vfs;
   rc=statvfs("/",&vfs);

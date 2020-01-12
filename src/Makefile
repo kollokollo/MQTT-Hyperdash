@@ -143,9 +143,10 @@ hyperdash.exe: $(CSRC) $(MYWINLIBS)
 #
 
 
-install : hyperdash hyperdash.desktop 
+install : hyperdash hyperdash.desktop sysmeasure 
 	install -m 644 hyperdash.desktop $(DESKTOPDIR)/
 	install -s -m 755 hyperdash $(BINDIR)/
+	install -s -m 755 sysmeasure $(BINDIR)/
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
 	install -m 644 hyperdash.1 $(MANDIR)/man1/
@@ -159,16 +160,17 @@ install : hyperdash hyperdash.desktop
 uninstall :
 	rm -f $(DESKTOPDIR)/hyperdash.desktop
 	rm -f $(BINDIR)/hyperdash
+	rm -f $(BINDIR)/sysmeasure
 	rm -f $(MANDIR)/man1/hyperdash.1
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons
 	rm -rf $(DATADIR)/hyperdash/dashboards
 clean :
-	rm -f *.o a.out Makefile.bak demo commander sysmeasure \
+	rm -f *.o a.out Makefile.bak demo commander \
 	backup-*.tgz *.d
 	rm -rf doc-pak
 moreclean : clean
-	rm -f hyperdash
+	rm -f hyperdash sysmeasure
 
 distclean : moreclean
 	rm -f Makefilex config.cache config.status config.log config.h \

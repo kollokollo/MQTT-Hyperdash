@@ -16,6 +16,12 @@ BITMAPLABEL: x=245 y=5 BGC=$000040ff TOPIC=LOCALHOST/SYSMEASURE/ACTIVITY_DM \
   BITMAP[2]="2|Disc3|$ffffffff" \
   BITMAP[3]="3|Disc4|$ffffffff"
 
+BITMAPLABEL: x=235 y=45 BGC=$000040ff TOPIC=LOCALHOST/SYSMEASURE/SYSOVERLOAD_DM \
+  BITMAP[0]="0|SmallCircle|$00ff00ff" \
+  BITMAP[1]="1|SmallCircle|$ffff00ff" \
+  BITMAP[2]="2|SmallCircle|$ff0000ff"
+
+
 TEXT: X=5 y=40 TEXT="Uptime:"  FGC=$ffffffff 
 TOPICNUMBER: TOPIC="LOCALHOST/SYSMEASURE/SYSUPTIME_AM" FORMAT="####.# days" \
              X=80 y=40  FGC=$ffff00ff BGC=$000040ff
