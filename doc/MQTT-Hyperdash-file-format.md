@@ -7,8 +7,8 @@ MQTT Hyperdash runs so-called dash-files. Dash-files are simple text files,
 consisting of UTF-8 encoded ASCII text. They can be edited by any text editor.  
 
 Each line contains the definition of one element. If te last charackter of the
-line is a '\' (backslash), the next line will be linked to this line. You can use 
-this to better format the dash files, e.g. to split the definition of one 
+line is a '\' (backslash), the next line will be linked to this line. You can
+use  this to better format the dash files, e.g. to split the definition of one 
 element over mutliple real lines. 
 
 A line with an element definition has following structure: 
@@ -36,20 +36,20 @@ one "BROKER" element.
 Currently there exist following element types:
 
 
-|Element       |   Recognized keyvalues                        |
-|--------------|:----------------------------------------------|
-|PANEL         | W H TITLE FGC BGC                             |
-|BROKER        | URL USER PASSWD                               |
-|BOX           | X Y W H FGC                                   |
-|PBOX          | X Y W H FGC BGC                               |
-|CIRCLE        | X Y W H FGC                                   |
-|PCIRCLE       | X Y W H FGC BGC                               |
-|LINE          | X Y X2 Y2 FGC                                 |
-|FRAME         | X Y W H REVERT                                |
-|FRAMETOGGLE   | X Y W H                                       |
-|BITMAP        | X Y BITMAP FGC                                | 
-|ICON          | X Y ICON                                      |
-|TEXT          | X Y H TEXT FGC FONT FONTSIZE                  |
+|Element       |   Recognized keyvalues                                    |
+|--------------|:----------------------------------------------------------|
+|PANEL         | W H TITLE FGC BGC                                         |
+|BROKER        | URL USER PASSWD                                           |
+|BOX           | X Y W H FGC                                               |
+|PBOX          | X Y W H FGC BGC                                           |
+|CIRCLE        | X Y W H FGC                                               |
+|PCIRCLE       | X Y W H FGC BGC                                           |
+|LINE          | X Y X2 Y2 FGC                                             |
+|FRAME         | X Y W H REVERT                                            |
+|FRAMETOGGLE   | X Y W H                                                   |
+|BITMAP        | X Y BITMAP FGC                                            | 
+|ICON          | X Y ICON                                                  |
+|TEXT          | X Y H TEXT FGC FONT FONTSIZE                              |
 |TOPICSTRING   | X Y W H TOPIC FGC BGC FONT FONTSIZE                       |
 |TOPICNUMBER   | X Y H TOPIC FGC BGC FONT FONTSIZE FORMAT                  |
 |HBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX                         |
@@ -235,6 +235,8 @@ draw multiple bitmaps on top of another to combine more complicated graphics.
 The file name must be
 specified with BITMAP. The file is searched for in the bitmappath.
 
+<img src="images/BITMAP.png">
+
 Example:
 <pre>
 BITMAP:      X=450 y=300 BITMAP="Bulb" FGC=$ffffffff
@@ -242,75 +244,170 @@ BITMAP:      X=450 y=300 BITMAP="Bulb" FGC=$ffffffff
 
 ### Dynamic output Elements
 
-Dynamic elements are controlled by the content of a topic. They change 
-their appearance when the topic content
-changes. But they cannot take user input. They are used to display data. 
+Dynamic elements are controlled by the content of a topic. They change their
+appearance when the topic content changes. But they cannot take user input. They
+are used to display data. 
 
 #### TopicString: X= Y= W= [H=] TOPIC= FGC= BGC= FONT= FONTSIZE=
 
 Displays the topic messages as they arrive using the specified FONT. When new
-data arrives, the old text need to be cleared, therefor a width (and Height) of 
-the box to be cleared with background color (BGC) need to be specified. 
-If H is ommitted, the font height is used. 
+data arrives, the old text need to be cleared, therefore a width (and height)
+of the box to be cleared with background color (BGC) needs to be specified. If
+H is ommitted, the font height is used. 
+
+Example:
+<pre>
+TOPICSTRING: X=10 Y=190 W=140 H=16 TOPIC=HOME/LOAD_SM FGC=$FFFF00FF BGC=$40FF \
+             FONT="Arial_Bold" FONTSIZE=16
+</pre>
 
 #### TopicNumber: X= Y= [W=] [H=] TOPIC= FGC= BGC= FONT= FORMAT=
 
-Evaluates the topic message as a number and then uses FORMAT to display them. 
-The Formatter should
-either be a string also used in BASIC PRINT USING statements (also EXCEL) or 
-a C style printf() format string. When new
-data arrives, the old text need to be cleared, therefor a width (and Height) of 
-the box to be cleared with background color (BGC) need to be specified. 
-If H is ommitted, the font height is used. If W is ommitted, the size of the
-FORMAT string is used.  
+Evaluates the topic message as a number and then uses FORMAT to display it. The
+formatter should either be a string also used in BASIC "PRINT USING" statements
+(also EXCEL) or a C style "printf() format" string. When new data arrives, the
+old text need to be cleared, therefore a width (and height) of the box to be
+cleared with background color (BGC) needs to be specified. If H is ommitted, the
+font height is used. If W is ommitted, the size of the FORMAT string is used.
+
+Example:
+<pre>
+TOPICNUMBER: X=400 Y=282 W=80 H=10 TOPIC=HOME/SOLAR/CELL3 FORMAT="##.### V" \
+             FGC=$FFFF00FF BGC=$7722FFFF
+</pre>
 
 #### FrameLabel:  X= Y= W= H= TOPIC= MATCH= 
 
 Draws a Frame, and if the topics content matches MATCH, it is drawn in 
-reversed state, otherwise in normal state. 
+reversed state, otherwise in normal state. Usually this element is used to 
+simulate a (radio) button.
+
+ <img src="images/radiobuttons.png">
+
+Example:
+<pre>
+FRAMELABEL:  x=120 y=120 w=50 h=25 TOPIC=HOME/SOLAR/LADE/CMD_DS MATCH="OFF"
+</pre>
 
 #### Meter: X= Y= W= H= TOPIC= MIN= MAX= AMIN= AMAX=
 
-Draws a round meter using the topics content interpreted as a value between min and max. 
+Draws a round meter using the topics content interpreted as a value between min
+and max. The meter is placed inside a box of the size x,y,w,h. The starting 
+angle and the ending angle of the hand is defined with AMIN and AMAX.
+
+<img src="images/METER.png">
+
+Example:
+<pre>
+METER: TOPIC="SYSMEASURE/SYSDISKUSAGE_AM" \
+       X=120 Y=100 W=100 h=100 FGC=$FF0000FF AGC=$FFFFFFFF BGC=$40FF \
+       MIN=0 MAX=100 AMIN=225 AMAX=-45
+
+</pre>
+
 
 #### HMeter: X= Y= W= H= TOPIC= MIN= MAX=
 
-Draws a horizontal meter using the topics content interpreted as a value between min and max. 
+Draws a horizontal meter using the topics content interpreted as a value between
+min and max. 
+
+Example:
+<pre>
+HMETER: x=38 y=100 w=140 h=25 MIN=-1 MAX=2  TOPIC=SINUS \
+        AGC=$444444FF BGC=$000000FF FGC=$FFFFFFFF
+</pre>
 
 #### VMeter: X= Y= W= H= TOPIC= MIN= MAX=
 
-Draws a vertical  meter using the topics content interpreted as a value between min and max. 
+Draws a vertical  meter using the topics content interpreted as a value between
+min and max. 
+
+<img src="images/VMETER.png">
+
+Example:
+<pre>
+VMETER:  X=250 Y=100 W=25 H=140 MIN=0 MAX=4 TOPIC=HELIUMPRESSURE \
+         AGC=$444444FF BGC=$000000FF FGC=$FFFFFFFF 
+</pre>
 
 #### VBar: X= Y= W= H= TOPIC= MIN= MAX= FGC= BGC= AGC=
 
 Draws a vertial bar, which is filled by the percentage of the topics content 
-interpreted as a value between min and max. 
+interpreted as a value between min and max.
+
+ <img src="images/VBAR.png">
+
+Example:
+<pre>
+VBAR: x=490 y=300 w=10 h=50 MIN=0 MAX=2 \
+      AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff \
+      TOPIC=HOME/SOLAR/LIION_OUT_CURRENT
+</pre>
 
 #### HBar: X= Y= W= H= TOPIC= MIN= MAX= FGC= BGC= AGC=
 
 Draws a horizontal bar, which is filled by the percentage of the topics content interpreted as a value
 between min and max. 
 
+Example:
+<pre>
+HBAR: x=200 y=100 w=100 h=10 MIN=0 MAX=8 \
+      AGC=$ffffffff BGC=$000000ff FGC=$ff0000ff TOPIC=DOSIMETER/CPM_AM
+</pre>
 
 #### TextLabel: X= Y= W= H= TOPIC= BGC= FONT= FONTSIZE= TEXT[n]="match|text|color"
 
-According to the content of the topic, 
-corresponding text is displayed. If one of the match strings given in 
-TEXT[n] matches the content, then the corresponding text is displayed in the 
-corresponding color.  
-If the topics content doesnt match at all, nothing is displayed. 
-n can be 0 to 9.
+According to the content of the topic, corresponding text is displayed. If one
+of the match strings given in TEXT[n] matches the content, then the
+corresponding text is displayed in the corresponding color. If the topics
+content doesnt match at all, nothing is displayed. n can be 0 to 9.
+
+Example:
+<pre>
+TEXTLABEL:   X=600 Y=350 W=20 H=20 TOPIC=KLYSTRON/HF_DM  \
+             BGC=$44ff FGC=$ffff00ff FONT="Courier_New_Bold"  FONTSIZE=12 \
+	     TEXT[0]="0|HF|$000000ff" \
+	     TEXT[1]="1|HF|$00ff00ff"
+</pre>
+
 
 #### BitmapLabel: X= Y= TOPIC= BGC= BITMAP[n]="match|filename|color"
 
-According to the content of the topic, 
-a corresponding bitmap is displayed. If one of the match strings given in 
-BITMAP[n] matches the content, then the corresponding bitmap is displayed in the 
-corresponding color.  
-If the topics content doesnt match at all, nothing is displayed. 
-n can be 0 to 9.
-This way status indicators can be implemented. The whole set of bitmaps all 
-use the same background color.
+According to the content of the topic, a corresponding bitmap is displayed. If
+one of the match strings given in BITMAP[n] matches the content, then the
+corresponding bitmap is displayed in the  corresponding color. If the topics
+content doesnt match at all, nothing is displayed. n can be 0 to 9. 
+
+This way status indicators can be implemented. The whole set of bitmaps all use
+the same background color.
+
+Examples:
+<pre>
+BITMAPLABEL: X=600 Y=370 TOPIC=DOSIMETER/TREND_DM BGC=$44ff \
+             BITMAP[0]="0|TrendNone|$ffffffff" \
+	     BITMAP[1]="1|SmallTriagUp|$ffffffff" \
+	     BITMAP[2]="2|SmallTriagDwn|$ffffffff" 
+
+BITMAPLABEL: x=345 y=75 BGC=$000040ff TOPIC=ELECTRICITY/ACTIVITY \
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff"
+
+BITMAPLABEL: x=320 y=300 BGC=$000040ff TOPIC=SOLAR/LIION_FILLBAT \
+  BITMAP[0]="0|Battery0|$ffaaaaff" \
+  BITMAP[1]="1|Battery1|$aaaaaaff" \
+  BITMAP[2]="2|Battery2|$aaaaaaff" \
+  BITMAP[3]="3|Battery3|$aaaaaaff" \
+  BITMAP[4]="4|Battery4|$aaffaaff"
+
+BITMAPLABEL: x=83 y=321 BGC=$000040ff TOPIC=SOLAR/LADE/STATUS \
+  BITMAP[0]="-1|SmallCircle|$ff00ff" \
+  BITMAP[1]="0|SmallCircle|$222222ff" 
+
+</pre>
+
+
 
 #### SCmdLabel: TOPIC= CMD[n]="match|shell command"
 
@@ -328,41 +425,74 @@ Example:
 
 <pre>
 SCMDLABEL:  TOPIC="SOUND_DC" \
-            CMD[0]="1|mplayer /usr/share/sounds/window-slide.ogg"
+            CMD[0]="1|mplayer /usr/share/sounds/window-slide.ogg &"
 </pre>
 
 
 #### Plot: X=<x> Y=<y> W=<w> H=<h> TOPIC=<topic> 
+
+Displays a plot or chart of the numbers in the topic. 
 The topic content is expected to be a comma separated or space separated list of
-number values. If OFFSET is specified, the first offset numbers will be ignored. 
-If N is specified, only at maximum n values are used. 
-These are then plotted into a graph. With TYPE you specify the
-type of graph produced. e.g. Type=0 only plots dots, TYPE=1 impulses, 
-TYPE=2 histogram lines, TYPE=3 normal lines, and so on. 
-The horizontal scaling can be influenced using AMIN and AMAX, the vertical
-scaling is controlled by MIN and MAX. You can specify a background color (BGC), a 
-foreground color (FGC) and a color for frame and axis (AGC). 
+number values. If OFFSET is specified, the first offset numbers will be
+ignored. If N is specified, only at maximum n values are used. These are then
+plotted into a graph. 
+
+With TYPE you specify the type of graph produced. e.g.
+Type=0 only plots dots, 
+TYPE=1 impulses,  
+TYPE=2 histogram lines, 
+TYPE=3 normal lines, and so on.  
+
+The horizontal scaling can be influenced using AMIN and AMAX,
+the vertical scaling is controlled by MIN and MAX. You can specify a background
+color (BGC), a  foreground color (FGC) and a color for frame and axis (AGC). 
+ 
+ <img src="images/PLOT.png">
+
+Example: 
+
+<pre>
+PLOT: x=20 Y=100 w=300 h=200 TOPIC=DOSIMETER/PULSELENHIST_SM BGC=$000000ff \
+      OFFSET=8 MIN=0 MAX=100 TYPE=2
+
+</pre>
 
 ### Dynamic input Elements
 
-They are like the dynamic output elements with the extra feature that they allow user input.
-You can enter numbers, change states etc... 
+They are like the dynamic output elements with the extra feature that they allow
+user input. You can enter numbers, change states etc... 
 
 #### TopicInString: X= Y= W= H= TOPIC= [QOS=]
 
-Clicking in this area,  
-the user can enter a string which is then published to the topic using QOS2.
+Clicking in this area, the user can enter a string which is then published to
+the topic using QOS2 by default.
+
+<img src="images/TOPICINSTRING.png">
+
+Example: 
+
+<pre>
+TOPICINSTRING: TOPIC="TITLE_SC" x=110 y=152 w=100 h=30
+</pre>
 
 #### TopicInNumber: X= Y= W= H= TOPIC= MIN= MAX= FORMAT= [TIC=] [QOS=]
 
-Clicking in this area,  
-the user can enter a number which is then published to the topic using QOS2.
-The range of the entered number is checked against MIN and MAX and clipped
-if necessary. The topic contend is finally formatted using the FORMAT pattern.
+Clicking in this area, the user can enter a number which is then published to
+the topic using QOS2 by default. The range of the entered number is checked
+against MIN and MAX and clipped if necessary. The topic contend is finally
+formatted using the FORMAT pattern.
+
+Example: 
+
+<pre>
+TOPICINNUMBER:  X=10 Y=252 W=100 H=30 TOPIC=SETPOINT_AC FORMAT="%g" MIN=0 MAX=4
+</pre>
+
 
 #### VScaler: X= Y= W= H= TOPIC= MIN= MAX= TIC= FORMAT= [QOS=] [FGC BGC AGC]
 
-This element draws a vertical scaler. A foreground color (FGC) a 
+This element draws a vertical scaler (a simulated potentiometer). 
+A foreground color (FGC) a 
 background color (BGC) as well as a frame color (AGC) can be specified. 
 The user can slide the scaler to change the number of the topics content. 
 The user can also click into the scalers background, and a dialog to enter
@@ -373,10 +503,17 @@ During sliding, the values are published to the TOPIC at each move of the mouse
 if the results produced are bigger than TIC. During sliding the values are 
 always published with QOS=0. Only the final value (after releasing the sliders
 knob) will be published with the Quality of Sevice specified. 
+
+Example: 
+
+<pre>
+VSCALER: X=300 Y=30 W=20 H=200 TOPIC=SETPOINT_AC MIN=0 MAX=4  TIC=0.05
+</pre>
 
 #### HScaler:  X= Y= W= H= TOPIC= MIN= MAX= TIC= FORMAT= [QOS=] [FGC BGC AGC]
 
-This element draws a horizontal scaler. A foreground color (FGC) a 
+This element draws a horizontal scaler. 
+A foreground color (FGC) a 
 background color (BGC) as well as a frame color (AGC) can be specified. 
 The user can slide the scaler to change the number of the topics content. 
 The user can also click into the scalers background, and a dialog to enter
@@ -388,11 +525,27 @@ if the results produced are bigger than TIC. During sliding the values are
 always published with QOS=0. Only the final value (after releasing the sliders
 knob) will be published with the Quality of Sevice specified. 
 
+ <img src="images/HSCALER.png">
+
+Example: 
+
+<pre>
+HSCALER: X=100 Y=300 W=200 H=16 TOPIC=SETPOINT_AC MIN=0 MAX=4 TIC=0.05 AGC=$0
+</pre>
 
 #### TopicInArea: X= Y= W= H= TOPIC= VALUE= [QOS=] 
 
 If the user clicks in the area, the content VALUE will be published to the 
 TOPIC with the specified Quality of Service (QOS).
+This element is used together with FRAMETOGGLE or FRAMELABEL to make a
+button.
+
+Example: 
+
+<pre>
+TOPICINAREA: x=180 y=120 w=50 h=25 TOPIC=SOLAR/LADE/CMD_DS VALUE="ON"
+</pre>
+
 
 #### Ticker: X= Y= W= H= TOPIC= TIC= MIN= MAX= [FORMAT=] [QOS=] 
 
@@ -402,8 +555,18 @@ with the specified Quality of Service (QOS). TIC can be negative. The range of
 the values will be checked against MIN and MAX and the number will be clipped
 if necessary.
 
+Example: 
+
+<pre>
+TICKER:      X=48 Y=208 W=34 H=34 TOPIC=TESTT TIC=0.2 MIN=0 MAX=4
+TICKER:      X=48 Y=288 W=34 H=34 TOPIC=TESTT TIC=-0.2 MIN=0 MAX=4
+</pre>
+
 
 ### Elements for Application control
+
+These elements will not affect any topic. They have effects on the 
+local machine, which the dashboard is displayed on.
 
 #### FrameToggle: X= Y= W= H=
 
@@ -411,20 +574,42 @@ This element draws a frame in normal state. When clicked with the mouse it
 changes to reverse state until the mouse button is released. This element is
 used to make buttons which the user can click on. It gives visual feedback on 
 the click. Thats all. Usually this element will be combined with TopicInArea 
-or one of the following elements: 
+or one of the following elements for application control.
+
+Example: 
+
+<pre>
+FRAMETOGGLE: x=240 y=400 w=100 h=25
+</pre>
 
 #### ShellCmd: X= Y W= H= CMD=
 
 An invisible click area. When the user clicks it, a shell command will be 
 excecuted.
 
+Example: 
+
+<pre>
+SHELLCMD: x=20 y=260 w=240 h=25 \
+          CMD="firefox https://github.com/kollokollo/MQTT-Hyperdash &"
+</pre>
+
 #### Dash: X= Y= W= H= DASH=
 
 An invisible click area. When the user clicks it, 
 another window with another dashboard opens. The file name must 
-be specified with DASH. The files are searched for in the dashboardpath.
+be specified with DASH (without the postfix ".dash"). 
+The files are searched for in the dashboardpath.
+
+Example: 
+
+<pre>
+DASH:        x=110 y=360 w=100 h=25 DASH="main"
+</pre>
 
 
-More element types can be thought of, but our goal is to keep everything as simple
-as possible.
+More element types can be thought of, but our goal is to keep everything as
+simple as possible. At the moment we are thinking of maybe having 
 
+* IMAGE (display topic content as image (jpeg, png)).
+* TEXTAREA (formatted text area)
