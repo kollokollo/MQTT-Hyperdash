@@ -276,6 +276,40 @@ void put_font_text(SDL_Surface *display, int fidx, char *text, int x,int y,unsig
   SDL_FreeSurface(message);
 }
 
+static int get_textline(char *text,TTF_Font *ttffont, int w) {
+  if(!text || !*text) return(-1);
+  char buffer[256];
+  int tw=0, th=8, i=0;
+  while(text[i] && text[i]!='\n' && i<sizeof(buffer)-1) {
+    buffer[i]=text[i];
+    buffer[++i]=0;
+    if(ttffont) TTF_SizeUTF8(ttffont, buffer, &tw, &th);
+    else tw=i*8;
+    if(tw>=w) return(i-1);
+  }
+  return(i);
+}
+
+void put_font_long_text(SDL_Surface *display, int fidx, char *text, int x,int y,unsigned long int fgc, int w, int h) {
+  TTF_Font *ttffont=fonts[fidx].font;
+  int fontheight=fonts[fidx].height;
+  char buffer[256];
+  int z,z0=0;
+  int yy=y;
+  z=get_textline(text,ttffont,w);
+  while(z>=0) {
+    if(z>=sizeof(buffer)) z=sizeof(buffer)-1;
+    memcpy(buffer,&text[z0],z);
+    buffer[z]=0;
+    if(z==0) z0++;
+    else z0+=z;
+    if(text[z0]=='\n') z0++;
+    put_font_text(display,fidx,buffer, x,yy,fgc,fontheight);
+    yy+=fontheight;
+    if(yy>y+h-fontheight) break;
+    z=get_textline(&text[z0],ttffont,w);
+  }
+}
 FONTDEF fonts[256];
 int anzfonts=0;
 int find_font(const char *name,int size) {

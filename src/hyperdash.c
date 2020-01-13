@@ -92,6 +92,8 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER",       i_tticker,  d_subscribe,NULL,     c_tticker},
  {EL_VISIBLE|EL_DYNAMIC,         "PLOT",         i_plot,     d_plot,     u_plot,   NULL},
  {EL_VISIBLE|EL_DYNAMIC,         "SCMDLABEL",    i_scmdlabel,d_subscribe,u_scmdlabel,NULL}, 
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICIMAGE",   i_timage,   d_subscribe,u_timage,NULL}, 
+ {EL_VISIBLE|EL_DYNAMIC,         "TEXTAREA",     i_textarea, d_textarea, u_textarea,NULL}, 
 
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
@@ -107,7 +109,7 @@ static int click_element(ELEMENT *el, WINDOW *win, int x, int y,int b) {
 
 static void update_element(ELEMENT *el, WINDOW *win, STRING message) {
   int j=(el->type&0xff);
-  if(eltyps[j].update) (eltyps[j].update)(el,win,message.pointer);
+  if(eltyps[j].update) (eltyps[j].update)(el,win,message.pointer,message.len);
 }
 static void draw_element(ELEMENT *el, WINDOW *win) {
   int j=(el->type&0xff);

@@ -1,0 +1,16 @@
+BROKER: URL="tcp://localhost:1883"
+PANEL:  TITLE="Button Test Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
+
+#
+# Static drawing, headline etc...
+#
+TEXT:   X=20 Y=10 H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=36
+
+
+TOPICIMAGE: x=5 y=70 W=100 H=100 TOPIC="IMAGE"
+
+TEXTAREA: x=5 y=180 W=250 H=100 TOPIC="TEXT" FGC=$ffffFFFF BGC=$000000ff \
+          FONT="Courier_New_Bold" FONTSIZE=16
+
+FRAME: x=3 y=178 W=254 H=104 REVERT=1
+

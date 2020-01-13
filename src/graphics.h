@@ -45,5 +45,6 @@ int add_font(const char *name, int size);
 void open_all_fonts();
 void clear_all_fonts();
 void put_font_text(SDL_Surface *display, int fidx, char *text, int x,int y,unsigned long int fgc, int h);
+void put_font_long_text(SDL_Surface *display, int fidx, char *text, int x,int y,unsigned long int fgc, int w, int h);
 STRING get_icon(const char *name, int *w, int *h);
 STRING get_bitmap(const char *name, int *w, int *h);

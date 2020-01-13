@@ -70,6 +70,8 @@ Currently there exist following element types:
 |VSCALER       | X Y W H TOPIC FORMAT MIN MAX TIC QOS BGC FGC AGC          |
 |TICKER        | X Y W H TOPIC FORMAT MIN MAX TIC QOS                      |
 |PLOT          | X Y W H TOPIC TYPE N OFFSET MIN MAX AMIN AMAX BGC FGC AGC |
+|TEXTAREA      | X Y W H TOPIC ALIGN FGC BGC FONT FONTSIZE                 |
+|TOPICIMAGE    | X Y W H TOPIC                                             |
 
 
 ### Common keyvalue formats
@@ -457,7 +459,38 @@ PLOT: x=20 Y=100 w=300 h=200 TOPIC=DOSIMETER/PULSELENHIST_SM BGC=$000000ff \
 
 </pre>
 
-### Dynamic input Elements
+##### TopicImage: X= Y= [W= H=] TOPIC=
+
+Draws an image at x,y of size w,h. The Image data is taken from the TOPICs 
+content. The data must be in .png file format to be recognized. If W or H is
+ommited, the image width and height is used. Currently the image doesnt clip to
+the elements bounds, nor does it scale. You have to make sure, that the element
+is big enough to contain the image.  
+
+Example: 
+
+<pre>
+TOPICIMAGE: x=5 y=70 W=100 H=100 TOPIC="IMAGE"
+</pre>
+
+##### TextArea:  X= Y= W= H= TOPIC= FGC= BGC= FONT= FONTSIZE= [ALIGN=]
+
+Draws the topics content into a text area of size w,h. If the text is longer
+than W it is automatically wrapped to the next line. TEXT can be UTF8 coded
+ASCII text.  Newline characters are recognized to terminate a line.
+
+ALIGN specifies thich part of the text is shown in case the Elements box is too
+small. ALIGN can be  TOP, BOTTOM, CENTER. Default is TOP.
+
+Example: 
+
+<pre>
+TEXTAREA: x=5 y=180 W=250 H=100 TOPIC="LONGTEXT" FGC=$FFFFFFFF BGC=$000000FF \
+          FONT="Courier_New_Bold" FONTSIZE=16
+</pre>
+
+
+## Dynamic input Elements
 
 They are like the dynamic output elements with the extra feature that they allow
 user input. You can enter numbers, change states etc... 

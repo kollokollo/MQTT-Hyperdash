@@ -60,7 +60,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
   m.pointer=message->payload;
   m.len=message->payloadlen;
   char buf[m.len+1];
-  strncpy(buf,m.pointer,m.len);
+  memcpy(buf,m.pointer,m.len);
   buf[m.len]=0;
   if(verbose>0) printf("Message arrived for <%s>:<%s>\n",topicName,buf);
   m.pointer=buf;
@@ -130,6 +130,7 @@ int mqtt_broker(char *url,char *user, char *passwd, char *cid) {
   conn_opts.keepAliveInterval = 20;
   conn_opts.cleansession = 1;
   conn_opts.reliable=0;
+  conn_opts.MQTTVersion = MQTTVERSION_3_1;  /* TODO */
 
   if(user) conn_opts.username=user;
   if(passwd) conn_opts.password=passwd;

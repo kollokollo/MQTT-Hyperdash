@@ -25,10 +25,10 @@ void d_bitmap(ELEMENT *el,WINDOW *win);
 
 void i_bitmaplabel(ELEMENT *el,char *pars);
 void d_bitmaplabel(ELEMENT *el,WINDOW *win);
-void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message);
+void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message, int);
 
 void i_scmdlabel(ELEMENT *el,char *pars);
-void u_scmdlabel(ELEMENT *el,WINDOW *win, char *message);
+void u_scmdlabel(ELEMENT *el,WINDOW *win, char *message, int);
 
 void i_icon(ELEMENT *el,char *pars);
 void d_icon(ELEMENT *el,WINDOW *win);
@@ -44,13 +44,13 @@ int  c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b);
 
 void i_framelabel(ELEMENT *el,char *pars);
 void d_framelabel(ELEMENT *el,WINDOW *win);
-void u_framelabel(ELEMENT *el,WINDOW *win, char *message);
+void u_framelabel(ELEMENT *el,WINDOW *win, char *message, int);
 
 void d_hbar(ELEMENT *el,WINDOW *win);
-void u_hbar(ELEMENT *el,WINDOW *win, char *message);
+void u_hbar(ELEMENT *el,WINDOW *win, char *message, int);
 
 void d_vbar(ELEMENT *el,WINDOW *win);
-void u_vbar(ELEMENT *el,WINDOW *win, char *message);
+void u_vbar(ELEMENT *el,WINDOW *win, char *message, int);
 
 void i_icon(ELEMENT *el,char *pars);
 
@@ -71,25 +71,31 @@ void d_textlabel(ELEMENT *el,WINDOW *win);
 
 void i_tstring(ELEMENT *el,char *pars);
 void d_tstring(ELEMENT *el,WINDOW *win);
-void u_tstring(ELEMENT *el,WINDOW *win,char *message);
+void u_tstring(ELEMENT *el,WINDOW *win,char *message, int);
 
 void i_tnumber(ELEMENT *el,char *pars);
 void d_tnumber(ELEMENT *el,WINDOW *win);
-void u_tnumber(ELEMENT *el,WINDOW *win, char *message);
+void u_tnumber(ELEMENT *el,WINDOW *win, char *message, int);
 
-void u_textlabel(ELEMENT *el,WINDOW *win, char *message);
+void i_timage(ELEMENT *el,char *pars);
+void u_timage(ELEMENT *el,WINDOW *win, char *message, int);
+void i_textarea(ELEMENT *el,char *pars);
+void d_textarea(ELEMENT *el,WINDOW *win);
+void u_textarea(ELEMENT *el,WINDOW *win, char *message, int);
+
+void u_textlabel(ELEMENT *el,WINDOW *win, char *message, int);
 
 void i_tinarea(ELEMENT *el,char *pars);
 void i_tinstring(ELEMENT *el,char *pars);
 void i_tinnumber(ELEMENT *el,char *pars);
 void i_meter(ELEMENT *el,char *pars);
 void d_meter(ELEMENT *el,WINDOW *win);
-void u_meter(ELEMENT *el,WINDOW *win, char *message);
+void u_meter(ELEMENT *el,WINDOW *win, char *message, int);
 
 void d_tvmeter(ELEMENT *el,WINDOW *win);
-void u_tvmeter(ELEMENT *el,WINDOW *win, char *message);
+void u_tvmeter(ELEMENT *el,WINDOW *win, char *message, int);
 void d_thmeter(ELEMENT *el,WINDOW *win);
-void u_thmeter(ELEMENT *el,WINDOW *win, char *message);
+void u_thmeter(ELEMENT *el,WINDOW *win, char *message, int);
 
 void i_shellcmd(ELEMENT *el,char *pars);
 int  c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y, int b);
@@ -103,8 +109,8 @@ void d_subscribe(ELEMENT *el,WINDOW *win);
 void i_scaler(ELEMENT *el,char *pars);
 void d_hscaler(ELEMENT *el,WINDOW *win);
 void d_vscaler(ELEMENT *el,WINDOW *win);
-void u_hscaler(ELEMENT *el,WINDOW *win, char *message);
-void u_vscaler(ELEMENT *el,WINDOW *win, char *message);
+void u_hscaler(ELEMENT *el,WINDOW *win, char *message, int);
+void u_vscaler(ELEMENT *el,WINDOW *win, char *message, int);
 int  c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
 int  c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b);
 int  c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b);
@@ -113,5 +119,5 @@ int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b);
 int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b);
 void i_plot(ELEMENT *el,char *pars);
 void d_plot(ELEMENT *el,WINDOW *win);
-void u_plot(ELEMENT *el,WINDOW *win, char *message);
+void u_plot(ELEMENT *el,WINDOW *win, char *message, int);
 

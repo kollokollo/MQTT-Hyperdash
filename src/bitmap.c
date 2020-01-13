@@ -34,9 +34,11 @@ static void writeshort(unsigned char *p,unsigned short n) {
 STRING pngtobmp(unsigned char *pngdata,size_t pngsize) {
   STANDARDBITMAP stdbmp;
   STRING ergebnis;
+  ergebnis.pointer=NULL;
+  ergebnis.len=0;
   unsigned int error = lodepng_decode32(&stdbmp.image, &stdbmp.w, &stdbmp.h,pngdata,pngsize);
   if(error) printf("PNGDECODE: error %u\n", error);
-  ergebnis.pointer=(char *)stdbmtobmp(stdbmp,(int *)&ergebnis.len);
+  else ergebnis.pointer=(char *)stdbmtobmp(stdbmp,(int *)&ergebnis.len);
   free(stdbmp.image);
   return(ergebnis);
 }

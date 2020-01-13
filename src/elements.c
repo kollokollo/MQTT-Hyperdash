@@ -302,6 +302,18 @@ void i_tstring(ELEMENT *el,char *pars) {
   el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
+void i_textarea(ELEMENT *el,char *pars) {
+  el->font=strdup(key_value(pars,"FONT","SMALL"));
+  el->fontsize=atoi(key_value(pars,"FONTSIZE","16"));
+  ELEMENT_FONT();
+  el->w=atoi(key_value(pars,"W","128"));
+  el->h=atoi(key_value(pars,"H","64"));
+  /* FGC BGC  */  
+  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
+  el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
+  /* ALIGN */
+  el->format=strdup(key_value(pars,"ALIGN","TOP"));
+}
 void i_tnumber(ELEMENT *el,char *pars) {
   el->format=strdup(key_value(pars,"FORMAT","###.###"));
   el->font=strdup(key_value(pars,"FONT","SMALL"));
@@ -314,6 +326,10 @@ void i_tnumber(ELEMENT *el,char *pars) {
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
 
+void i_timage(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","20"));
+  el->h=atoi(key_value(pars,"H","20"));
+}
 
 
 
@@ -446,6 +462,13 @@ void d_hbar(ELEMENT *el,WINDOW *win) {
   if(el->min<0 && el->max>0) lineColor(win->display,el->x+x,el->y,el->x+x,el->y+el->h,el->agc);
   ELEMENT_SUBSCRIBE();
 }
+void d_textarea(ELEMENT *el,WINDOW *win) {
+  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  ELEMENT_SUBSCRIBE();
+}
+
+
+
 void d_vbar(ELEMENT *el,WINDOW *win) {
   int y=el->h-1-(int)(0-el->min)*el->h/(el->max-el->min);
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
@@ -454,23 +477,23 @@ void d_vbar(ELEMENT *el,WINDOW *win) {
   ELEMENT_SUBSCRIBE();
 }
 void d_tvmeter(ELEMENT *el,WINDOW *win) {
-  u_tvmeter(el,win,"NaN");
+  u_tvmeter(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_thmeter(ELEMENT *el,WINDOW *win) {
-  u_thmeter(el,win,"NaN");
+  u_thmeter(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_meter(ELEMENT *el,WINDOW *win) {
-  u_meter(el,win,"NaN");
+  u_meter(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_hscaler(ELEMENT *el,WINDOW *win) {
-  u_hscaler(el,win,"NaN");
+  u_hscaler(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_vscaler(ELEMENT *el,WINDOW *win) {
-  u_vscaler(el,win,"NaN");
+  u_vscaler(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_tstring(ELEMENT *el,WINDOW *win) {
@@ -494,7 +517,7 @@ void d_tnumber(ELEMENT *el,WINDOW *win) {
   ELEMENT_SUBSCRIBE();
 }
 void d_plot(ELEMENT *el,WINDOW *win) {
-  u_plot(el,win,"");
+  u_plot(el,win,"",0);
   ELEMENT_SUBSCRIBE();
 }
 
@@ -502,11 +525,11 @@ void d_plot(ELEMENT *el,WINDOW *win) {
 /* Update drawing functions for all dynamic elements....*/
 
 
-void u_tstring(ELEMENT *el,WINDOW *win,char *message) {
+void u_tstring(ELEMENT *el,WINDOW *win,char *message, int len) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   put_font_text(win->display,el->fontnr,message,el->x,el->y,el->fgc,el->h);
 }
-void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
+void u_tnumber(ELEMENT *el,WINDOW *win, char *message, int len) {
   STRING format;
   format.pointer=el->format;
   format.len=strlen(format.pointer);
@@ -516,7 +539,7 @@ void u_tnumber(ELEMENT *el,WINDOW *win, char *message) {
   put_font_text(win->display,el->fontnr,a.pointer,el->x,el->y,el->fgc,el->h);
   free(a.pointer);
 }
-void u_textlabel(ELEMENT *el,WINDOW *win, char *message) {
+void u_textlabel(ELEMENT *el,WINDOW *win, char *message, int len) {
   int i;
   int found=-1;
   for(i=0;i<10;i++) {
@@ -529,7 +552,16 @@ void u_textlabel(ELEMENT *el,WINDOW *win, char *message) {
     put_font_text(win->display,el->fontnr,el->data[found].pointer,el->x,el->y,el->labelcolor[found],el->h);
   }
 }
-void u_scmdlabel(ELEMENT *el,WINDOW *win, char *message) {
+
+/* TODO: */
+
+void u_textarea(ELEMENT *el,WINDOW *win,char *message, int len) {
+ // printf("Received long text. Len=%d\n",len);
+ // printf("This is the text:\n%s\n",message);
+  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  put_font_long_text(win->display,el->fontnr,message,el->x,el->y,el->fgc,el->w,el->h);
+}
+void u_scmdlabel(ELEMENT *el,WINDOW *win, char *message, int len) {
   int i;
   int found=-1;
   for(i=0;i<10;i++) {
@@ -542,14 +574,14 @@ void u_scmdlabel(ELEMENT *el,WINDOW *win, char *message) {
     if(system(el->data[found].pointer)==-1) printf("Error: system\n");
   }
 }
-void u_framelabel(ELEMENT *el,WINDOW *win, char *message) {
+void u_framelabel(ELEMENT *el,WINDOW *win, char *message, int len) {
   el->revert=0;
   if(el->label[0].pointer) {
     if(!strcmp(el->label[0].pointer,message)) el->revert=1;   
   }
   d_frame(el,win);
 }
-void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message) {
+void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message, int len) {
   int i;
   int found=-1;
   for(i=0;i<10;i++) {
@@ -562,10 +594,19 @@ void u_bitmaplabel(ELEMENT *el,WINDOW *win, char *message) {
     put_bitmap(win,el->data[found].pointer,el->x,el->y,el->w,el->h,el->labelcolor[found]);
   }
 }
+/* TODO: We should clip the image to a defined size or scale it....
+   maybe we should also allow .jpeg image data via SDL_image or so...*/
+
+void u_timage(ELEMENT *el,WINDOW *win,char *message, int len) {
+  // printf("Update with image data: len=%d\n",len);
+  STRING ret;
+  ret=pngtobmp((unsigned char *)message,(size_t)len);
+  // printf("After decoding: len=%d\n",ret.len);
+  put_graphics(win,ret,el->x,el->y,el->w,el->h,el->agc);
+}
 
 
-
-void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
+void u_hbar(ELEMENT *el,WINDOW *win, char *message, int len) {
   double v=myatof(message);
   int x0=(int)((0-el->min)*(double)el->w/(el->max-el->min));
   int x=(int)((v-el->min)*(double)el->w/(el->max-el->min));
@@ -581,7 +622,7 @@ void u_hbar(ELEMENT *el,WINDOW *win, char *message) {
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x+x0,el->y,el->x+x0,el->y+el->h,el->agc);
 }
-void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
+void u_vbar(ELEMENT *el,WINDOW *win, char *message, int len) {
   double v=myatof(message);
   int y0=el->h-1-(int)((0-el->min)*(double)el->h/(el->max-el->min));
   int y=el->h-1-(int)((v-el->min)*(double)el->h/(el->max-el->min));
@@ -598,7 +639,7 @@ void u_vbar(ELEMENT *el,WINDOW *win, char *message) {
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y0,el->x+el->w,el->y+y0,el->agc);
 }
-void u_hscaler(ELEMENT *el,WINDOW *win, char *message) {
+void u_hscaler(ELEMENT *el,WINDOW *win, char *message, int len) {
   double v=myatof(message);
   int scalerbw=el->w/10;
   if(scalerbw<el->h)  scalerbw=el->h;
@@ -627,7 +668,7 @@ void u_hscaler(ELEMENT *el,WINDOW *win, char *message) {
   }
 }
 
-void u_vscaler(ELEMENT *el,WINDOW *win, char *message) {
+void u_vscaler(ELEMENT *el,WINDOW *win, char *message, int len) {
   double v=myatof(message);
   int scalerbh=el->h/10;
   if(scalerbh<el->w)  scalerbh=el->w;
@@ -656,10 +697,10 @@ void u_vscaler(ELEMENT *el,WINDOW *win, char *message) {
   }
 }
 
-void u_plot(ELEMENT *el,WINDOW *win, char *message) {
+void u_plot(ELEMENT *el,WINDOW *win, char *message, int len) {
   boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
   rectangleColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->agc);
-  if(message && strlen(message)) {
+  if(message && len>0) {
     char *p1=message;
     char *p2;
     int i=0;
@@ -707,7 +748,7 @@ void u_plot(ELEMENT *el,WINDOW *win, char *message) {
 
 /* This makes a nice looking vertical meter with automatic scala */
 
-void u_tvmeter(ELEMENT *el,WINDOW *win, char *message) {
+void u_tvmeter(ELEMENT *el,WINDOW *win, char *message, int len) {
   double v=myatof(message);
   int x=el->x;
   int y=el->y+35*el->w/120;
@@ -760,7 +801,7 @@ void u_tvmeter(ELEMENT *el,WINDOW *win, char *message) {
     filledPolygonColor(win->display,&vx[0],&vy[0],7,el->fgc);
   }
 }
-void u_thmeter(ELEMENT *el,WINDOW *win, char *message) {
+void u_thmeter(ELEMENT *el,WINDOW *win, char *message, int len) {
   double v=myatof(message);
   int x=el->x+35*el->h/120;
   int y=el->y;
@@ -823,7 +864,7 @@ void u_thmeter(ELEMENT *el,WINDOW *win, char *message) {
 const Sint16 zeigerx[7]={0, 200,400,500, 400,200,  0};
 const Sint16 zeigery[7]={25, 25,100,  0,-100,-25,-25};
 
-void u_meter(ELEMENT *el,WINDOW *win, char *message) {
+void u_meter(ELEMENT *el,WINDOW *win, char *message, int len) {
   int i;
   double v=myatof(message);
   double phi;
