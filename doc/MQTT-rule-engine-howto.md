@@ -1,6 +1,6 @@
 ## MQTT Rule Engines
 
-Herewe summarize briefly what rule engine are and how you can nicely implement
+Here we summarize briefly what rule engines are and how you can nicely implement
 abstraction layers into your data and how you can build a distributed and 
 scalable computation based on the MQTT data.
 
@@ -12,12 +12,45 @@ set of topics, watch their updates and trigger a routine, which calculates
 something based on the input topics and finally puplish the result(s) to output
 topics,  which then can trigger other rules or rule engines. They also can
 perform actions on the machine they are running, like excecuting shell scripts
-when a topic content matches a certain pattern. With multiple rule engines
-running even on different computers using the same broker, one can implmenent a
-full automation control, which would create the Internet of Things.  The concept
-of rule engines is not new and can be found in other automation concepts as
-well. This implementation is focused on high performance quick reaction, and
-reliablility. Using them is not very complicated. 
+when a topic content matches a certain pattern. 
+
+![Definition of a Rule](images/rule.png)
+
+A rule is a transformation algoritm together with a set of 
+input parameters (topics) and a set of output parameterr. A Subset of the input
+parameters can trigger the algorithm calculation. The rule is triggered when 
+the content of such an input trigger topic has changes. A rule algorithm is 
+calculated in no time (which means, the algorithm must not yield or halt its
+excecution and must process as fast as possible.)
+
+A rule engine is a process running on any computer connected to the broker, 
+which can excecute one or more rules. 
+
+With multiple rule engines running even on different computers using the same
+broker, one can implmenent a full automation control, which would create the
+Internet of Things. 
+
+All rules together form a rule network, or a rule graph.
+
+![Complex Graph of Rule Engines](images/rule-graph.png)
+
+
+Usually this graph is a directed graph, so that all calculations always come 
+to an end. 
+
+If the graph has cycles, this would mean, that the rules will trigger 
+themselves. Except for special cases, the rule graph must be designed to not
+have unintended cycles, otherwise the parameters have undefined values and
+the whole rule subgraph becomes unstable. 
+
+However, If you can make sure, that the cycle will always come to an end, e.g. 
+when the algorithm as a whole converges on the input parameters, then a cycle 
+might be an interesting concept to implement (slow) control loops for the 
+automation.
+
+The concept of rule engines is not new and can be found in other automation
+concepts as well. This implementation is focused on high performance quick
+reaction, and reliablility. Using them is not very complicated. 
 
 ### MQTT-Hyperdash rule engines
 
