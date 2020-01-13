@@ -14,9 +14,6 @@
 #ifndef WINDOWS
 #include <gtk/gtk.h>
 #endif
-//#ifdef WINDOWS
-//  #include <windows.h>
-//#endif
 #include "config.h"
 #include "basics.h"
 #include "graphics.h"

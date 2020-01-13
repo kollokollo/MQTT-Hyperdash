@@ -48,10 +48,12 @@ void i_broker(ELEMENT *el,char *pars) {
   el->h=0;
   /* connect to mqtt broker */
   int rc=mqtt_broker(el->filename,NULL,NULL,NULL);
-  if(rc==-1) {
+  while(rc==-1) {
     char buffer[256];
-    snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n%s",el->filename);
-    message_dialog("MQTT Hyperdash Error",buffer, 1);
+    snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n"
+    "%s\n\nTry again?\n",el->filename);
+    if(message_dialog("MQTT Hyperdash Error",buffer,2)==1)
+      rc=mqtt_broker(el->filename,NULL,NULL,NULL);
   }
 }
 

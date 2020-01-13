@@ -2,3 +2,9 @@
 *.d
 hyperdash
 *.exe
+doc-pak
+demo
+sysmeasure
+commander
+battery
+Debian/Outputs
