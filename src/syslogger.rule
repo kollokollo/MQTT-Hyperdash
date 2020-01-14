@@ -1,0 +1,279 @@
+/* SYSLOGGER.RULE (c) Markus Hoffmann  */
+
+/* This file is part of MQTT-Hyperdash, the MQTT Dashboard 
+ * ============================================================
+ * MQTT-Hyperdash is free software and comes with NO WARRANTY - read the file
+ * COPYING for details
+ */
+
+/* Demonstration of a logging rule engine which listens on changes 
+   of several numerical topics and logs the changes together with 
+   a timestamp. Output parameter is a status and possibly an error 
+   string. 
+   The data is logged into a conventional ASCII files which can be 
+   plotted with gnuplot (p. ex.).
+   Every day, a new file is generated. The filename contains the 
+   day number and the host name. 
+
+   <basedir>/syslog-<daynr>-<hostname>.dat
+
+   The directory where the file is put can be specified via 
+   commandline parameters --basedir at excecution of this rule 
+   engine. 
+      
+ */
+
+/* Specify the Broker with URL, USERNAME and PASSWORD if needed.*/
+
+#define BROKER "tcp://localhost:1883"
+#define USER NULL
+#define PASSWD NULL
+
+/* Define a name for this rule engine */
+
+#define CLIENT "Sys-Logger"
+
+
+/* Define a TOPIC where the activity of this engine is reported to
+   every second as long the process is running.
+ */
+
+#define ACTIVITY_TOPIC "SYSLOGGER/ACTIVITY_DM"
+
+
+/* Define input and output topics for the rule 
+ */
+
+enum {
+ SYSLOAD1M,      /* alias for first  (output) parameter*/
+ SYSMEMUSAGE,    /* alias for 2. (output) parameter*/
+ SYSDISKUSAGE,   /* alias for 3. (output) parameter*/
+ STATUS,         /* alias for 4. (output) parameter*/
+ STATUSSTRING,   /* alias for 5. (output) parameter*/
+};
+
+/* We need to well define the trigger parameter, so that all parameter
+   values belong to the same time. In case of sysmeasure it would be best
+   to trigger on the SYSMEASUE/ACTIVITY_DM. But we only want to logg real
+   changes, this means we need to handle the data ourselves. 
+ */
+
+PARMDEF my_rule_parms[]={
+  {PARM_IN|PARM_TRIGGER|PARM_ISNUMBER,"SYSMEASURE/SYSLOAD_AM",0,0,NULL},
+  {PARM_IN|PARM_TRIGGER|PARM_ISNUMBER,"SYSMEASURE/SYSMEMUSAGE_AM",0,0,NULL},
+  {PARM_IN|PARM_TRIGGER|PARM_ISNUMBER,"SYSMEASURE/SYSDISKUSAGE_AM",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,            "SYSLOGGER/STATUS_DM",0,0,NULL},
+  {PARM_OUT,                          "SYSLOGGER/STATUS_SM",0,0,NULL}
+};
+
+
+/**************************************************************************** 
+ ** define the rule(s) for this rule engine. You can define multiple rules but
+ ** in most cases you would only have one.
+ ** This demo has only one rule.
+ ** The main rule function (here cmd_rule) need to be defined. It can use 
+ ** any other C function it creates if necessary.
+ */
+
+void init_rule(int argc, char* argv[]);
+void my_rule(int trig,PARMBUF *parms);
+
+RULEDEF rules[]={
+  {my_rule_parms,sizeof(my_rule_parms)/sizeof(PARMDEF),init_rule,my_rule}
+};
+/****************************************************************************/
+
+/**************************************** 
+ ** Define some helper functions
+ */
+
+#include <sys/time.h>
+#include <time.h>
+/* return a 64 bit UNIX timestamp (in double)*/
+static double v_timer() {
+  struct timeval t;
+  struct timezone tz;
+  gettimeofday(&t,&tz);
+  return((double)t.tv_sec+(double)t.tv_usec/1000000);
+}
+/* Return a pointer to a static string with the current date */
+static char *vs_date() {
+  static char ergebnis[12];
+  time_t timec;
+  struct tm * loctim;
+  timec = time(&timec);
+  loctim=localtime(&timec);
+  sprintf(ergebnis,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
+  return(ergebnis);
+}
+
+/* Return a pointer to a static string with the current time */
+static char *vs_time() {
+  static char ergebnis[9];
+  time_t timec;
+  timec = time(&timec);
+  strncpy(ergebnis,ctime(&timec)+11,8);
+  ergebnis[8]=0;
+  return(ergebnis);
+}
+
+char basedir[128];
+char host[128];
+char datafile[256];
+int today;
+
+#include <sys/stat.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <errno.h>
+
+static int prepare_logfile() {
+  /* Prepare directories */
+  int status=mkdir(basedir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  if(status && errno!=EEXIST) {
+    perror("ERROR: The base directory could not be created. Abort.\n");
+    return(-1);
+  }
+  return(0);
+}
+
+
+void init_rule(int argc, char* argv[]) {
+  printf("init rule got called....\n");
+  today=(int)(v_timer()/24/3600);
+  char *envptr;
+  envptr=getenv("HOST");
+  if(envptr) strncpy(host,envptr,sizeof(host));
+  else strncpy(host,"nohost",sizeof(host));
+  envptr=getenv("HOME");
+  if(envptr) strncpy(basedir,envptr,sizeof(basedir));
+  else strcpy(basedir,".");  /* If there is no HOME directory, use the current directory.*/
+
+  /* Evaluate commandline parameters (logfilename etc...)*/
+  
+  int i;
+  if(argc>1) {
+    for(i=1;i<argc;i++) {
+      if(!strcmp(argv[i],"--basedir"))   strncpy(basedir,argv[++i],128);
+      else if(!strcmp(argv[i],"--host")) strncpy(host,argv[++i],128);
+    }
+  }
+  snprintf(datafile,sizeof(datafile),"%s/syslog-%d-%s.dat",basedir,today,host);
+  if(verbose>0) {
+    printf("Basedir: <%s>\n",basedir);
+    printf("Host   : <%s>\n",host);
+    printf("Datafile: <%s>\n",datafile);
+  }
+
+  if(prepare_logfile()) {
+    printf("ERROR: could not write to disk.\n");
+    exit(0);
+  }  
+}
+
+volatile int datafile_d=-1;
+
+/* This function is called whenever one of the 
+   trigger TOPICs gets new data.
+   Trigger TOPICs need to be defined with PARM_TRIGGER.
+   The current/actual content of all parameters (PARM_IN and PARM_OUT)
+   have been collected in a snapshot and is refered to by parms.
+   The number of the parameter which has triggerd the rule is passed to
+   trig.
+   
+   The function is expected to put the results of its calculation (if any) into
+   the snapshot parms is pointing to. If PARM_ISNUMBER is set, the  value should
+   be a double and put into parms[i].value. Otherwise the result is expected as
+   a STRING in parms[i].string. Note that the  string should not be dynamically
+   allocated, since it would not be freed. You must take care of this memory. 
+
+   All parameters which are defined with PARM_OUT will be pushed to their
+   TOPICS afterwards, but only if the value has changes. Otherwise it is not
+   pushed and such the old retained value stays. 
+
+ */
+
+void my_rule(int trig,PARMBUF *parms) {
+  char line[128];
+  double timestamp=v_timer()-today*3600*24;
+  if(verbose>0) printf("my_rule triggered by #%d....\n",trig);
+
+  /* We do not really care which of the Input Parameters have triggerd, 
+   * we just log the new values.  
+   */
+  if(datafile_d!=-1) {
+  //  sprintf(line,"%.13g triggered by #%d %g\n",timestamp,trig,parms[trig].value);
+  //  if(write(datafile_d,line,strlen(line))<0) perror("write");
+    sprintf(line,"%.13g %g %g %g\n",timestamp,parms[0].value, parms[1].value,parms[2].value);
+    if(write(datafile_d,line,strlen(line))<0) perror("write");
+  } else {
+    printf("ERROR: logfile is not open.\n");
+  }
+}
+
+
+/* This function runs in the main loop and shall handle the files.
+   It is called periodically every second. 
+
+   The current/actual content of all parameters (PARM_IN and PARM_OUT)
+   have been collected in a snapshot and is refered to by parms.
+   
+   The function is expected to put the results of its calculation (if any) into
+   the snapshot parms is pointing to. If PARM_ISNUMBER is set, the  value should
+   be a double and put into parms[i].value. Otherwise the result is expected as
+   a STRING in parms[i].string. Note that the  string should not be dynamically
+   allocated, since it would not be freed. You must take care of this memory. 
+
+   All parameters which are defined with PARM_OUT will be pushed to their
+   TOPICS afterwards, but only if the value has changes. Otherwise it is not
+   pushed and such the old retained value stays. 
+ */
+ 
+void mainloop(PARMBUF *parms) {
+  char line[128];
+  int i;
+    /* Calculate the day number out of UNIX Timestamp. */
+  unsigned int t=(unsigned int)(v_timer()/24/3600);
+  if(t!=today) {
+    if(datafile_d!=-1) {
+      int d=datafile_d;
+      datafile_d=-1;  /* This will hinder the other threads from writing...*/
+      close(d);
+    }
+    today=t;
+    snprintf(datafile,sizeof(datafile),"%s/syslog-%d-%s.dat",basedir,today,host); 
+  }
+  if(datafile_d==-1) {
+    /* Open / Append Datafile */
+    if(verbose>=0) {printf("--> %s [",datafile);fflush(stdout);}
+    datafile_d=open(datafile,O_RDWR|O_APPEND|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    if(datafile_d==-1) perror("could not open datafile");
+    if(verbose>=0) {printf(".");fflush(stdout);}
+    snprintf(line,sizeof(line),"# datataking started at %s %s\n",vs_date(),vs_time());
+    if(datafile_d!=-1) if(write(datafile_d,line,strlen(line))<0) perror("write");
+    /*List the names of the TOPICs to be logged in the file*/
+    for(i=0;i<rules[0].numparms;i++) {
+      snprintf(line,sizeof(line),"# %s\n",rules[0].params[i].topic);
+      if(datafile_d!=-1) if(write(datafile_d,line,strlen(line))<0) perror("write");
+    }
+    if(verbose>=0) printf("]\n");
+  }
+  
+  /* Now the logfile should be open and ready for writing....*/
+
+  /* Set status */
+  if(datafile_d!=-1) {
+    free(parms[STATUSSTRING].string.pointer);
+    parms[STATUSSTRING].string.pointer=strdup("OK.");
+    parms[STATUSSTRING].string.len=strlen(parms[STATUSSTRING].string.pointer);
+    parms[STATUS].value=0;
+  } else {
+    free(parms[STATUSSTRING].string.pointer);
+    parms[STATUSSTRING].string.pointer=strdup("ERROR: Logfile not open.");
+    parms[STATUSSTRING].string.len=strlen(parms[STATUSSTRING].string.pointer);
+    parms[STATUS].value=1;
+  }
+  default_measure_loop(NULL); /* Do the ACTIVITY stuff and yield for 1 second...*/
+}
+
+void (*measure_rule)(PARMBUF *)=mainloop;

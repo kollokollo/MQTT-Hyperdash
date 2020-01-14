@@ -118,12 +118,14 @@ configure : configure.in
 hyperdash :  $(MAINOBJS)
 	$(CC) -L. $(LINKFLAGS) -o $@ $(MAINOBJS) $(LIBS)
 
-
 # Make the exe for MS WINDOWS
 
 hyperdash.exe: $(CSRC) $(MYWINLIBS)
 	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  $(CSRC) \
 	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
+
+rules:	demo sysmeasure syslogger commander
+
 
 # This defines the compile sequence for .rule files
 

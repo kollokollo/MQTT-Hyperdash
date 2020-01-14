@@ -6,28 +6,28 @@ scalable computation based on the MQTT data.
 
 ### Introduction
 
-Rule engines are ment to be applications running completely in the background. 
+Rule engines are meant to be applications running completely in the background. 
 They do not interact directly with the user. Their function is to subscribe to a
 set of topics, watch their updates and trigger a routine, which calculates 
-something based on the input topics and finally puplish the result(s) to output
+something based on the input topics and finally publish the result(s) to output
 topics,  which then can trigger other rules or rule engines. They also can
-perform actions on the machine they are running, like excecuting shell scripts
+perform actions on the machine they are running, like executing shell scripts
 when a topic content matches a certain pattern. 
 
 ![Definition of a Rule](images/rule.png)
 
-A rule is a transformation algoritm together with a set of 
-input parameters (topics) and a set of output parameterr. A Subset of the input
+A rule is a transformation algorithm together with a set of 
+input parameters (topics) and a set of output parameter. A Subset of the input
 parameters can trigger the algorithm calculation. The rule is triggered when 
 the content of such an input trigger topic has changes. A rule algorithm is 
 calculated in no time (which means, the algorithm must not yield or halt its
-excecution and must process as fast as possible.)
+execution and must process as fast as possible.)
 
 A rule engine is a process running on any computer connected to the broker, 
-which can excecute one or more rules. 
+which can execute one or more rules. 
 
 With multiple rule engines running even on different computers using the same
-broker, one can implmenent a full automation control, which would create the
+broker, one can implement a full automation control, which would create the
 Internet of Things. 
 
 All rules together form a rule network, or a rule graph.
@@ -50,38 +50,44 @@ automation.
 
 The concept of rule engines is not new and can be found in other automation
 concepts as well. This implementation is focused on high performance quick
-reaction, and reliablility. Using them is not very complicated. 
+reaction, and reliability. Using them is not very complicated. 
 
 ### MQTT-Hyperdash rule engines
 
 MQTT-Hyperdash provides a framework with which you can very quickly define 
 and program rule engines. You only need to specify the main code fraction 
 of your algorithm, and the framework will take care of collecting all data
-trigger your routines and bublish the results. For the rule itself the data 
-is available as if they are in normale variables to calculate with. No 
-communication overhead nned to be programmed. 
+trigger your routines and publish the results. For the rule itself the data 
+is available as if they are in normal variables to calculate with. No 
+communication overhead need to be programmed. 
 
 You can make tree different base kinds of rule engines:
 
 1. An engine which will be triggered on a set of topics changes and then 
-   perform any action an the local machine (ineract with the hardare, 
-   perform switching tasks, excecute external programs or shell scripts. 
+   perform any action an the local machine (interact with the hardware, 
+   perform switching tasks, execute external programs or shell scripts, or
+   simply log the data and write them to a file or database. 
 
 2. An engine which performs measurement tasks in a loop and publishes the
    measured results to the MQTT-Network. The rule itself need perform the 
-   measuremnet code, access the hardware, do calculatons. The results are 
+   measurement code, access the hardware, do calculations. The results are 
    stored in a data area and the framework takes care of publishing it. 
 
 3. An engine which waits for triggers from a set of input topics, use even more
    topics data (without been triggered by it) and then calculate something. The
    results are stored in a data area and the framework takes care of 
-   publishing it. All data is transparently availableto the rule itself 
+   publishing it. All data is transparently available to the rule itself 
    as if it was normal variable content. 
 
 And of course any grade of mixture of these three base concepts. 
 
-There are three example rules providedwith this package to demonstrate the usage
-in any of these cases. sysmeasure.rule, commander.rule and demo.rule. 
+There are four example rules provided with this package to demonstrate the usage
+in any of these cases:
+
+* sysmeasure.rule
+* syslogger.rule
+* commander.rule and 
+* demo.rule. 
 
 ### The framework
 
@@ -89,30 +95,30 @@ The rule engine framework, with which the rule programmer will not come in touch
 subscribes to all TOPICs defined and collects permanently all data which
 arrives. If a trigger TOPIC gets a message, a snapshot of all data available at
 that time on every TOPIC defined is collected into a snapshot and the rule
-function is excecuted. The results are expected to be stored in the snapshot and
+function is executed. The results are expected to be stored in the snapshot and
 finally the framework publishes the content of the defined OUTPUT TOPICs, 
 but only, if the content has changed! If the rule comes to the same results, 
-it will not get publshed again, because there is a retained value with the 
-same content. This saves network bandwith and hinders other rules to be 
+it will not get published again, because there is a retained value with the 
+same content. This saves network bandwidth and hinders other rules to be 
 triggered with the same input again and again. 
 
 ### Quick Guide: demo.rule
 
 You want to have a look at src/demo.rule. This es everything needed to implement
-and make a simple rule. The rule will be compiled into a native excecutable with
+and make a simple rule. The rule will be compiled into a native executable with
 
 <pre>
 make demo
 </pre>
 
-The file demo now can be excecuted, but it should not print anything to the
-terminal console, becaue besided debug messages there is no direct output or
+The file demo now can be executed, but it should not print anything to the
+terminal console, because besides debug messages there is no direct output or
 input via the console. 
 
 If you see an error message, make sure that you run a broker on the 
 machine (localhost) and that the access rights are correct.
 
-You can as well excecute demo in the background, e.g.
+You can as well execute demo in the background, e.g.
 like this:
 
 <pre>
@@ -135,7 +141,7 @@ In Window number 1 please run
  mosquitto_sub -h localhost -t DEMO/ACTIVITY_DM 
 </pre>
 
-If demo is running, you shouls see an update here every second counting from 0
+If demo is running, you should see an update here every second counting from 0
 to 3. This indicates that the demo engine is running. (Maybe you want to make 
 a dashboard, and put DEMO/ACTIVITY_DM to a BITMAPLABEL ...)
 
@@ -159,28 +165,28 @@ can to with this mechanism.
 I do
 * calculate the filling percentage of a battery out of the voltage measured
 * Do a rescaling of values from mSv/d to µSv/h.
-* Have shell commands excecuted on a remote machine whenever I press a Button on
+* Have shell commands executed on a remote machine whenever I press a Button on
   a MQTT-Hyperdash dashboard.
 * Recalculate and rescale the data for a plot in a dashboard whenever the 
   user sets a different scaling for X or Y.
 
-The rule engines consume nearly no cpu power, they are so fast, that changes are
+The rule engines consume nearly no CPU power, they are so fast, that changes are
 instantly trigger calculations on the fly. 
 
 ### Writing own rules
 
 You should take demo.rule as a template and modify it according to your needs.
 
-The rule syntax is C with some prerdefined macros. Rule files are actually C 
-files and they are  compiled with gcc. SO you can add any subfunction you 
+The rule syntax is C with some predefined macros. Rule files are actually C 
+files and they are  compiled with gcc. SO you can add any sub-function you 
 need for calculation. And the stdlib including math is readily available. 
 
-This way the excecution of the rule function can be very fast, but there are 
+This way the execution of the rule function can be very fast, but there are 
 nearly no limitations.
 
 For advanced use, the rule definitions allow an initialization functions which 
-is called once at startup of the rule engine excecutable and can pass
-commandline parameters, ask for environment variables or open configuration
+is called once at startup of the rule engine executable and can pass
+command-line parameters, ask for environment variables or open configuration
 files, if needed. The demo rule does not make use of it.
 
 <pre>

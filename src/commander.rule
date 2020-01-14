@@ -42,12 +42,12 @@ PARMDEF cmd_rule_parms[]={
 };
 
 
-
-/* define the rule(s) for this rule engine. You can define multiple rules but
-   in most cases you would only have one.
-   The commander has only one rule.
-   The main rule function (here cmd_rule) need to be defined. It can use 
-   any other C function it creates if necessary.
+/**************************************************************************** 
+ ** define the rule(s) for this rule engine. You can define multiple rules but
+ ** in most cases you would only have one.
+ ** This demo has only one rule.
+ ** The main rule function (here cmd_rule) need to be defined. It can use 
+ ** any other C function it creates if necessary.
  */
 
 void cmd_rule(int trig,PARMBUF *parms);
@@ -55,6 +55,7 @@ void cmd_rule(int trig,PARMBUF *parms);
 RULEDEF rules[]={
   {cmd_rule_parms,sizeof(cmd_rule_parms)/sizeof(PARMDEF),NULL,cmd_rule}
 };
+/****************************************************************************/
 
 /* These are specific for the Commander rule. We define a set of matches and
    a list of shell commands which shall be excecuted if the Topic content
@@ -69,22 +70,22 @@ static char *shellcmd[]={
 static int anzmatch=sizeof(match)/sizeof(char *);
 
 /* This function will be called whenever a parameter of the rule 
-   getzs an update and(!) this parameter was defined with PARM_TRIGGER
+   gets an update and(!) this parameter was defined with PARM_TRIGGER
    The current/actual content of all parameters (PARM_IN and PARM_OUT)
    have been collected in a snapshot and is refered to by parms.
    The number of the parameter which has triggerd the rule is passed to
    trig.
    
-   The function is expected to put the results of its calculation into the
-   Snapshot parms is pointing to. If PARM_ISNUMBER is set, the 
-   value should be a double and put into parms[i].value. Otherwise the 
-   result is expected as a STRING in parms[i].string. Note that the 
-   string should not be dynamically allocated, since it would not be freed.
-   You must take care of this memory. 
-   All parameters which are defined with 
-   PARM_OUT will be pushed to their TOPICS afterwards, but only if the value
-   has changes. Otherwise it is not pushed. Note that there remains a 
-   retained value. 
+   The function is expected to put the results of its calculation (if any) into
+   the snapshot parms is pointing to. If PARM_ISNUMBER is set, the  value should
+   be a double and put into parms[i].value. Otherwise the result is expected as
+   a STRING in parms[i].string. Note that the  string should not be dynamically
+   allocated, since it would not be freed. You must take care of this memory. 
+
+   All parameters which are defined with PARM_OUT will be pushed to their
+   TOPICS afterwards, but only if the value has changes. Otherwise it is not
+   pushed and such the old retained value stays. 
+
  */
 
 void cmd_rule(int trig,PARMBUF *parms) {

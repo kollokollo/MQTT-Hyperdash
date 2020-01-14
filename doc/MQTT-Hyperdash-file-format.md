@@ -4,30 +4,30 @@ for MQTT Hyperdash V.1.00 (c) by Markus Hoffmann
 
 
 MQTT Hyperdash runs so-called dash-files. Dash-files are simple text files, 
-consisting of UTF-8 encoded ASCII text. They can be edited by any text editor.  
+consisting of UTF-8 encoded ASCII text. They can be edited by any text editor.
 
-Each line contains the definition of one element. If te last charackter of the
+Each line contains the definition of one element. If the last character of the
 line is a '\' (backslash), the next line will be linked to this line. You can
 use  this to better format the dash files, e.g. to split the definition of one 
-element over mutliple real lines. 
+element over multiple real lines. 
 
 A line with an element definition has following structure: 
 
-elementname : one or more KEY=VALUE pairs separated by whitespace.
+element-name : one or more KEY=VALUE pairs separated by whitespace.
 
 All keywords are case insensitive. 
 
 The order of KEY=VALUE pairs is irrelevant. They are all optional. 
 If missing, default values apply.
 
-String values should be enclosed by "" if they contain whitespaces and when
+String values should be enclosed by "" if they contain white-spaces and when
 case matters.
 
 Comments are marked with a '#' at the beginning of a line.
 
 Empty lines will be ignored. 
 
-Each dash file must contain excactly one "PANEL" element and 
+Each dash file must contain exactly one "PANEL" element and 
 one "BROKER" element. 
 
 
@@ -36,7 +36,7 @@ one "BROKER" element.
 Currently there exist following element types:
 
 
-|Element       |   Recognized keyvalues                                    |
+|Element       |   Recognized key-values                                    |
 |--------------|:----------------------------------------------------------|
 |PANEL         | W H TITLE FGC BGC                                         |
 |BROKER        | URL USER PASSWD                                           |
@@ -83,37 +83,37 @@ Currently there exist following element types:
 * Y2=<pixels> Vertical position  of the endpoint of a line in pixel coordinates
 * W=<pixels> Width of the element in pixels
 * H=<pixels> Height of the element in pixels
-* TITLE=<String> Title of the dashbord window.
+* TITLE=<String> Title of the dashboard window.
 * URL=<String> URL of the broker to connect to. Example: URL="tcp://localhost:1883"
-* USER=<String> Username for connection
+* USER=<String> User-name for connection
 * PASSWD=<String> Password for connection
 * FGC=<color value> Foreground color. The color values are 32bit RGBA. 
   They can be specified using a hey value $rrggbbaa:
-  e.g. FGC=$ff4532FF  
+  e.g. FGC=$ff4532FF
 * BGC=<color value> Background color. 
 * BITMAP=<filename> Specify a bitmap file name relative to the bitmap path. The
   bitmap files need to be in .xbm (X-Window bitmap) format and can be generated 
   and edited with the simple application "bitmap". 
 * ICON=<filename> Specify an image file name relative to the icon path. These 
-  files must be .png (Potable network grapics) files.
+  files must be .png (Potable network graphics) files.
 * TEXT=<String> Specify a text to be shown.
-* FONT=<fontname> Specify a text font to use. These fonts must be TrueType Fonts
+* FONT=<fontname> Specify a text font to use. These fonts must be True-type Fonts
   usually installed in the standard path /usr/share/fonts/truetype/msttcorefonts
   There a file with .ttf ending is searched. 
 * FONTSIZE=<value> Specify the size of the font. This defaults to 16.
 * TOPIC=<TompicName> The name of the topic of a dynamic element. 
-* REVERT=<0 or 1> Specifys if the frame is drawn in revert state.
+* REVERT=<0 or 1> Specifies if the frame is drawn in revert state.
 * MATCH=<String> A String to match the topics content.
-* TEXT[n] Are one or multiple Labeldefinitions of the form 
+* TEXT[n] Are one or multiple Label definitions of the form 
   TEXT[n]="<match>|<text>|<fgc>". E.g. TEXT[0]="0|Hello|$ffffffff"
-* BITMAP[n] Are one or multiple Labeldefinitions of the form 
+* BITMAP[n] Are one or multiple Label definitions of the form 
   BITMAP[n]="<match>|<bitmapfile>|<fgc>". E.g. BITMAP[0]="0|SmallTriangle|$ff0000ff"
 * VALUE=<String> A String to apply to a topic.
-* QOS=<0,1 or 2> Qiality of service for publication to the broker. Defaults to 0.
+* QOS=<0,1 or 2> Quality of service for publication to the broker. Defaults to 0.
 * TIC=<number> An increment used by the ticker. The increment can aswell be negative.
 * TYPE=<number> The type of the plot.
-* OFFSET=<number> ignore the first n numbers of the toic content.
-* N=<number> use only n numbers of the toic content.
+* OFFSET=<number> ignore the first n numbers of the topic content.
+* N=<number> use only n numbers of the topic content.
 </pre>
 
 ### Static elements 
@@ -134,7 +134,7 @@ PANEL:  TITLE="Button Test Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
 
 #### Broker: URL= [USER= PASSWD=]
 
-This sets the mqtt broker url, and also username and password if required. 
+This sets the mqtt broker url, and also user-name and password if required. 
 Each dash file must contain exactly one broker element. 
 
 Example: 
@@ -155,13 +155,13 @@ LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
 #### Text: X= Y= [H=] FGC= TEXT= FONT= FONTSIZE=
 
 Draws a text at coordinates (X,Y) in given color with a given font. Fonts are
-true type fonts (.ttf). The size (height) of the charackters can be specified 
-with FONTSIZE. H defines the textbox height. The text will be vertically 
+true type fonts (.ttf). The size (height) of the characters can be specified 
+with FONTSIZE. H defines the text-box height. The text will be vertically 
 centered to this height. If H is not specified this defaults to the Font height 
 of the specified font. If the specified font cannot be found or loaded the 
-font defaults to an ugly 8x8 pixel monospaced font. If not specified, the 
+font defaults to an ugly 8x8 pixel mono-spaced font. If not specified, the 
 FONTSIZE defaults to 16. The text is transparent and has no background. This 
-way, you can stuff multiple charackters or texts on top of a bitmap or other
+way, you can stuff multiple characters or texts on top of a bitmap or other
 graphical elements. 
 
 Example:
@@ -221,7 +221,7 @@ FRAME:   X=90 Y=290 W=220 H=36
 #### Icon: X= Y= ICON=
 
 Draws an image, usually a png-file, at position x and y. The file name must be
-specified with ICON. The file is searched for in the iconpath. 
+specified with ICON. The file is searched for in the icon-path. 
 
 Example:
 <pre>
@@ -235,7 +235,7 @@ Bitmaps are drawn with transparent
 background, so one can 
 draw multiple bitmaps on top of another to combine more complicated graphics.
 The file name must be
-specified with BITMAP. The file is searched for in the bitmappath.
+specified with BITMAP. The file is searched for in the bitmap path.
 
 <img src="images/BITMAP.png">
 
@@ -255,7 +255,7 @@ are used to display data.
 Displays the topic messages as they arrive using the specified FONT. When new
 data arrives, the old text need to be cleared, therefore a width (and height)
 of the box to be cleared with background color (BGC) needs to be specified. If
-H is ommitted, the font height is used. 
+H is omitted, the font height is used. 
 
 Example:
 <pre>
@@ -269,8 +269,8 @@ Evaluates the topic message as a number and then uses FORMAT to display it. The
 formatter should either be a string also used in BASIC "PRINT USING" statements
 (also EXCEL) or a C style "printf() format" string. When new data arrives, the
 old text need to be cleared, therefore a width (and height) of the box to be
-cleared with background color (BGC) needs to be specified. If H is ommitted, the
-font height is used. If W is ommitted, the size of the FORMAT string is used.
+cleared with background color (BGC) needs to be specified. If H is omitted, the
+font height is used. If W is omitted, the size of the FORMAT string is used.
 
 Example:
 <pre>
@@ -334,7 +334,7 @@ VMETER:  X=250 Y=100 W=25 H=140 MIN=0 MAX=4 TOPIC=HELIUMPRESSURE \
 
 #### VBar: X= Y= W= H= TOPIC= MIN= MAX= FGC= BGC= AGC=
 
-Draws a vertial bar, which is filled by the percentage of the topics content 
+Draws a vertical bar, which is filled by the percentage of the topics content 
 interpreted as a value between min and max.
 
  <img src="images/VBAR.png">
@@ -362,7 +362,7 @@ HBAR: x=200 y=100 w=100 h=10 MIN=0 MAX=8 \
 According to the content of the topic, corresponding text is displayed. If one
 of the match strings given in TEXT[n] matches the content, then the
 corresponding text is displayed in the corresponding color. If the topics
-content doesnt match at all, nothing is displayed. n can be 0 to 9.
+content doesn't match at all, nothing is displayed. n can be 0 to 9.
 
 Example:
 <pre>
@@ -378,7 +378,7 @@ TEXTLABEL:   X=600 Y=350 W=20 H=20 TOPIC=KLYSTRON/HF_DM  \
 According to the content of the topic, a corresponding bitmap is displayed. If
 one of the match strings given in BITMAP[n] matches the content, then the
 corresponding bitmap is displayed in the  corresponding color. If the topics
-content doesnt match at all, nothing is displayed. n can be 0 to 9. 
+content doesn't match at all, nothing is displayed. n can be 0 to 9. 
 
 This way status indicators can be implemented. The whole set of bitmaps all use
 the same background color.
@@ -414,10 +414,10 @@ BITMAPLABEL: x=83 y=321 BGC=$000040ff TOPIC=SOLAR/LADE/STATUS \
 #### SCmdLabel: TOPIC= CMD[n]="match|shell command"
 
 According to the content of the topic, a corresponding shell-command is 
-excecuted. 
+executed. 
 If one of the match strings given in CMD[n] matches the content, then the 
-corresponding shell-command is excecuted. 
-If the topics content doesnt match at all, nothing happens. 
+corresponding shell-command is executed. 
+If the topics content doesn't match at all, nothing happens. 
 n can be 0 to 9.
 This is a very versatile but non portable element. You can use it for various 
 things, but currently I can only think of the automatic trigger of sounds by
@@ -441,9 +441,9 @@ plotted into a graph.
 
 With TYPE you specify the type of graph produced. e.g.
 Type=0 only plots dots, 
-TYPE=1 impulses,  
+TYPE=1 impulses,
 TYPE=2 histogram lines, 
-TYPE=3 normal lines, and so on.  
+TYPE=3 normal lines, and so on.
 
 The horizontal scaling can be influenced using AMIN and AMAX,
 the vertical scaling is controlled by MIN and MAX. You can specify a background
@@ -463,9 +463,9 @@ PLOT: x=20 Y=100 w=300 h=200 TOPIC=DOSIMETER/PULSELENHIST_SM BGC=$000000ff \
 
 Draws an image at x,y of size w,h. The Image data is taken from the TOPICs 
 content. The data must be in .png file format to be recognized. If W or H is
-ommited, the image width and height is used. Currently the image doesnt clip to
+omitted, the image width and height is used. Currently the image doesn't clip to
 the elements bounds, nor does it scale. You have to make sure, that the element
-is big enough to contain the image.  
+is big enough to contain the image.
 
 Example: 
 
@@ -479,7 +479,7 @@ Draws the topics content into a text area of size w,h. If the text is longer
 than W it is automatically wrapped to the next line. TEXT can be UTF8 coded
 ASCII text.  Newline characters are recognized to terminate a line.
 
-ALIGN specifies thich part of the text is shown in case the Elements box is too
+ALIGN specifies which part of the text is shown in case the Elements box is too
 small. ALIGN can be  TOP, BOTTOM, CENTER. Default is TOP.
 
 Example: 
@@ -535,7 +535,7 @@ if necessary. The topic content is finally formatted using the FORMAT pattern.
 During sliding, the values are published to the TOPIC at each move of the mouse
 if the results produced are bigger than TIC. During sliding the values are 
 always published with QOS=0. Only the final value (after releasing the sliders
-knob) will be published with the Quality of Sevice specified. 
+knob) will be published with the Quality of Service specified. 
 
 Example: 
 
@@ -556,7 +556,7 @@ if necessary. The topic content is finally formatted using the FORMAT pattern.
 During sliding, the values are published to the TOPIC at each move of the mouse
 if the results produced are bigger than TIC. During sliding the values are 
 always published with QOS=0. Only the final value (after releasing the sliders
-knob) will be published with the Quality of Sevice specified. 
+knob) will be published with the Quality of Service specified. 
 
  <img src="images/HSCALER.png">
 
@@ -618,7 +618,7 @@ FRAMETOGGLE: x=240 y=400 w=100 h=25
 #### ShellCmd: X= Y W= H= CMD=
 
 An invisible click area. When the user clicks it, a shell command will be 
-excecuted.
+executed.
 
 Example: 
 
@@ -632,7 +632,7 @@ SHELLCMD: x=20 y=260 w=240 h=25 \
 An invisible click area. When the user clicks it, 
 another window with another dashboard opens. The file name must 
 be specified with DASH (without the postfix ".dash"). 
-The files are searched for in the dashboardpath.
+The files are searched for in the dashboard-path.
 
 Example: 
 

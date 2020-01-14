@@ -50,13 +50,15 @@ PARMDEF my_rule_parms[]={
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSLOAD15M_AM",0,0,NULL},
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSOVERLOAD_DM",0,0,NULL},
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSUPTIME_AM",0,0,NULL},
-  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSMEMUSAGE_AM",0,0,NULL},
+  {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSMEMUSAGE_AM",0,0,"###.#"},
   {PARM_OUT|PARM_ISNUMBER,"SYSMEASURE/SYSDISKUSAGE_AM",0,0,NULL}
 };
 
 
-/* define the rule(s) for this rule engine. 
-   This demo has no active rule, it uses only the measurement loop.
+/**************************************************************************** 
+ ** define the rule(s) for this rule engine. You can define multiple rules but
+ ** in most cases you would only have one.
+ ** This demo has no active rule, it uses only the measurement loop.
 
   The params for the measure-function must be defined in the first rule. 
 
@@ -66,6 +68,7 @@ PARMDEF my_rule_parms[]={
 RULEDEF rules[]={
   {my_rule_parms,sizeof(my_rule_parms)/sizeof(PARMDEF),NULL,NULL}
 };
+/****************************************************************************/
 
 
 /* This function will be called in a loop. You are responsible to 
@@ -74,16 +77,16 @@ RULEDEF rules[]={
    The current/actual content of all parameters (PARM_IN and PARM_OUT)
    have been collected in a snapshot and is refered to by parms.
    
-   The function is expected to put the results of its calculation into the
-   Snapshot parms is pointing to. If PARM_ISNUMBER is set, the 
-   value should be a double and put into parms[i].value. Otherwise the 
-   result is expected as a STRING in parms[i].string. Note that the 
-   string should not be dynamically allocated, since it would not be freed.
-   You must take care of this memory. 
-   All parameters which are defined with 
-   PARM_OUT will be pushed to their TOPICS afterwards, but only if the value
-   has changes. Otherwise it is not pushed. Note that there remains a 
-   retained value. 
+   The function is expected to put the results of its calculation (if any) into
+   the snapshot parms is pointing to. If PARM_ISNUMBER is set, the  value should
+   be a double and put into parms[i].value. Otherwise the result is expected as
+   a STRING in parms[i].string. Note that the  string should not be dynamically
+   allocated, since it would not be freed. You must take care of this memory. 
+
+   All parameters which are defined with PARM_OUT will be pushed to their
+   TOPICS afterwards, but only if the value has changes. Otherwise it is not
+   pushed and such the old retained value stays. 
+
  */
 
 #include <sys/sysinfo.h>
