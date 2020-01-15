@@ -82,6 +82,6 @@ void init_dash(DASH *dash);
 void close_dash(DASH *dash);
 void draw_dash(DASH *dash, WINDOW *win);
 int handle_dash(DASH *dash, WINDOW *win);
-void update_topic_message(int sub, STRING message);
+void update_topic_message(int sub,const char *, STRING message);
 
 #endif

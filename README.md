@@ -40,7 +40,16 @@ A description of the [dash file format](doc/MQTT-Hyperdash-file-format.md) can
 be found in the doc/ section.
 
 
-#### rule-engine sysmeasure
+#### mqtt-list-topics
+
+A tool to connect to a mqtt broker and list all topics available there to stdout. 
+
+mqtt-list-topics also performs a brief analysis on the topics content to 
+classify the topic into binary, string, number, and integer. This 
+classification is not perfect, since it is based on a single payload value only, 
+but it can help making automatic dashboards for MQTT-Hyperdash. 
+
+#### rule-engine sysmeasure and syslogger
 
 Rule engines are meant to be applications running completely in the background. 
 They do not interact directly with user. Their function is to subscribe to a 

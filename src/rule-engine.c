@@ -176,9 +176,10 @@ static void free_snapshot(int n,PARMBUF *parms) {
   free(parms);
 }
 
-void update_topic_message(int sub, STRING message) {
+void update_topic_message(int sub, const char *topicname, STRING message) {
+  if(sub<0) return;  /* Ignore it. */
   int i,j;
-  if(verbose>0) printf("update_topic_message: %d <%s>\n",sub,message.pointer);
+  if(verbose>0) printf("update_topic_message: %d:%s: <%s>\n",sub,topicname,message.pointer);
 
   if(num_rules>0) {
     for(i=0;i<num_rules;i++) {

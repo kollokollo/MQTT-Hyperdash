@@ -1,4 +1,4 @@
-# Makefile for MQTT-Hyperdash (c) Markus Hoffmann V.1.27
+# Makefile for MQTT-Hyperdash (c) Markus Hoffmann V.1.02
 
 # This file is part of MQTT-Hyperdash, the universal MQTT Dashboard
 # ======================================================================
@@ -82,6 +82,7 @@ DIST= ../README.md ../doc/INSTALL ../COPYING *.1 \
 WINDIST=WINDOWS/lib/SDL.dll \
         WINDOWS/lib/README-SDL.txt \
 	hyperdash.exe  \
+	mqtt-list-topics.exe  \
         WINDOWS/readme-windows.txt \
 	WINDOWS/hyperdash.ico  WINDOWS/demo.dash \
 	WINDOWS/dash.ico ../COPYING ../RELEASE_NOTES INTRO
@@ -103,7 +104,7 @@ MYWINLIBS = WINDOWS/lib/libgfx.lib
 
 
 
-all :    hyperdash sysmeasure
+all :    hyperdash mqtt-list-topics sysmeasure
 
 configure : configure.in
 	autoconf
@@ -123,6 +124,14 @@ hyperdash :  $(MAINOBJS)
 hyperdash.exe: $(CSRC) $(MYWINLIBS)
 	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  $(CSRC) \
 	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
+
+mqtt-list-topics :  mqtt-list-topics.c mqtt.o subscribe.o util.o
+	$(CC)  mqtt-list-topics.c mqtt.o subscribe.o util.o \
+	-o $@ -lm -lpaho-mqtt3c 
+
+mqtt-list-topics.exe: mqtt-list-topics.c mqtt.c subscribe.c util.c
+	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  \
+	-o $@ mqtt-list-topics.c mqtt.c subscribe.c util.c -lm -lpaho-mqtt3c
 
 rules:	demo sysmeasure syslogger commander
 
@@ -145,13 +154,15 @@ rules:	demo sysmeasure syslogger commander
 #
 
 
-install : hyperdash hyperdash.desktop sysmeasure 
+install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics
 	install -m 644 hyperdash.desktop $(DESKTOPDIR)/
 	install -s -m 755 hyperdash $(BINDIR)/
+	install -s -m 755 mqtt-list-topics $(BINDIR)/
 	install -s -m 755 sysmeasure $(BINDIR)/
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
 	install -m 644 hyperdash.1 $(MANDIR)/man1/
+	install -m 644 mqtt-list-topics.1 $(MANDIR)/man1/
 	install -m 775  -d $(DATADIR)/hyperdash/bitmaps
 	install -m 644 ../bitmaps/* $(DATADIR)/hyperdash/bitmaps/
 	install -m 775  -d $(DATADIR)/hyperdash/icons
@@ -162,8 +173,10 @@ install : hyperdash hyperdash.desktop sysmeasure
 uninstall :
 	rm -f $(DESKTOPDIR)/hyperdash.desktop
 	rm -f $(BINDIR)/hyperdash
+	rm -f $(BINDIR)/mqtt-list-topics
 	rm -f $(BINDIR)/sysmeasure
 	rm -f $(MANDIR)/man1/hyperdash.1
+	rm -f $(MANDIR)/man1/mqtt-list-topics.1
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons
 	rm -rf $(DATADIR)/hyperdash/dashboards
@@ -172,7 +185,7 @@ clean :
 	backup-*.tgz *.d
 	rm -rf doc-pak
 moreclean : clean
-	rm -f hyperdash sysmeasure
+	rm -f hyperdash sysmeasure mqtt-list-topics
 
 distclean : moreclean
 	rm -f Makefilex config.cache config.status config.log config.h \

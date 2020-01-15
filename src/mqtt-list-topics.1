@@ -1,35 +1,20 @@
-.TH HYPERDASH 1 04-Jan-2019 "Version 1.02" "MQTT Hyperdash"
+.TH MQTT-LIST-TOPICS 1 04-Jan-2020 "Version 1.00" "MQTT Hyperdash"
 .SH NAME
-hyperdash \- The MQTT dashboard interpreter 
+mqtt-list-topics \- List all (retined) topics on a mqtt broker. 
 .SH SYNOPSIS
-.B hyperdash
-.RI "[ " option " ] " 
-.I <filename>
+.B mqtt-list-topics
+.RI "[ " options " ] "
 
 .SH DESCRIPTION
 
-MQTT Hyperdash is a fast and efficient dashboard (GUI) for the MQTT framework. 
+mqtt-list-topics connects to a mqtt broker and listens for a 
+certein amount of time (default 1 second) for all topics available. A list will
+pe printed to stdout. 
 
-The man machine interface is the interactive tool from which the individual
-components of the Internet of Things (IoT) are controlled. In order to avoid 
-confusion and to minimize the learning time, the interface builds on ergonomic 
-and logical concepts which allow for an intuitive understanding of its 
-operation and of the operation of the devices it controls.
-
-Virtual control panels (dashbors) allow users to operate on the graphical 
-representations of a large set of devices like switches, knobs, sliders, 
-digital and analog indicators, whose behaviour is equivalent to that of the 
-real (and sometimes analog) instrumental devices. 
-The connection with
-the mosquitto broker on the lower layers is automatic
-and completely transparent.
-
-
-.SH Filenames
-
-.B hyperdash
-processes one input file. The suffix of the input file is 
-usually .dash.
+mqtt-list-topics also performs a brief analysis on the topics content to 
+classify the topic into binary, string, number, and integer. This 
+classification is not perfect, since it is based on a single payload value only, 
+but it can help making automatic dashboards for MQTT-Hyperdash. 
 
 .SH OPTIONS
 .TP
@@ -39,14 +24,20 @@ Be quiet and print less debug information.
 .BR \-v
 Be more verbose and print debug information. 
 .TP
+.BR \-\-broker " " \fIurl\fR
+specify the broker url. By default "tcp://localhost:1883" is used. 
+.TP
+.BR \-\-pattern " " \fIpattern\fR
+specify a topic pattern. By default "#" is used. 
+.TP
+.BR \-\-wait " " \fIseconds\fR
+specify a time to wait/listen in seconds. By default, the time is 1 second. 
+.TP
 .BR \-\-version
 shows version, program and other information and exits.
 .TP
 .BR \-h ", " \-\-help
 print a short help and exit.
-.TP
-.BR \-h ", " \-\-fullscreen
-enable fullscreen graphics mode.
 .PP
 For detailed help and description of the MQTT principle take a 
 look at the README file coming with the package. 
@@ -54,7 +45,7 @@ look at the README file coming with the package.
 
 .SH EXAMPLES
 .nf
-hyperdash main.dash &
+mqtt-list-topics --wait 0 --broker "tcp://localhost:1883"
 .fi
 
 
@@ -64,7 +55,7 @@ Page was created for V.1.02
 
 .SH BUG REPORTS       
 
-If you find a bug in the MQTT hyperdash software, you should report it. But
+If you find a bug in the MQTT Hyperdash software, you should report it. But
 first, you should make sure that it really is a bug, and that it appears in
 the latest version of the RadCon package that you have.
 
@@ -91,4 +82,4 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 .SH SEE ALSO
-mosquitto(1), mosquitto_pub(1), mosquitto_sub(1), mqtt-list-topics(1)
+mosquitto(1), mosquitto_pub(1), mosquitto_sub(1), hyperdash(1)

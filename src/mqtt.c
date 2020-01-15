@@ -17,7 +17,7 @@
 #include "subscribe.h"
 #include "mqtt.h"
 
-void update_topic_message(int sub, STRING message);
+void update_topic_message(int sub, const char *, STRING message);
 extern int verbose; 
 
 
@@ -70,9 +70,14 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
     subscriptions[sub].last_value.len=message->payloadlen;
     subscriptions[sub].last_value.pointer=realloc(subscriptions[sub].last_value.pointer,message->payloadlen+1);
     memcpy(subscriptions[sub].last_value.pointer,buf,m.len+1);
-    update_topic_message(sub,m);
+    update_topic_message(sub,topicName,m);
+  } else {
+    /* ERROR: Topic %s was not subscribed! 
+     * this can happen when wildcards are used for 
+     * subscriptions. 
+     */
+    update_topic_message(-1,topicName,m);
   }
-  else printf("ERROR: Topic %s was not subscribed!\n",topicName);
   MQTTClient_freeMessage(&message);
   MQTTClient_free(topicName);
   return 1;  /* Message successfully consumed. */

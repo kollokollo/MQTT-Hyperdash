@@ -215,7 +215,8 @@ void draw_dash(DASH *dash, WINDOW *win) {
   SDL_Flip(win->display); 
   mqtt_subscribe_all();
 }
-void update_topic_message(int sub, STRING message) {
+void update_topic_message(int sub,const char *topic_name, STRING message) {
+  if(sub<0) return;  /* Ignore it. */
   DASH *dash=global_dash;
   WINDOW *win=global_window;
   int i;
