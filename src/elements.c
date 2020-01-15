@@ -54,6 +54,7 @@ void i_broker(ELEMENT *el,char *pars) {
     "%s\n\nTry again?\n",el->filename);
     if(message_dialog("MQTT Hyperdash Error",buffer,2)==1)
       rc=mqtt_broker(el->filename,NULL,NULL,NULL);
+    else rc=0;
   }
 }
 
