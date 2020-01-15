@@ -58,25 +58,56 @@ MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
 
 CSRC=    $(MAINOBJS:.o=.c)
 
-DEPSRC=  $(CSRC) 
+CSRC_EXTRA= mqtt-list-topics.c rule-engine.c
+
+RULESRC=  commander.rule  demo.rule  syslogger.rule  sysmeasure.rule
+
+
+DEPSRC=  $(CSRC)  mqtt-list-topics.c
 
 # Headerfiles which should be added to the distribution
 
 HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
-       input.h elements.h subscribe.h
+       input.h elements.h subscribe.h basics.h config.h 
 
 # example dash files 
 
-EXAMPLES= 
+EXAMPLES= ../dashboards/demo.dash ../dashboards/sonnenschein.dash \
+          ../dashboards/sysmeasure.dash ../dashboards/imagetest.dash  \
+	  ../dashboards/main.dash ../dashboards/test.dash \
+	  ../dashboards/metertest.dash
 
-DIST= ../README.md ../doc/INSTALL ../COPYING *.1 \
+# bitmap files
+
+BITMAPS= ../bitmaps/alarmRing ../bitmaps/bombe_gross  ../bitmaps/Hygrometer \
+         ../bitmaps/SmallTriagUp ../bitmaps/battery   ../bitmaps/Bulb       \
+	 ../bitmaps/P-meter      ../bitmaps/smiley    ../bitmaps/Battery0   \
+	 ../bitmaps/Circle       ../bitmaps/PVModule  ../bitmaps/Snowflake  \
+         ../bitmaps/Battery1     ../bitmaps/Disc1     ../bitmaps/RadiationSmall \
+	 ../bitmaps/Thermometer  ../bitmaps/Battery2  ../bitmaps/Disc2     \
+	 ../bitmaps/README       ../bitmaps/TrendNone ../bitmaps/Battery3  \
+         ../bitmaps/Disc3        ../bitmaps/RightArrow  ../bitmaps/UpArrow \
+         ../bitmaps/Battery4     ../bitmaps/Disc4       ../bitmaps/schlange  \
+	 ../bitmaps/USB-Stick    ../bitmaps/batterySmall  ../bitmaps/DownArrow \
+	 ../bitmaps/SmallCircle  ../bitmaps/warning     ../bitmaps/biene    \
+	 ../bitmaps/GridPlug     ../bitmaps/SmallDonut  ../bitmaps/WarnTS   \
+         ../bitmaps/bombe        ../bitmaps/helfer      \
+	 ../bitmaps/SmallTriagDown
+
+
+# Image files
+
+ICONS=   ../icons/MQTT-Hyperdash-logo.png  ../icons/README
+
+
+DIST= ../README.md ../CONTRIBUTING.md ../doc/MQTT-Hyperdash.txt ../COPYING *.1 \
 	../doc/ACKNOWLEGEMENTS \
-	../doc/AUTHORS  ../RELEASE_NOTES \
-      $(HSRC) $(CSRC) WINDOWS/MQTT-Hyperdash.iss \
-      config.h.in  \
-        Makefile.in configure config.guess configure.in \
-        MQTT-Hyperdash.spec hyperdash.desktop  \
-        ../bitmaps/* $(EXAMPLES) 
+	../doc/AUTHORS  ../doc/MQTT-rule-engine-howto.md \
+	../doc/MQTT-Hyperdash-file-format.md \
+      $(HSRC) $(CSRC) $(CSRC_EXTRA) $(RULESRC) MQTT-Hyperdash.iss \
+        Makefile  \
+        hyperdash.desktop  \
+        $(BITMAPS) $(ICONS) $(EXAMPLES) 
 
 
 WINDIST=WINDOWS/lib/SDL.dll \
@@ -163,6 +194,7 @@ install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics
 	install -d $(MANDIR)/man1
 	install -m 644 hyperdash.1 $(MANDIR)/man1/
 	install -m 644 mqtt-list-topics.1 $(MANDIR)/man1/
+	install -d $(DATADIR)/hyperdash
 	install -m 775  -d $(DATADIR)/hyperdash/bitmaps
 	install -m 644 ../bitmaps/* $(DATADIR)/hyperdash/bitmaps/
 	install -m 775  -d $(DATADIR)/hyperdash/icons
@@ -206,7 +238,8 @@ rpm :	$(DIR).tar.gz hyperdash.spec
 	rpmbuild -ba  --clean --nodeps hyperdash.spec
 
 DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS \
-	 ../README.md 
+	 ../README.md ../doc/MQTT-Hyperdash-file-format.md \
+	 ../doc/MQTT-rule-engine-howto.md
 
 doc-pak: $(DEBDOC)
 	mkdir -p $@
@@ -216,8 +249,10 @@ doc-pak: $(DEBDOC)
 #	gzip -9 $@/changelog.Debian
 #	cp Debian/copyright $@/
 
+DEBNAME= mqtt-hyperdash
+
 deb :	$(BINDIST) doc-pak
-	sudo checkinstall -D --pkgname hyperdash --pkgversion $(LIBNO) \
+	sudo checkinstall -D --pkgname $(DEBNAME) --pkgversion $(LIBNO) \
 	--pkgrelease $(RELEASE)  \
 	--maintainer "kollo@users.sourceforge.net" \
         --requires libc6,libsdl1.2debian,libsdl-gfx1.2-5,libsdl-ttf2.0-0 \
@@ -225,8 +260,8 @@ deb :	$(BINDIST) doc-pak
 	--pkggroup interpreters   \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
-	sudo chown 1000 hyperdash_$(LIBNO)-$(RELEASE)_*.deb
-	mv hyperdash_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
+	sudo chown 1000 $(DEBNAME)_$(LIBNO)-$(RELEASE)_*.deb
+	mv $(DEBNAME)_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
 
 
 # Auto dependency stuff (from info make)
