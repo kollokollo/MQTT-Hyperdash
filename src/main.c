@@ -27,8 +27,11 @@
 #endif
 
 
-char ifilename[100]="main.dash";
+char ifilename[128]="main.dash";
 int verbose=0;
+
+char *broker_override=NULL;
+char *topic_prefix=NULL;
 
 int dofullscreen=0;
 
@@ -48,9 +51,12 @@ static void usage() {
     " --help <topic>\t\t--- print help on topic\n"
     " --iconpath <path>\t--- set path for icon files [%s]\n"
     " --bitmappath <path>\t--- set path for bitmap files [%s]\n"
+    " --dashboardpath <path>\t--- set path for dash files [%s]\n"
     " --fontpath <path>\t--- set path for bitmap files [%s]\n"
+    " --broker <url>\t\t--- use this broker, ignore broker in dash file.\n"
+    " --prefix <prefix>\t--- set a prefix for all topics.\n"
     " --fullscreen \t\t--- enable fullscreen graphics mode \n"
-    ,MQTT_HYPERDASH_EXECUTABLE_NAME,ifilename,icondir,bitmapdir,fontdir);
+    ,MQTT_HYPERDASH_EXECUTABLE_NAME,ifilename,icondir,bitmapdir,dashboarddir,fontdir);
 }
 static void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
@@ -61,13 +67,15 @@ static void kommandozeile(int anzahl, char *argumente[]) {
       usage();
       quitflag=1;
     } 
-    else if(!strcmp(argumente[count],"-v"))	     verbose++;
-    else if(!strcmp(argumente[count],"-q"))	     verbose--;
-    else if(!strcmp(argumente[count],"--fullscreen")) dofullscreen++;
-    else if(!strcmp(argumente[count],"--iconpath"))  strncpy(icondir,      argumente[++count],256);
-    else if(!strcmp(argumente[count],"--bitmappath"))strncpy(bitmapdir,   argumente[++count],256);
-    else if(!strcmp(argumente[count],"--fontpath"))strncpy(fontdir,   argumente[++count],256);
+    else if(!strcmp(argumente[count],"-v"))	        verbose++;
+    else if(!strcmp(argumente[count],"-q"))	        verbose--;
+    else if(!strcmp(argumente[count],"--fullscreen"))   dofullscreen++;
+    else if(!strcmp(argumente[count],"--iconpath"))     strncpy(icondir,      argumente[++count],256);
+    else if(!strcmp(argumente[count],"--bitmappath"))   strncpy(bitmapdir,   argumente[++count],256);
+    else if(!strcmp(argumente[count],"--fontpath"))     strncpy(fontdir,   argumente[++count],256);
     else if(!strcmp(argumente[count],"--dashboardpath"))strncpy(dashboarddir,   argumente[++count],256);
+    else if(!strcmp(argumente[count],"--broker"))       broker_override=argumente[++count];
+    else if(!strcmp(argumente[count],"--prefix"))       topic_prefix=argumente[++count];
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
     else {
       strncpy(ifilename,argumente[count],sizeof(ifilename));

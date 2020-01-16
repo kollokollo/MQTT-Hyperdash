@@ -128,8 +128,8 @@ void init_dash(DASH *dash) {
    
   */
   int i;
-  char a[256];
-  char b[256];
+  char a[256*4];
+  char b[256*4];
   global_dash=dash;
 
   for(i=0;i<dash->anzelement;i++) {

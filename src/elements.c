@@ -40,21 +40,25 @@
 
 /* Initialize the broker and try to connect... */
 
+extern char *broker_override;
+
 void i_broker(ELEMENT *el,char *pars) {
-  el->filename=strdup(key_value(pars,"URL","tcp://localhost:1883"));
+  int rc;
+  if(broker_override) el->filename=strdup(broker_override);
+  else el->filename=strdup(key_value(pars,"URL",DEFAULT_BROKER));
   el->x=0;
   el->y=0;
   el->w=0;
   el->h=0;
   /* connect to mqtt broker */
-  int rc=mqtt_broker(el->filename,NULL,NULL,NULL);
+  rc=mqtt_broker(el->filename,NULL,NULL,NULL);
   while(rc==-1) {
     char buffer[256];
     snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n"
-    "%s\n\nTry again?\n",el->filename);
-    if(message_dialog("MQTT Hyperdash Error",buffer,2)==1)
+                                   "%s\n\nTry again?\n",el->filename);
+    if(message_dialog("MQTT Hyperdash Error",buffer,2)==1) {
       rc=mqtt_broker(el->filename,NULL,NULL,NULL);
-    else rc=0;
+    } else rc=0;
   }
 }
 
@@ -72,9 +76,21 @@ void i_panel(ELEMENT *el,char *pars) {
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff0000"));
 }
 
+extern char *topic_prefix;
+
+static char *make_topic(const char *n) {
+  static char buf[256];
+  if(topic_prefix && *topic_prefix) {
+    strncpy(buf,topic_prefix,sizeof(buf));
+    strncat(buf,"/",sizeof(buf)-strlen(buf)-1);
+  } else *buf=0;
+  strncat(buf,n,sizeof(buf)-strlen(buf)-1);
+  return(buf);
+}
+
 /* Initialize Static drawing elements */
 #define ELEMENT_FONT() el->fontnr=add_font(el->font,el->fontsize)
-#define ELEMENT_SUBSCRIBE() el->subscription=add_subscription(el->topic,0)
+#define ELEMENT_SUBSCRIBE() el->subscription=add_subscription(make_topic(el->topic),0)
 
 
 void i_line(ELEMENT *el,char *pars) {
@@ -1143,11 +1159,13 @@ int c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   return(0);
 }
 int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  char filename[256];
   char buf[256];
   if(b==1) {
-    if(exist(el->text))  snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s.dash &",el->text);
+    snprintf(filename,sizeof(filename),"%s.dash",el->text);
+    if(exist(filename))  snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s &",filename);
     else snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s/%s.dash &",dashboarddir,el->text);
-    printf("Dash start: <%s>\n",el->text);
+    printf("Dash start: <%s>\n",filename);
     if(system(buf)==-1) printf("Error: system\n");  
     return(1);
   }

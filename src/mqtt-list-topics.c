@@ -40,7 +40,7 @@
 
 /* Configuration variables */
 
-char *broker_url="tcp://localhost:1883";
+char *broker_url=DEFAULT_BROKER;
 char *topic_pattern="#";
 int listen_time=1;  /* in secs */
 

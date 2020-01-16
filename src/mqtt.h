@@ -5,6 +5,11 @@
  * MQTT-Hyperdash is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
+
+
+#define DEFAULT_BROKER "tcp://localhost:1883"
+
+
 void mqtt_init();
 void mqtt_exit();
 int mqtt_broker(char *url,char *user, char *passwd, char *);
