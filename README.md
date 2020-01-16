@@ -40,6 +40,22 @@ A description of the [dash file format](doc/MQTT-Hyperdash-file-format.md) can
 be found in the doc/ section.
 
 
+#### hddashgen (HyperDash DashboardGenerator)
+
+Making dashboard file by hand with a text editor can be a lot of annoying  manual
+work. To help this, have made a tool to automatically create dash files from
+topic lists, so one has a good starting point to work with. hddashgen will do
+this job in combination with mqtt-list-topics (see below).
+
+The default appearance is derived from the topics names, if they follow a
+naming convention. The naming convention used is explained in 
+[Dashgen Naming Conventions](doc/MQTT-dashgen-naming-conventions.md).
+
+A brief explanation how to use hddashgen is in its man-page 
+[hddashgen man-page](src/hddashgen.1).
+
+hddashgen is still work in progress. 
+
 #### mqtt-list-topics
 
 A tool to connect to a mqtt broker and list all topics available there to stdout. 
@@ -48,6 +64,9 @@ mqtt-list-topics also performs a brief analysis on the topics content to
 classify the topic into binary, string, number, and integer. This 
 classification is not perfect, since it is based on a single payload value only, 
 but it can help making automatic dashboards for MQTT-Hyperdash. 
+
+A good starting point for the usage of mqtt-list-topics is its man-page 
+[mqtt-list-topics man-page](src/mqtt-list-topics.1).
 
 #### rule-engine sysmeasure and syslogger
 

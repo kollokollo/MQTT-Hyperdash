@@ -58,7 +58,7 @@ MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
 
 CSRC=    $(MAINOBJS:.o=.c)
 
-CSRC_EXTRA= mqtt-list-topics.c rule-engine.c
+CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c
 
 RULESRC=  commander.rule  demo.rule  syslogger.rule  sysmeasure.rule
 
@@ -68,7 +68,7 @@ DEPSRC=  $(CSRC)  mqtt-list-topics.c
 # Headerfiles which should be added to the distribution
 
 HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
-       input.h elements.h subscribe.h basics.h config.h 
+       input.h elements.h subscribe.h basics.h config.h hddashgen.h
 
 # example dash files 
 
@@ -102,8 +102,10 @@ ICONS=   ../icons/MQTT-Hyperdash-logo.png  ../icons/README
 
 DIST= ../README.md ../CONTRIBUTING.md ../doc/MQTT-Hyperdash.txt ../COPYING *.1 \
 	../doc/ACKNOWLEGEMENTS \
-	../doc/AUTHORS  ../doc/MQTT-rule-engine-howto.md \
+	../doc/AUTHORS  \
+	../doc/MQTT-rule-engine-howto.md \
 	../doc/MQTT-Hyperdash-file-format.md \
+	../doc/MQTT-dashgen-naming-conventions.md \
       $(HSRC) $(CSRC) $(CSRC_EXTRA) $(RULESRC) MQTT-Hyperdash.iss \
         Makefile  \
         hyperdash.desktop  \
@@ -128,14 +130,14 @@ DIR33=$(DIR)-bin
 LINKFLAGS = 
 WINLINKFLAGS = -L./WINDOWS/lib 
 
-LIBS =  -lm  -lpaho-mqtt3c -lSDL -lSDL_gfx  -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
+LIBS = -lm -lpaho-mqtt3c -lSDL -lSDL_gfx -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
 
 MYWINLIBS = WINDOWS/lib/libgfx.lib 
 
 
 
 
-all :    hyperdash mqtt-list-topics sysmeasure
+all :    hyperdash mqtt-list-topics sysmeasure hddashgen
 
 configure : configure.in
 	autoconf
@@ -155,6 +157,9 @@ hyperdash :  $(MAINOBJS)
 hyperdash.exe: $(CSRC) $(MYWINLIBS)
 	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  $(CSRC) \
 	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
+
+hddashgen : hddashgen.c
+	$(CC) hddashgen.c -o $@ -lm 
 
 mqtt-list-topics :  mqtt-list-topics.c mqtt.o subscribe.o util.o
 	$(CC)  mqtt-list-topics.c mqtt.o subscribe.o util.o \

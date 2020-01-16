@@ -1,0 +1,89 @@
+.TH HDDASHGEN 1 04-Jan-2020 "Version 1.00" "MQTT Hyperdash"
+.SH NAME
+hddashgen \- create generic MQTT-Hyperdash dashboard files from topic lists. 
+.SH SYNOPSIS
+.B hddashgen
+.RI "[ " options " ] "
+
+.SH DESCRIPTION
+
+hddashgen (hyperdash dash generation tool) generates generic 
+dashboard files (.dash) for the MQTT-Hyperdash hyperdash(1) dashboard 
+interpreter.
+It expects a sorted topic list on stdin. It creates a series of dashboard files
+of with the generic ending *_hd.dash. The root dashboard is mainroot_hd.dash.
+
+The format of the topic list expected is what the output of  
+mqtt-list-topics(1) looks like. 
+
+If is a common use case to simply pipe the output of mqtt-list-topics(1) through 
+sort(1) into hddashgen(1). See example below.
+
+For recognizing certain styles for input and output of the data in the topics
+hddashgen uses patterns following a naming convention. Please 
+read the file MQTT-dashgen-naming-conventions.md for details. 
+
+
+.SH OPTIONS
+.TP
+.BR \-q
+Be quiet and print less debug information. 
+.TP
+.BR \-v
+Be more verbose and print debug information. 
+.TP
+.BR \-\-broker " " \fIurl\fR
+specify the broker url. By default "tcp://localhost:1883" is used. 
+.TP
+.BR \-\-version
+shows version, program and other information and exits.
+.TP
+.BR \-h ", " \-\-help
+print a short help and exit.
+.PP
+For detailed help and description of the MQTT principle take a 
+look at the README file coming with the package. 
+
+
+.SH EXAMPLES
+.nf
+mqtt-list-topics --wait 0 --broker "tcp://localhost:1883" | sort | ./hddashgen
+.fi
+
+.SH COMMENT
+
+This program is still work in progress...
+
+.SH VERSION
+Page was created for V.1.02
+
+.SH BUG REPORTS       
+
+If you find a bug in the MQTT Hyperdash software, you should report it. But
+first, you should make sure that it really is a bug, and that it appears in
+the latest version of the MQTT-Hyperdash package that you have.
+
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that
+as well! Suggestions may be mailed to the bug tracking system.
+
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+
+.SH COPYRIGHT
+Copyright (C) 2019-2020 Markus Hoffmann 
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software 
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+.SH SEE ALSO
+hyperdash(1), mqtt-list-topics(1)

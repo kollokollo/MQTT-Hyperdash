@@ -24,3 +24,42 @@ any-scale complicated machine consisting of many (thousands of) devices can
 be realized. Technically this has been possible for a long time, but 
 standardization was missing, until now!
 
+
+
+MQTT Hyperdash was inspired by following two publications: 
+
+T. Götz, "Entwicklung und Inbetriebnahme eines verteilten 
+Rechnerkontrollsystems zur Steuerung der Elektronen-Stretcher-Anlage ELSA, 
+unter besonderer Berücksichtigung der Anforderungen des 
+Nachbeschleunigungsbetriebes bis 3.5 GeV"
+(German, about a distributed control system running on RISC workstations and 
+VME based processors, combining control and realtime beam diagnostics in one 
+homogeneous environment) BONN-IR-95-03 
+
+and 
+
+M. Picard, "Entwurf, Entwicklung und Inbetriebnahme eines verteilten 
+Rechnerkontrollsystems zur Steuerung der Elektronen-Stretcher-Anlage ELSA, 
+unter besonderer Berücksichtigung der Extraktion im Nachbeschleunigungsbetrieb 
+bis 3.5 GeV"
+(German, about a distributed control system running on RISC workstations 
+and VME based processors, combining control and realtime beam diagnostics 
+in one homogeneous environment) BONN-IR-95-01
+
+
+If you are looking for new ideas how to improve MQTT-Hyperdash, (and if you  can
+understand german,) I recommend  you read some chapters of these two phd theses.
+They where visionary way back in 1995, and you will find many similarities with
+the MQTT framework, developped (later) elsewhere.  Dashboards, rule engines,
+naming conventions standardization of the user interface have been already
+mentioned there, and not only mentioned, they were realized and implemented and
+the complex accelerator machine of the University of Bonn was operated with that
+control system for more than 20 years until now. 
+
+If you are interested, here is a link:
+https://www-elsa.physik.uni-bonn.de/Beschleuniger/control_system.html
+
+Computers in the 1990s where slow compared to what we have today, but the
+performace has already beeen great back then. And the concepts are still up to
+date and state of the art in many areas for automation and control.
+
