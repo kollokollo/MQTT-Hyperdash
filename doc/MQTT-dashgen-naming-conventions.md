@@ -80,3 +80,30 @@ one ON button and one OFF button.
 
 hddasgen is still work in progress and eventually new standard names will be 
 added. 
+
+
+
+## setpoint parameters and measured value parameters
+
+The most important differentiation class of the parameters is the distinction
+between setpoint parameters and actual/measured value parameters. These
+parameters usually occur in pairs, e.g. the target current of a power supply, as
+specified by the user, and the measured actual current. 
+
+Another class of parameters are state parameters. State parameters are integer
+parameters with a minimum value of 0 and a finite maximum value n. Each integer
+between 0 and n-1 represents one of n states.
+
+## Using colors
+
+The colors are to be assigned in such a way that there are uniform assignments
+for setpoints and actual values as well as for status messages, which make it
+easier to find the information you are looking for when you look at a dashboard.
+The use of colors does not happen according to (arbitrary) selection, for
+example from an aesthetic point of view, but from the point of view that they
+carry additional information. However, care must be taken because the loss of
+this additional information should not result in significant restrictions for e.g.
+color-blind surgeons. This can be maintained by using redundant appearance on
+important visuals, e.g. a green circle means "everything is OK" and a red
+square means "there are errors".
+
