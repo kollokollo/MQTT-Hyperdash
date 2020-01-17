@@ -194,6 +194,7 @@ install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics
 	install -m 644 hyperdash.desktop $(DESKTOPDIR)/
 	install -s -m 755 hyperdash $(BINDIR)/
 	install -s -m 755 mqtt-list-topics $(BINDIR)/
+	install -s -m 755 hddashgen $(BINDIR)/
 	install -s -m 755 sysmeasure $(BINDIR)/
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
@@ -211,6 +212,7 @@ uninstall :
 	rm -f $(DESKTOPDIR)/hyperdash.desktop
 	rm -f $(BINDIR)/hyperdash
 	rm -f $(BINDIR)/mqtt-list-topics
+	rm -f $(BINDIR)/hddashgen
 	rm -f $(BINDIR)/sysmeasure
 	rm -f $(MANDIR)/man1/hyperdash.1
 	rm -f $(MANDIR)/man1/mqtt-list-topics.1
