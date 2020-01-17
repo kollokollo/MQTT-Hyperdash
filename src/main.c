@@ -20,8 +20,9 @@
 #include "hyperdash.h"
 #include "file.h"
 
-#if defined WINDOWS || defined ANDROID
+#if defined WINDOWS 
   #define EX_OK 0
+  #define mkdir(a,b) mkdir(a)
 #else
   #include <sysexits.h>
 #endif
@@ -34,7 +35,20 @@ char *broker_override=NULL;
 char *topic_prefix=NULL;
 
 int dofullscreen=0;
-
+static void hyperdash_set_defaults() {
+  /* Set the default path where the .dash files are searched for. 
+   * The path can be overridden by a commandline parameter.
+   */
+  char *envptr;
+  char path[256];
+  envptr=getenv("HOME");
+  if(envptr) {
+    snprintf(path,sizeof(path),"%s/.hyperdash/dashboards",envptr);
+    if(exist(path)) { /* It does exist! */
+      strncpy(dashboarddir,path,256);
+    }
+  }
+}
 static void intro() {
   printf("**********************************************************\n"
          "*    %10s                    V." VERSION "            *\n"
@@ -51,7 +65,7 @@ static void usage() {
     " --help <topic>\t\t--- print help on topic\n"
     " --iconpath <path>\t--- set path for icon files [%s]\n"
     " --bitmappath <path>\t--- set path for bitmap files [%s]\n"
-    " --dashboardpath <path>\t--- set path for dash files [%s]\n"
+    " --dashpath <path>\t--- set path for dash files [%s]\n"
     " --fontpath <path>\t--- set path for bitmap files [%s]\n"
     " --broker <url>\t\t--- use this broker, ignore broker in dash file.\n"
     " --prefix <prefix>\t--- set a prefix for all topics.\n"
@@ -73,7 +87,7 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     else if(!strcmp(argumente[count],"--iconpath"))     strncpy(icondir,      argumente[++count],256);
     else if(!strcmp(argumente[count],"--bitmappath"))   strncpy(bitmapdir,   argumente[++count],256);
     else if(!strcmp(argumente[count],"--fontpath"))     strncpy(fontdir,   argumente[++count],256);
-    else if(!strcmp(argumente[count],"--dashboardpath"))strncpy(dashboarddir,   argumente[++count],256);
+    else if(!strcmp(argumente[count],"--dashpath"))     strncpy(dashboarddir,   argumente[++count],256);
     else if(!strcmp(argumente[count],"--broker"))       broker_override=argumente[++count];
     else if(!strcmp(argumente[count],"--prefix"))       topic_prefix=argumente[++count];
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
@@ -105,6 +119,7 @@ int main(int anzahl, char *argumente[]) {
 #ifndef WINDOWS
   gtk_init (&anzahl, &argumente);
 #endif
+  hyperdash_set_defaults();
     kommandozeile(anzahl, argumente);    /* process command line */
     if(!exist(ifilename)) {
       char buf[strlen(ifilename)+1];

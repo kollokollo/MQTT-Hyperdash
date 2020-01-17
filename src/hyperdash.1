@@ -51,6 +51,24 @@ specify a broker url which will be used instead of the ones define in the .dash 
 .BR \-\-prefix " " \fIprefix\fR
 specify a prefix to all TOPICs defined in the .dash file.
 .TP
+.BR \-\-dashpath " " \fIpath\fR
+specify a path where .dash files are to be searched. 
+Hyperdash first seaches for the given filename in the current directory, if not
+fond there, it looks into this specified directory. It defaults to 
+$HOME/.hyperdash/dashboards if that exist and /usr/share/hyperdash/dashboards else.
+.TP
+.BR \-\-fontpath " " \fIpath\fR
+specify a path where the true type fonts used by hyperdash are searched for. 
+It defaults to /usr/share/fonts/truetype/msttcorefonts . 
+.TP
+.BR \-\-iconpath " " \fIpath\fR
+specify a path where the icons (png files) used by hyperdash are searched for. 
+It defaults to /usr/share/hyperdash/icons .
+.TP
+.BR \-\-bitmappath " " \fIpath\fR
+specify a path where the bitmaps (monochrome) used by hyperdash are searched for. 
+It defaults to /usr/share/hyperdash/bitmaps .
+.TP
 .BR \-h ", " \-\-fullscreen
 enable fullscreen graphics mode.
 .PP

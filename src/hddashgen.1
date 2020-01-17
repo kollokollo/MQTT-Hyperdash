@@ -11,7 +11,7 @@ hddashgen (hyperdash dash generation tool) generates generic
 dashboard files (.dash) for the MQTT-Hyperdash hyperdash(1) dashboard 
 interpreter.
 It expects a sorted topic list on stdin. It creates a series of dashboard files
-of with the generic ending *_hd.dash. The root dashboard is mainroot_hd.dash.
+of with the generic ending is *_hd.dash. The root dashboard is mainroot_hd.dash.
 
 The format of the topic list expected is what the output of  
 mqtt-list-topics(1) looks like. 
@@ -33,7 +33,12 @@ Be quiet and print less debug information.
 Be more verbose and print debug information. 
 .TP
 .BR \-\-broker " " \fIurl\fR
-specify the broker url. By default "tcp://localhost:1883" is used. 
+specify the broker url which is inserted into every generated dash file. 
+By default "tcp://localhost:1883" is used. 
+.TP
+.BR \-\-dashpath " " \fIpath\fR
+specify a path where .dash files are to be stored. 
+it defaults to $HOME/.hyperdash/dashboards if that exist and the current working directory  else.
 .TP
 .BR \-\-version
 shows version, program and other information and exits.

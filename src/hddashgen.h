@@ -11,3 +11,4 @@
    Define the geometric layout of all elements 
  */
  
+#define HDDASHGEN_VERSION "1.02"
