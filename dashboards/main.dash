@@ -10,7 +10,7 @@
 # Global settings and default values
 #
 BROKER: URL="tcp://localhost:1883"
-PANEL:  TITLE="MQTT-Hyperdash main.dash" W=420 H=300 FGC=$ffffffff BGC=$000040ff
+PANEL:  TITLE="MQTT-Hyperdash main.dash" W=420 H=500 FGC=$ffffffff BGC=$000040ff
 
 #
 # Static drawing
@@ -41,13 +41,31 @@ TEXT:   X=5 Y=164 FGC=$ffffFFFF TEXT="Folow the options below..." FONT="Courier_
 BOX: x=5 y=200 w=410 h=30 FGC=$00ff00ff
 TEXT: X=15 Y=200 H=30 FGC=$ffffFFFF TEXT="right click opens a file selector" FONT="Arial_Bold" FONTSIZE=16
 
+ICON: x=70 y=250 ICON="dashtree.png" BGC=$ffffffff
+DASH: x=70 y=250 w=122 h=65 DASH="mainroot_hd"
+FRAMETOGGLE: x=70 y=250 w=122 h=65
+TEXT: x=70 y=320 TEXT="Generic Dashboards" FONT="Arial" FONTSIZE="14"
+TEXT: x=220 y=270 TEXT="You need to create the local" FONT="Arial" FONTSIZE="12"
+TEXT: x=220 y=290 TEXT="dashboard tree to make that work" FONT="Arial" FONTSIZE="12"
+LINE: x=217 y=285 X2=195 Y2=270 FGC=$ffffffff
 
-SHELLCMD:     x=270 y=260 w=120 h=25 CMD="bitmap &"
-PBOX:         x=270 y=260 w=120 h=25 BGC=$444444ff 
-TEXT:         x=280 y=260 w=120 h=25 TEXT="bitmap editor" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
-FRAMETOGGLE:  x=270 y=260 w=120 h=25
 
-SHELLCMD:     x=20 y=260 w=240 h=25 CMD="firefox https://github.com/kollokollo/MQTT-Hyperdash &"
-PBOX:         x=20 y=260 w=240 h=25 BGC=$444444ff 
-TEXT:         x=30 y=260 w=240 h=25 TEXT="MQTT-Hyperdash Homepage" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
-FRAMETOGGLE:  x=20 y=260 w=240 h=25
+SHELLCMD:     x=270 y=460 w=120 h=25 CMD="bitmap &"
+PBOX:         x=270 y=460 w=120 h=25 BGC=$444444ff 
+TEXT:         x=280 y=460 w=120 h=25 TEXT="bitmap editor" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
+FRAMETOGGLE:  x=270 y=460 w=120 h=25
+
+SHELLCMD:     x=20  y=460 w=240 h=25 CMD="firefox https://github.com/kollokollo/MQTT-Hyperdash &"
+PBOX:         x=20  y=460 w=240 h=25 BGC=$444444ff 
+TEXT:         x=30  y=460 w=240 h=25 TEXT="MQTT-Hyperdash Homepage" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
+FRAMETOGGLE:  x=20  y=460 w=240 h=25
+
+SHELLCMD:     x=20  y=420 w=240 h=25 CMD="sh /usr/share/hyperdash/create_tree.sh &"
+PBOX:         x=20  y=420 w=240 h=25 BGC=$444444ff 
+TEXT:         x=30  y=420 w=240 h=25 TEXT="Create local dashboard tree" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
+FRAMETOGGLE:  x=20  y=420 w=240 h=25
+
+PBOX:         x=20  y=380 w=370 h=25 FGC=$0ff BGC=$0ff
+FRAME:        x=18  y=378 w=374 h=29 REVERT=1
+TOPICSTRING:  x=25  y=380 w=365 h=25 TOPIC="MQTT_HYPERDASH/STATUS_SM" FGC=$ffffffff \
+              FONT="Courier_New_Bold" FONTSIZE=16 BGC=$ff

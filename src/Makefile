@@ -94,22 +94,23 @@ BITMAPS= ../bitmaps/alarmRing ../bitmaps/bombe_gross  ../bitmaps/Hygrometer \
          ../bitmaps/bombe        ../bitmaps/helfer      \
 	 ../bitmaps/SmallTriagDown
 
+MANPAGES= hddashgen.1  hyperdash.1  mqtt-list-topics.1
 
 # Image files
 
-ICONS=   ../icons/MQTT-Hyperdash-logo.png  ../icons/README
+ICONS=   ../icons/MQTT-Hyperdash-logo.png  ../icons/README ../icons/dashtree.png
 
 
-DIST= ../README.md ../CONTRIBUTING.md ../doc/MQTT-Hyperdash.txt ../COPYING *.1 \
+DIST= ../README.md ../CONTRIBUTING.md ../doc/MQTT-Hyperdash.txt ../COPYING \
 	../doc/ACKNOWLEGEMENTS \
 	../doc/AUTHORS  \
 	../doc/MQTT-rule-engine-howto.md \
 	../doc/MQTT-Hyperdash-file-format.md \
 	../doc/MQTT-dashgen-naming-conventions.md \
       $(HSRC) $(CSRC) $(CSRC_EXTRA) $(RULESRC) MQTT-Hyperdash.iss \
-        Makefile  \
+        Makefile create_tree.sh \
         hyperdash.desktop  \
-        $(BITMAPS) $(ICONS) $(EXAMPLES) 
+        $(BITMAPS) $(ICONS) $(EXAMPLES) $(MANPAGES)
 
 
 WINDIST=WINDOWS/lib/SDL.dll \
@@ -190,7 +191,7 @@ rules:	demo sysmeasure syslogger commander
 #
 
 
-install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics
+install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics $(MANPAGES) create_tree.sh
 	install -m 644 hyperdash.desktop $(DESKTOPDIR)/
 	install -s -m 755 hyperdash $(BINDIR)/
 	install -s -m 755 mqtt-list-topics $(BINDIR)/
@@ -201,12 +202,13 @@ install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics
 	install -m 644 hyperdash.1 $(MANDIR)/man1/
 	install -m 644 mqtt-list-topics.1 $(MANDIR)/man1/
 	install -d $(DATADIR)/hyperdash
-	install -m 775  -d $(DATADIR)/hyperdash/bitmaps
-	install -m 644 ../bitmaps/* $(DATADIR)/hyperdash/bitmaps/
-	install -m 775  -d $(DATADIR)/hyperdash/icons
-	install -m 644 ../icons/* $(DATADIR)/hyperdash/icons/
-	install -m 775  -d $(DATADIR)/hyperdash/dashboards
-	install -m 644 ../dashboards/* $(DATADIR)/hyperdash/dashboards/
+	install -m 644 create_tree.sh $(DATADIR)/hyperdash/
+	install -m 775 -d $(DATADIR)/hyperdash/bitmaps
+	install -m 644 $(BITMAPS) $(DATADIR)/hyperdash/bitmaps/
+	install -m 775 -d $(DATADIR)/hyperdash/icons
+	install -m 644 $(ICONS) $(DATADIR)/hyperdash/icons/
+	install -m 775 -d $(DATADIR)/hyperdash/dashboards
+	install -m 644 $(EXAMPLES) $(DATADIR)/hyperdash/dashboards/
 
 uninstall :
 	rm -f $(DESKTOPDIR)/hyperdash.desktop
@@ -219,17 +221,18 @@ uninstall :
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons
 	rm -rf $(DATADIR)/hyperdash/dashboards
+	rm -f $(DATADIR)/hyperdash/create_tree.sh
 clean :
 	rm -f *.o a.out Makefile.bak demo commander \
 	backup-*.tgz *.d
 	rm -rf doc-pak
 moreclean : clean
-	rm -f hyperdash sysmeasure mqtt-list-topics
+	rm -f hyperdash sysmeasure hddashgen mqtt-list-topics
 
 distclean : moreclean
 	rm -f Makefilex config.cache config.status config.log config.h \
 	MQTT-Hyperdash-examples-$(LIBNO).zip \
-	hyperdash.exe  \
+	hyperdash.exe hddashgen.exe \
 	rm -rf autom4te.cache
 
 $(DIR).tar.gz : dist

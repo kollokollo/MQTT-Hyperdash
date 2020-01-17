@@ -1163,9 +1163,9 @@ int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   char buf[256];
   if(b==1) {
     snprintf(filename,sizeof(filename),"%s.dash",el->text);
-    if(exist(filename))  snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s &",filename);
-    else snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s/%s.dash &",dashboarddir,el->text);
+    snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s &",filename);
     printf("Dash start: <%s>\n",filename);
+//    printf("<%s>\n",buf);
     if(system(buf)==-1) printf("Error: system\n");  
     return(1);
   }

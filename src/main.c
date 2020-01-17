@@ -39,15 +39,15 @@ static void hyperdash_set_defaults() {
   /* Set the default path where the .dash files are searched for. 
    * The path can be overridden by a commandline parameter.
    */
-  char *envptr;
   char path[256];
-  envptr=getenv("HOME");
-  if(envptr) {
+  char *envptr=getenv("HOME");
+  if(envptr!=NULL) {
     snprintf(path,sizeof(path),"%s/.hyperdash/dashboards",envptr);
+    printf("Try dashboard path: %s\n",path);
     if(exist(path)) { /* It does exist! */
       strncpy(dashboarddir,path,256);
-    }
-  }
+    } else printf("does not exist.\n");
+  } else printf("HOME not set.\n");
 }
 static void intro() {
   printf("**********************************************************\n"
