@@ -75,7 +75,7 @@ HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
 EXAMPLES= ../dashboards/demo.dash ../dashboards/sonnenschein.dash \
           ../dashboards/sysmeasure.dash ../dashboards/imagetest.dash  \
 	  ../dashboards/main.dash ../dashboards/test.dash \
-	  ../dashboards/metertest.dash
+	  ../dashboards/metertest.dash ../dashboards/remote_tree.dash
 
 # bitmap files
 

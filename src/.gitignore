@@ -1,10 +1,14 @@
 *.o 
 *.d
 hyperdash
+hddashgen
+mqtt-list-topics
+
 *.exe
 doc-pak
 demo
 sysmeasure
+syslogger
 commander
 battery
 Debian/Outputs

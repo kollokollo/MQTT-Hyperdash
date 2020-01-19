@@ -1,0 +1,60 @@
+#
+# User interface to remote creation of the generic dashboard tree
+# One can enter the broker name and then trigger a script (locally)
+# which geth topic lists and create the generic dashboards
+#
+
+#
+# Global settings and default values
+#
+BROKER: URL="tcp://localhost:1883"
+PANEL:  TITLE="MQTT-Hyperdash remote_tree.dash" W=420 H=470 FGC=$ffffffff BGC=$000040ff
+
+#
+# Static drawing
+#
+
+TEXT:   X=5 Y=70 FGC=$ffffFFFF TEXT="Enter the broker url of the broker" FONT="Courier_New_Bold" FONTSIZE=16
+TEXT:   X=5 Y=86 FGC=$ffffFFFF TEXT="you want to create the generic dashboars"  FONT="Courier_New_Bold" FONTSIZE=16
+TEXT:   X=5 Y=102 FGC=$ffffFFFF TEXT="for. Then press the button."  FONT="Courier_New_Bold" FONTSIZE=16
+#TEXT:   X=5 Y=118 FGC=$ffffFFFF TEXT="" FONT="Courier_New_Bold" FONTSIZE=16
+#TEXT:   X=5 Y=154 FGC=$ffffFFFF TEXT="" FONT="Courier_New_Bold" FONTSIZE=16
+
+
+BOX:  x=5 y=30 w=410 h=30 FGC=$00ff00ff
+TEXT: X=15 Y=30 H=30 FGC=$ffffFFFF TEXT="right click opens a file selector" FONT="Arial_Bold" FONTSIZE=16
+
+ICON:        x=70 y=150 ICON="dashtree.png" BGC=$ffffffff
+DASH:        x=70 y=150 w=122 h=65 DASH="mainroot_hd"
+FRAMETOGGLE: x=70 y=150 w=122 h=65
+
+TEXT: x=70 y=220 TEXT="Generic Dashboards" FONT="Arial" FONTSIZE="14" FGC=$00ff00ff
+TEXT: x=220 y=170 TEXT="You need to create the local" FONT="Arial" FONTSIZE="12" FGC=$00ff00ff
+TEXT: x=220 y=190 TEXT="dashboard tree to make that work" FONT="Arial" FONTSIZE="12" FGC=$00ff00ff
+LINE: x=217 y=185 X2=195 Y2=170 FGC=$ffffffff
+
+SHELLCMD:     x=20  y=310 w=170 h=25 CMD="sh /usr/share/hyperdash/create_tree.sh remote &"
+PBOX:         x=20  y=310 w=170 h=25 BGC=$444444ff 
+TEXT:         x=30  y=310 w=170 h=25 TEXT="Create Tree" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
+FRAMETOGGLE:  x=20  y=310 w=170 h=25
+
+
+SHELLCMD:     x=20  y=410 w=200 h=25 CMD="sh /usr/share/hyperdash/create_tree.sh &"
+PBOX:         x=20  y=410 w=200 h=25 BGC=$444444ff 
+TEXT:         x=30  y=410 w=200 h=25 TEXT="Create local dashboard tree" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=13
+FRAMETOGGLE:  x=20  y=410 w=200 h=25
+
+
+PBOX:         x=20  y=370 w=380 h=25 FGC=$0ff BGC=$0ff
+FRAME:        x=18  y=368 w=384 h=29 REVERT=1
+TOPICSTRING:  x=25  y=370 w=375 h=25 TOPIC="MQTT_HYPERDASH/STATUS_SM" FGC=$ffffffff \
+              FONT="Courier_New_Bold" FONTSIZE=16 BGC=$ff
+
+
+PBOX:         x=20  y=270 w=380 h=25 FGC=$0ff BGC=$0ff
+FRAME:        x=18  y=268 w=384 h=29 REVERT=1
+TOPICSTRING:  x=25  y=270 w=375 h=25 TOPIC="MQTT_HYPERDASH/BROKER_SC" FGC=$00ffffff \
+              FONT="Courier_New_Bold" FONTSIZE=16 BGC=$ff
+TOPICINSTRING: x=20  y=270 w=380 TOPIC="MQTT_HYPERDASH/BROKER_SC"
+
+TEXT:         x=20  y=250 H=20 FGC=$ffffffff TEXT="Enter Broker URL: (tcp://localhost:1883)"
