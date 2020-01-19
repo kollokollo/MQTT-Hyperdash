@@ -275,6 +275,23 @@ int do_level(int level,char *match, char *filename) {
 	    fprintf(fp,"TOPICNUMBER: X=%d Y=%d W=100 H=%d FONT=\"Courier_New_Bold\" FONTSIZE=16 TOPIC=\"%s\" BGC=$40ff FGC=$ffff00ff FORMAT=\"######.###\"\n",x+150,y,20,topics[i].name);
             if(w<x+250) w=x+250;
             advance();
+	  } else if(!fnmatch("*_AC",buffer,FNM_NOESCAPE|FNM_PATHNAME)) {
+	    fprintf(fp,"TEXT: X=%d Y=%d H=%d FONT=\"Courier_New_Bold\" FONTSIZE=16 TEXT=\"%s\" FGC=$ffffffff\n",x+10,y,20,buffer);
+	    fprintf(fp,"TOPICNUMBER: X=%d Y=%d W=100 H=%d FONT=\"Courier_New_Bold\" FONTSIZE=16 TOPIC=\"%s\" BGC=$40ff FGC=$00ffffff FORMAT=\"######.###\"\n",x+150,y,20,topics[i].name);
+            if(w<x+250) w=x+250;
+            advance();
+ 
+	    fprintf(fp,"PBOX:  X=%d Y=%d W=%d H=%d BGC=$808080ff\n",x+7,y,240,20);
+	    fprintf(fp,"FRAME: X=%d Y=%d W=%d H=%d\n",x+7-2,y-2,240+4,20+4);
+	    fprintf(fp,"FRAME: X=%d Y=%d W=%d H=%d REVERT=1\n",x+7-2+20,y+2,240+4-40,20-4-1);
+	    fprintf(fp,"BITMAP: X=%d Y=%d BITMAP=\"TickLeft\" FGC=$ffffffff\n",x+7,y+2);
+	    fprintf(fp,"BITMAP: X=%d Y=%d BITMAP=\"TickRight\" FGC=$ffffffff\n",x+7+220+2,y+2);
+	    fprintf(fp,"HSCALER: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" MIN=0 MAX=4 TIC=0.05 FGC=$808080ff BGC=$ff AGC=$0\n",x+7+20,y+2,240-40,20-4-2,topics[i].name);
+	    fprintf(fp,"TICKER: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" MIN=0 MAX=4 TIC=-0.05\n",x+7,    y+2,16,16,topics[i].name);
+	    fprintf(fp,"TICKER: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" MIN=0 MAX=4 TIC=0.05\n", x+7+220+2,y+2,16,16,topics[i].name);
+
+            if(w<x+250) w=x+250;
+            advance();
 	  } else if(!fnmatch("*_DM",buffer,FNM_NOESCAPE|FNM_PATHNAME)) {
 	    fprintf(fp,"TEXT: X=%d Y=%d H=%d FONT=\"Courier_New_Bold\" FONTSIZE=16 TEXT=\"%s\" FGC=$ffffffff\n",x+10,y,20,buffer);
 	    fprintf(fp,"TOPICNUMBER: X=%d Y=%d W=100 H=%d FONT=\"Courier_New_Bold\" FONTSIZE=16 TOPIC=\"%s\" BGC=$40ff FGC=$ffff00ff FORMAT=\"######\"\n",x+150,y,20,topics[i].name);

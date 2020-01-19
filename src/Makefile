@@ -92,7 +92,7 @@ BITMAPS= ../bitmaps/alarmRing ../bitmaps/bombe_gross  ../bitmaps/Hygrometer \
 	 ../bitmaps/SmallCircle  ../bitmaps/warning     ../bitmaps/biene    \
 	 ../bitmaps/GridPlug     ../bitmaps/SmallDonut  ../bitmaps/WarnTS   \
          ../bitmaps/bombe        ../bitmaps/helfer      \
-	 ../bitmaps/SmallTriagDown
+	 ../bitmaps/SmallTriagDown ../bitmaps/TickLeft ../bitmaps/TickRight
 
 MANPAGES= hddashgen.1  hyperdash.1  mqtt-list-topics.1
 
