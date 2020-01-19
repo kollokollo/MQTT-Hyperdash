@@ -15,7 +15,7 @@ PANEL:  TITLE="MQTT-Hyperdash main.dash" W=420 H=500 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
-TEXT:   X=64 Y=30 FGC=$ffff00FF h=40 TEXT="MQTT-Hyperdash   V.1.01" FONT="Arial_Bold" FONTSIZE=20
+TEXT:   X=64 Y=30 FGC=$ffff00FF h=40 TEXT="MQTT-Hyperdash   V.1.02" FONT="Arial_Bold" FONTSIZE=20
 TEXT:   X=170 Y=65 FGC=$00ffffFF TEXT="(c) Markus Hoffmann et al." FONT="Arial" FONTSIZE=10
 FRAME:  X=50 Y=30 W=260 H=50 
 #TEXTLABEL: x=10 y=30 TOPIC=ACTIVITY \
