@@ -159,8 +159,12 @@ hyperdash.exe: $(CSRC) $(MYWINLIBS)
 	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  $(CSRC) \
 	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
 
-hddashgen : hddashgen.c file.o
+hddashgen : hddashgen.c file.o hddashgen.h file.h
 	$(CC) hddashgen.c file.o -o $@ -lm 
+
+hddashgen.exe: hddashgen.c file.c  hddashgen.h file.h WINDOWS/fnmatch.c WINDOWS/getline.c
+	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  \
+	-o $@ hddashgen.c file.c WINDOWS/fnmatch.c WINDOWS/getline.c -lm -lpaho-mqtt3c
 
 mqtt-list-topics :  mqtt-list-topics.c mqtt.o subscribe.o util.o
 	$(CC)  mqtt-list-topics.c mqtt.o subscribe.o util.o \
