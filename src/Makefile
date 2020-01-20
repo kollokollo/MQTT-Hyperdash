@@ -248,16 +248,17 @@ rpm :	$(DIR).tar.gz hyperdash.spec
 	rpmbuild -ba  --clean --nodeps hyperdash.spec
 
 DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS \
-	 ../README.md ../doc/MQTT-Hyperdash-file-format.md \
-	 ../doc/MQTT-rule-engine-howto.md
+	 ../README.md \
+	 ../doc/MQTT-Hyperdash-file-format.md \
+	 ../doc/MQTT-rule-engine-howto.md \
+	 ../doc/MQTT-dashgen-naming-conventions.md
 
 doc-pak: $(DEBDOC)
 	mkdir -p $@
-	cp ../doc/ACKNOWLEGEMENTS  $@/
-	cp ../doc/AUTHORS  ../README.md $@/
+	cp $(DEBDOC) $@/
 #	cp Debian/changelog.Debian $@/
 #	gzip -9 $@/changelog.Debian
-#	cp Debian/copyright $@/
+	cp Debian/copyright $@/
 
 DEBNAME= mqtt-hyperdash
 
@@ -265,12 +266,13 @@ deb :	$(BINDIST) doc-pak
 	sudo checkinstall -D --pkgname $(DEBNAME) --pkgversion $(LIBNO) \
 	--pkgrelease $(RELEASE)  \
 	--maintainer "kollo@users.sourceforge.net" \
-        --requires libc6,libsdl1.2debian,libsdl-gfx1.2-5,libsdl-ttf2.0-0 \
+        --requires libc6,libsdl1.2debian,libsdl-gfx1.2-5,libsdl-ttf2.0-0,paho.mqtt.c \
 	--backup  \
 	--pkggroup interpreters   \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
 	sudo chown 1000 $(DEBNAME)_$(LIBNO)-$(RELEASE)_*.deb
+	mkdir -p Debian/Outputs/
 	mv $(DEBNAME)_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
 
 
