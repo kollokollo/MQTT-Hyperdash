@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.02
 
-RELEASE=5
+RELEASE=6
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -204,6 +204,7 @@ install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics $(MANPAGES) cr
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
 	install -m 644 hyperdash.1 $(MANDIR)/man1/
+	install -m 644 hddashgen.1 $(MANDIR)/man1/
 	install -m 644 mqtt-list-topics.1 $(MANDIR)/man1/
 	install -d $(DATADIR)/hyperdash
 	install -m 644 create_tree.sh $(DATADIR)/hyperdash/
@@ -221,6 +222,7 @@ uninstall :
 	rm -f $(BINDIR)/hddashgen
 	rm -f $(BINDIR)/sysmeasure
 	rm -f $(MANDIR)/man1/hyperdash.1
+	rm -f $(MANDIR)/man1/hddashgen.1
 	rm -f $(MANDIR)/man1/mqtt-list-topics.1
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons

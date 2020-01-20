@@ -46,30 +46,39 @@ extern char *broker_passwd;
 
 void i_broker(ELEMENT *el,char *pars) {
   int rc;
-  char *user=NULL;
-  char *passwd=NULL;
-  if(broker_override) {
-    el->filename=strdup(broker_override);
-    user=broker_user;
-    passwd=broker_passwd;
-  } else {
-    el->filename=strdup(key_value(pars,"URL",DEFAULT_BROKER));
-    /*TODO: User & Passwd*/
+  if(broker_override) el->filename=strdup(broker_override);
+  else                el->filename=strdup(key_value(pars,"URL",DEFAULT_BROKER));
+  if(broker_user) el->text=strdup(broker_user);
+  else            el->text=strdup(key_value(pars,"USER",""));
+  if(broker_passwd) el->format=strdup(broker_passwd);
+  else              el->format=strdup(key_value(pars,"PASSWD",""));
+  if(!el->text[0]) {
+    free(el->text);
+    el->text=NULL;
+  }
+  if(!el->format[0]) {
+    free(el->format);
+    el->format=NULL;
   }
   el->x=0;
   el->y=0;
   el->w=0;
   el->h=0;
   /* connect to mqtt broker */
-  rc=mqtt_broker(el->filename,user,passwd,NULL);
+  rc=mqtt_broker(el->filename,el->text,el->format,NULL);
   while(rc==-1) {
     char buffer[256];
     snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n"
-                                   "%s\n\nTry again?\n",el->filename);
+                                   "%s\n\nUser=%s\n\nTry again?\n",
+				   el->filename,el->text);
     if(message_dialog("MQTT Hyperdash Error",buffer,2)==1) {
-      rc=mqtt_broker(el->filename,user,passwd,NULL);
+      rc=mqtt_broker(el->filename,el->text,el->format,NULL);
     } else rc=0;
   }
+  free(el->format);  /* such that the password will not persist in memory
+                        longer than necessary
+		      */
+  el->format=NULL;
 }
 
 /* Initialoize the panel/window, get title and default values... */
@@ -1023,6 +1032,7 @@ int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b) {
       if(exist(newdash))  snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s &",newdash);
       else snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s/%s.dash &",dashboarddir,newdash);
       if(verbose>0) printf("Dash start: <%s>\n",newdash);
+      if(verbose>0) printf("call: <%s>\n",buf);
       if(system(buf)==-1) printf(MQTT_HYPERDASH_EXECUTABLE_NAME " ERROR: system\n");  
     }
     return(1);
@@ -1090,7 +1100,7 @@ int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
         if(v<el->min) v=el->min;
 	element_publish(&lose,v,old2_v);
       } else {
-        if(verbose) printf("Button was released at %d,%d.\n",event.button.x,event.button.y);
+        if(verbose>0) printf("Button was released at %d,%d.\n",event.button.x,event.button.y);
 	d=event.button.x-x; /* rel. movement */
 	diff=(double)d/(double)(el->w-scalerbw)*(el->max-el->min);
 	diff=round(diff/el->increment)*el->increment;
@@ -1140,7 +1150,7 @@ int c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
         if(v<el->min) v=el->min;
 	element_publish(&lose,v,old2_v);
       } else {
-        if(verbose) printf("Button was released at %d,%d.\n",event.button.x,event.button.y);
+        if(verbose>0) printf("Button was released at %d,%d.\n",event.button.x,event.button.y);
 	d=-(event.button.y-y); /* rel. movement */
 	diff=(double)d/(double)(el->h-scalerbh)*(el->max-el->min);
 	diff=round(diff/el->increment)*el->increment;
@@ -1168,14 +1178,18 @@ int c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   }
   return(0);
 }
+
+extern char call_options[];
+
+
 int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   char filename[256];
   char buf[256];
   if(b==1) {
     snprintf(filename,sizeof(filename),"%s.dash",el->text);
-    snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s &",filename);
-    printf("Dash start: <%s>\n",filename);
-//    printf("<%s>\n",buf);
+    snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME "%s %s &",call_options,filename);
+    if(verbose>=0) printf("Dash start: <%s>\n",filename);
+    if(verbose>=0) printf("call: <%s>\n",buf);
     if(system(buf)==-1) printf("Error: system\n");  
     return(1);
   }
@@ -1183,7 +1197,7 @@ int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 }
 int c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
-    printf("Shell cmd : <%s>\n",el->text);
+    if(verbose>=0) printf("Shell cmd : <%s>\n",el->text);
     if(system(el->text)==-1) printf("Error: system\n");
     return(1);
   }
@@ -1191,7 +1205,7 @@ int c_shellcmd(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 }
 int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
-    printf("topic value cmd : <%s>\n",el->text);
+    if(verbose>=0) printf("topic value cmd : <%s>\n",el->text);
     STRING a;
     a.pointer=el->text;
     a.len=strlen(a.pointer);
@@ -1202,7 +1216,7 @@ int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 }
 int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
-    printf("input number for topic <%s> with format <%s>\n",el->topic,el->format);
+    if(verbose>0) printf("input number for topic <%s> with format <%s>\n",el->topic,el->format);
     STRING a;
     char buf[256];
     char *def=subscriptions[el->subscription].last_value.pointer;
@@ -1224,7 +1238,7 @@ int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 }
 int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
-    printf("input string for topic <%s>\n",el->topic);
+    if(verbose>0) printf("input string for topic <%s>\n",el->topic);
     STRING a;
     char buf[256];
     char *def=subscriptions[el->subscription].last_value.pointer;

@@ -343,6 +343,6 @@ DASH *merge_dash(DASH *dash, const char *fname) {
     dash->tree[len++].line=pos;  /* Potenzielle letzte Zeile ohne \n */
     dash->buffer[i]=0; /*stelle sicher dass die letzte Zeile durch ein 0 beendet ist*/
   }
-  if(verbose>0) printf("(%d elements)\n",dash->anzelement);
+  if(verbose>=0) printf("(%d elements)\n",dash->anzelement);
   return(dash);
 }

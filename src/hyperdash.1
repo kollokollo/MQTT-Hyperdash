@@ -76,8 +76,16 @@ It defaults to /usr/share/hyperdash/icons .
 specify a path where the bitmaps (monochrome) used by hyperdash are searched for. 
 It defaults to /usr/share/hyperdash/bitmaps .
 .TP
-.BR \-h ", " \-\-fullscreen
+.BR \-\-fullscreen
 enable fullscreen graphics mode.
+.TP
+.BR \-\-noopts
+do not pass previous commandline options to sub-dashboards. Normally the path 
+settings as well as the broker/user/passwd settings are passed to all 
+sub-dashboards called from this instance. If you do not want this, you can
+use --noopts as a last commandline option. It disables the passing of all 
+options which have been set before. However, options passed after --noopts are passed
+anyways.
 .PP
 For detailed help and description of the MQTT principle take a 
 look at the README file coming with the package. 

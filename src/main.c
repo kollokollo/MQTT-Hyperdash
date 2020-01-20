@@ -36,6 +36,8 @@ char *broker_user=NULL;
 char *broker_passwd=NULL;
 char *topic_prefix=NULL;
 
+char call_options[256]="";
+
 int dofullscreen=0;
 static void hyperdash_set_defaults() {
   /* Set the default path where the .dash files are searched for. 
@@ -45,11 +47,11 @@ static void hyperdash_set_defaults() {
   char *envptr=getenv("HOME");
   if(envptr!=NULL) {
     snprintf(path,sizeof(path),"%s/.hyperdash/dashboards",envptr);
-    printf("Try dashboard path: %s\n",path);
+    if(verbose>0) printf("Try dashboard path: %s\n",path);
     if(exist(path)) { /* It does exist! */
       strncpy(dashboarddir,path,256);
-    } else printf("does not exist.\n");
-  } else printf("HOME not set.\n");
+    } else if(verbose>=0) printf("%s does not exist.\n",path);
+  } else if(verbose>=0) printf("$HOME not set.\n");
 }
 static void intro() {
   printf("**********************************************************\n"
@@ -73,35 +75,43 @@ static void usage() {
     " --user <user>\t\t--- use this username for broker.\n"
     " --passwd <passwd>\t\t--- use this password for broker.\n"
     " --prefix <prefix>\t--- set a prefix for all topics.\n"
-    " --fullscreen \t\t--- enable fullscreen graphics mode \n"
+    " --fullscreen \t\t--- enable fullscreen graphics mode.\n"
+    " --noopts \t\t--- do not pass commandline options to sub-dashboards.\n"
     ,MQTT_HYPERDASH_EXECUTABLE_NAME,ifilename,icondir,bitmapdir,dashboarddir,fontdir);
 }
+
+#define COLLECT() snprintf(call_options+strlen(call_options),sizeof(call_options)-strlen(call_options)," %s",argumente[count])
+#define COLLECT2() snprintf(call_options+strlen(call_options),sizeof(call_options)-strlen(call_options)," %s %s",argumente[count-1],argumente[count])
+
 static void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
-  /* process command line parameters */
+  /* process command line parameters and */
+  /* Collect call options used when hyperdash calls itself for a subDash: */
   for(count=1;count<anzahl;count++) {
     if(!strcmp(argumente[count],"-h") || !strcmp(argumente[count],"--help")) {
       intro();
       usage();
       quitflag=1;
     } 
-    else if(!strcmp(argumente[count],"-v"))	        verbose++;
-    else if(!strcmp(argumente[count],"-q"))	        verbose--;
-    else if(!strcmp(argumente[count],"--fullscreen"))   dofullscreen++;
-    else if(!strcmp(argumente[count],"--iconpath"))     strncpy(icondir,      argumente[++count],256);
-    else if(!strcmp(argumente[count],"--bitmappath"))   strncpy(bitmapdir,   argumente[++count],256);
-    else if(!strcmp(argumente[count],"--fontpath"))     strncpy(fontdir,   argumente[++count],256);
-    else if(!strcmp(argumente[count],"--dashpath"))     strncpy(dashboarddir,   argumente[++count],256);
-    else if(!strcmp(argumente[count],"--broker"))       broker_override=argumente[++count];
-    else if(!strcmp(argumente[count],"--user"))         broker_user=argumente[++count];
-    else if(!strcmp(argumente[count],"--passwd"))       broker_passwd=argumente[++count];
-    else if(!strcmp(argumente[count],"--prefix"))       topic_prefix=argumente[++count];
-    else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
+    else if(!strcmp(argumente[count],"-v"))	      {verbose++; COLLECT();}
+    else if(!strcmp(argumente[count],"-q"))	      {verbose--; COLLECT();}
+    else if(!strcmp(argumente[count],"--fullscreen")) {dofullscreen++; COLLECT();}
+    else if(!strcmp(argumente[count],"--iconpath"))   {strncpy(icondir,     argumente[++count],256);COLLECT2();}
+    else if(!strcmp(argumente[count],"--bitmappath")) {strncpy(bitmapdir,   argumente[++count],256);COLLECT2();}
+    else if(!strcmp(argumente[count],"--fontpath"))   {strncpy(fontdir,     argumente[++count],256);COLLECT2();}
+    else if(!strcmp(argumente[count],"--dashpath"))   {strncpy(dashboarddir,argumente[++count],256);COLLECT2();}
+    else if(!strcmp(argumente[count],"--broker"))     {broker_override=argumente[++count];COLLECT2();}
+    else if(!strcmp(argumente[count],"--user"))       {broker_user=    argumente[++count];COLLECT2();}
+    else if(!strcmp(argumente[count],"--passwd"))     {broker_passwd=  argumente[++count];COLLECT2();}
+    else if(!strcmp(argumente[count],"--prefix"))     {topic_prefix=   argumente[++count];COLLECT2();}
+    else if(!strcmp(argumente[count],"--noopts"))     {*call_options=0;}
+    else if(*(argumente[count])=='-')                 {COLLECT();}
     else {
       strncpy(ifilename,argumente[count],sizeof(ifilename));
     }
   }
   if(quitflag) exit(EX_OK);
+  if(verbose>0) printf("Call-Options: <%s>\n",call_options);
 }
 
 extern WINDOW *global_window;  /* TODO */
@@ -146,9 +156,9 @@ again:
         close_dash(maindash);
       } else if(rc==-1) {
         close_dash(maindash);
-	printf(PACKAGE_NAME ": Reconnect in 5 Sec.\n");
+	if(verbose>=0) printf(PACKAGE_NAME ": Reconnect in 5 sec.\n");
         sleep(5);
-	printf(PACKAGE_NAME ": Reconnect: \n");
+	if(verbose>=0) printf(PACKAGE_NAME ": Reconnect.\n");
 	init_dash(maindash);
 	draw_dash(maindash,mainwindow);
 	goto again;
