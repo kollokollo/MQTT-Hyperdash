@@ -32,6 +32,8 @@ char ifilename[128]="main.dash";
 int verbose=0;
 
 char *broker_override=NULL;
+char *broker_user=NULL;
+char *broker_passwd=NULL;
 char *topic_prefix=NULL;
 
 int dofullscreen=0;
@@ -68,6 +70,8 @@ static void usage() {
     " --dashpath <path>\t--- set path for dash files [%s]\n"
     " --fontpath <path>\t--- set path for bitmap files [%s]\n"
     " --broker <url>\t\t--- use this broker, ignore broker in dash file.\n"
+    " --user <user>\t\t--- use this username for broker.\n"
+    " --passwd <passwd>\t\t--- use this password for broker.\n"
     " --prefix <prefix>\t--- set a prefix for all topics.\n"
     " --fullscreen \t\t--- enable fullscreen graphics mode \n"
     ,MQTT_HYPERDASH_EXECUTABLE_NAME,ifilename,icondir,bitmapdir,dashboarddir,fontdir);
@@ -89,6 +93,8 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     else if(!strcmp(argumente[count],"--fontpath"))     strncpy(fontdir,   argumente[++count],256);
     else if(!strcmp(argumente[count],"--dashpath"))     strncpy(dashboarddir,   argumente[++count],256);
     else if(!strcmp(argumente[count],"--broker"))       broker_override=argumente[++count];
+    else if(!strcmp(argumente[count],"--user"))         broker_user=argumente[++count];
+    else if(!strcmp(argumente[count],"--passwd"))       broker_passwd=argumente[++count];
     else if(!strcmp(argumente[count],"--prefix"))       topic_prefix=argumente[++count];
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the BASIC program*/
     else {

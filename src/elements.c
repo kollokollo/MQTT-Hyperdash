@@ -41,23 +41,33 @@
 /* Initialize the broker and try to connect... */
 
 extern char *broker_override;
+extern char *broker_user;
+extern char *broker_passwd;
 
 void i_broker(ELEMENT *el,char *pars) {
   int rc;
-  if(broker_override) el->filename=strdup(broker_override);
-  else el->filename=strdup(key_value(pars,"URL",DEFAULT_BROKER));
+  char *user=NULL;
+  char *passwd=NULL;
+  if(broker_override) {
+    el->filename=strdup(broker_override);
+    user=broker_user;
+    passwd=broker_passwd;
+  } else {
+    el->filename=strdup(key_value(pars,"URL",DEFAULT_BROKER));
+    /*TODO: User & Passwd*/
+  }
   el->x=0;
   el->y=0;
   el->w=0;
   el->h=0;
   /* connect to mqtt broker */
-  rc=mqtt_broker(el->filename,NULL,NULL,NULL);
+  rc=mqtt_broker(el->filename,user,passwd,NULL);
   while(rc==-1) {
     char buffer[256];
     snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n"
                                    "%s\n\nTry again?\n",el->filename);
     if(message_dialog("MQTT Hyperdash Error",buffer,2)==1) {
-      rc=mqtt_broker(el->filename,NULL,NULL,NULL);
+      rc=mqtt_broker(el->filename,user,passwd,NULL);
     } else rc=0;
   }
 }

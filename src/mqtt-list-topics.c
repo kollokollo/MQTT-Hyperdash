@@ -33,14 +33,14 @@
 #include "util.h"
 
 
-#define USER NULL
-#define PASSWD NULL
-
 #define CLIENT "mqtt-list-topics"
 
 /* Configuration variables */
 
 char *broker_url=DEFAULT_BROKER;
+char *broker_user=NULL;
+char *broker_passwd=NULL;
+
 char *topic_pattern="#";
 int listen_time=1;  /* in secs */
 
@@ -133,6 +133,8 @@ static void usage() {
     "\nUsage: %s [-hvq] ---\tlist mqtt topics.\n\n"
     "  -h --help\t\t---\tusage\n"
     "  --broker  <url>\t---\tdefine the broker url used [%s]\n"
+    "  --user  <user>\t---\tdefine the username for the broker.\n"
+    "  --passwd  <passwd>\t---\tdefine the password for the broker.\n"
     "  --pattern <pat>\t---\tset topic pattern [%s]\n"
     "  --wait <seconds>\t---\tlisten for [%d] seconds.\n"
     "  -v\t\t\t---\tbe more verbose\n"
@@ -151,7 +153,10 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     else if(!strcmp(argumente[count],"--version"))  {
       intro();
       quitflag=1;
-    } else if(!strcmp(argumente[count],"--broker"))   broker_url=argumente[++count];
+    } 
+    else if(!strcmp(argumente[count],"--broker"))   broker_url=argumente[++count];
+    else if(!strcmp(argumente[count],"--user"))     broker_user=argumente[++count];
+    else if(!strcmp(argumente[count],"--passwd"))   broker_passwd=argumente[++count];
     else if(!strcmp(argumente[count],"--pattern"))  topic_pattern=argumente[++count];
     else if(!strcmp(argumente[count],"--wait"))     listen_time=atoi(argumente[++count]);
     else if(!strcmp(argumente[count],"-v"))	     verbose++;
@@ -174,7 +179,7 @@ int main(int argc, char* argv[]) {
   add_subscription(topic_pattern,0);
   
   
-  rc=mqtt_broker(broker_url,USER,PASSWD,CLIENT);  /* connect to mqtt broker */
+  rc=mqtt_broker(broker_url,broker_user,broker_passwd,CLIENT);  /* connect to mqtt broker */
   if(rc==-1) {
     printf("MQTT Error: Could not connect to the MQTT broker %s.\n",broker_url);
     printf("Quit.\n");
