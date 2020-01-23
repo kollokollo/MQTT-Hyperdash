@@ -32,6 +32,23 @@ char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
 char fontdir[256]="/usr/share/fonts/truetype/msttcorefonts";
 char dashboarddir[256]="/usr/share/hyperdash/dashboards";
 #endif
+DASH *global_dash;
+WINDOW *global_window;
+
+  /* Set the default path where the .dash files are searched for. 
+   * The path can be overridden by a commandline parameter.
+   */
+void hyperdash_set_defaults() {
+  char path[256];
+  char *envptr=getenv("HOME");
+  if(envptr!=NULL) {
+    snprintf(path,sizeof(path),"%s/.hyperdash/dashboards",envptr);
+    if(verbose>0) printf("Try dashboard path: %s\n",path);
+    if(exist(path)) { /* It does exist! */
+      strncpy(dashboarddir,path,256);
+    } else if(verbose>=0) printf("%s does not exist.\n",path);
+  } else if(verbose>=0) printf("$HOME not set.\n");
+}
 
 /* Element definitions for all element types. 
    You cann add new types or define aliases, if you want, but
@@ -55,45 +72,44 @@ And you must provide following functions for each element:
   */
 
 const ELDEF eltyps[]= {
- {EL_BROKER,                     "BROKER", i_broker,NULL,NULL},
- {EL_VISIBLE,                    "BOX",    i_box,d_box,NULL},
- {EL_VISIBLE,                    "CIRCLE", i_box,d_circle,NULL},
- {EL_VISIBLE,                    "LINE",   i_line,d_line,NULL},
- {EL_PANEL|EL_VISIBLE|EL_INPUT,  "PANEL",  i_panel,d_panel,NULL,c_panel},
- {EL_VISIBLE,                    "PBOX",   i_pbox,d_pbox,NULL},
- {EL_VISIBLE,                    "PCIRCLE",i_pbox,d_pcircle,NULL},
- {EL_VISIBLE,                    "FRAME",  i_frame,d_frame,NULL},
- {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",i_frame,d_frame,NULL,c_frame},
- {EL_VISIBLE,                    "BITMAP", i_bitmap,d_bitmap,NULL},
- {EL_VISIBLE,                    "ICON",   i_icon,d_icon,NULL},
- {EL_VISIBLE,                    "TEXT",   i_string,d_string,NULL},
- {EL_VISIBLE|EL_DYNAMIC,         "TOPICSTRING",i_tstring,d_tstring,u_tstring},
- {EL_VISIBLE|EL_DYNAMIC,         "TOPICNUMBER",i_tnumber,d_tnumber,u_tnumber},
- {EL_VISIBLE|EL_DYNAMIC,         "HBAR",   i_bar,d_hbar,u_hbar,NULL},
- {EL_VISIBLE|EL_DYNAMIC,         "VBAR",         i_bar,d_vbar,u_vbar,NULL},
- {EL_VISIBLE|EL_DYNAMIC,         "TOPICMETER"   ,i_meter,d_meter,u_meter,NULL}, /* obsolete */
- {EL_VISIBLE|EL_DYNAMIC,         "TOPICVMETER"  ,i_bar,d_tvmeter,u_tvmeter,NULL},  /* obsolete */
- {EL_VISIBLE|EL_DYNAMIC,         "TOPICHMETER"  ,i_bar,d_thmeter,u_thmeter,NULL},  /* obsolete */
- {EL_VISIBLE|EL_DYNAMIC,         "METER"        ,i_meter,d_meter,u_meter,NULL},
- {EL_VISIBLE|EL_DYNAMIC,         "VMETER"       ,i_bar,d_tvmeter,u_tvmeter,NULL}, 
- {EL_VISIBLE|EL_DYNAMIC,         "HMETER"       ,i_bar,d_thmeter,u_thmeter,NULL}, 
- {EL_VISIBLE|EL_DYNAMIC,         "TEXTLABEL"    ,i_textlabel,d_textlabel,u_textlabel,NULL},
- {EL_VISIBLE|EL_DYNAMIC,         "BITMAPLABEL"  ,i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL},
- {EL_VISIBLE|EL_DYNAMIC,         "FRAMELABEL"   ,i_framelabel,d_framelabel,u_framelabel,NULL},
- {EL_INPUT,                      "SHELLCMD"     ,i_shellcmd,NULL,NULL,c_shellcmd},
- {EL_INPUT,                      "DASH"         ,i_subdash ,NULL,NULL,c_subdash},
- {EL_INPUT|EL_DYNAMIC,           "TOPICINAREA",  i_tinarea ,NULL,NULL,c_tinarea},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINSTRING",i_tinstring,d_subscribe,NULL,     c_tinstring},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER",i_tinnumber,d_subscribe,NULL,     c_tinnumber},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICHSCALER", i_scaler,   d_hscaler,  u_hscaler,c_hscaler}, /* obsolete */
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICVSCALER", i_scaler,   d_vscaler,  u_vscaler,c_vscaler}, /* obsolete */
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"HSCALER",      i_scaler,   d_hscaler,  u_hscaler,c_hscaler},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"VSCALER",      i_scaler,   d_vscaler,  u_vscaler,c_vscaler},
- {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER",       i_tticker,  d_subscribe,NULL,     c_tticker},
- {EL_VISIBLE|EL_DYNAMIC,         "PLOT",         i_plot,     d_plot,     u_plot,   NULL},
- {EL_VISIBLE|EL_DYNAMIC,         "SCMDLABEL",    i_scmdlabel,d_subscribe,u_scmdlabel,NULL}, 
- {EL_VISIBLE|EL_DYNAMIC,         "TOPICIMAGE",   i_timage,   d_subscribe,u_timage,NULL}, 
- {EL_VISIBLE|EL_DYNAMIC,         "TEXTAREA",     i_textarea, d_textarea, u_textarea,NULL}, 
+ {EL_IGNORE,                     "#",          NULL,       NULL,       NULL,     NULL,   NULL}, /* must be there to occupy entry 0 */
+ {EL_BROKER,                     "BROKER",     i_broker,   NULL,       NULL,     NULL,   s_broker},
+ {EL_VISIBLE,                    "BOX",        i_box,      d_box,      NULL,     NULL,   s_box},
+ {EL_VISIBLE,                    "CIRCLE",     i_box,      d_circle,   NULL,     NULL,   s_box},
+ {EL_VISIBLE,                    "LINE",       i_line,     d_line,     NULL,     NULL,   s_line},
+ {EL_PANEL|EL_VISIBLE|EL_INPUT,  "PANEL",      i_panel,    d_panel,    NULL,     c_panel,s_panel},
+ {EL_VISIBLE,                    "PBOX",       i_pbox,     d_pbox,     NULL,     NULL,   s_pbox},
+ {EL_VISIBLE,                    "PCIRCLE",    i_pbox,     d_pcircle,  NULL,     NULL,   s_pbox},
+ {EL_VISIBLE,                    "FRAME",      i_frame,    d_frame,    NULL,     NULL,   s_frame},
+ {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",i_frame,    d_frame,    NULL,     c_frame,s_frame},
+ {EL_VISIBLE,                    "BITMAP",     i_bitmap,   d_bitmap,   NULL,     NULL,   s_bitmap},
+ {EL_VISIBLE,                    "ICON",       i_icon,     d_icon,     NULL,     NULL,   s_icon},
+ {EL_VISIBLE,                    "TEXT",       i_string,   d_string,   NULL,     NULL,   s_string},
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICSTRING",i_tstring,  d_tstring,  u_tstring,NULL,   s_tstring},
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICNUMBER",i_tnumber,  d_tnumber,  u_tnumber,NULL,   s_tnumber},
+ {EL_VISIBLE|EL_DYNAMIC,         "HBAR",       i_bar,      d_hbar,     u_hbar,   NULL,   s_bar},
+ {EL_VISIBLE|EL_DYNAMIC,         "VBAR",       i_bar,      d_vbar,     u_vbar,   NULL,   s_bar},
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICMETER", i_meter,    d_meter,    u_meter,  NULL,   s_meter}, /* obsolete */
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICVMETER",i_bar,      d_tvmeter,  u_tvmeter,NULL,   s_bar},   /* obsolete */
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICHMETER",i_bar,      d_thmeter,  u_thmeter,NULL,   s_bar},   /* obsolete */
+ {EL_VISIBLE|EL_DYNAMIC,         "METER"      ,i_meter,    d_meter,    u_meter,  NULL,   s_meter},
+ {EL_VISIBLE|EL_DYNAMIC,         "VMETER"     ,i_bar,      d_tvmeter,  u_tvmeter,NULL,   s_bar}, 
+ {EL_VISIBLE|EL_DYNAMIC,         "HMETER"     ,i_bar,      d_thmeter,  u_thmeter,NULL,   s_bar}, 
+ {EL_VISIBLE|EL_DYNAMIC,         "TEXTLABEL"  ,i_textlabel,d_textlabel,u_textlabel,NULL, s_textlabel},
+ {EL_VISIBLE|EL_DYNAMIC,         "BITMAPLABEL",i_bitmaplabel,d_bitmaplabel,u_bitmaplabel,NULL, s_bitmaplabel},
+ {EL_VISIBLE|EL_DYNAMIC,         "FRAMELABEL", i_framelabel,d_framelabel,u_framelabel,NULL,s_framelabel},
+ {EL_INPUT,                      "SHELLCMD",   i_shellcmd, NULL,       NULL,     c_shellcmd, s_shellcmd},
+ {EL_INPUT,                      "DASH",       i_subdash,  NULL,       NULL,     c_subdash,  s_subdash},
+ {EL_INPUT|EL_DYNAMIC,           "TOPICINAREA",i_tinarea,  NULL,       NULL,     c_tinarea,  s_tinarea},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINSTRING",i_tinstring,d_subscribe,NULL,   c_tinstring,s_tinstring},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TOPICINNUMBER",i_tinnumber,d_subscribe,NULL,   c_tinnumber,s_tinnumber},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"HSCALER",      i_scaler,   d_hscaler,  u_hscaler,c_hscaler, s_scaler},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"VSCALER",      i_scaler,   d_vscaler,  u_vscaler,c_vscaler, s_scaler},
+ {EL_VISIBLE|EL_INPUT|EL_DYNAMIC,"TICKER",       i_tticker,  d_subscribe,NULL,     c_tticker, s_ticker},
+ {EL_VISIBLE|EL_DYNAMIC,         "PLOT",         i_plot,     d_plot,     u_plot,   NULL,      s_plot},
+ {EL_VISIBLE|EL_DYNAMIC,         "SCMDLABEL",    i_scmdlabel,d_subscribe,u_scmdlabel,NULL,    s_scmdlabel}, 
+ {EL_VISIBLE|EL_DYNAMIC,         "TOPICIMAGE",   i_timage,   d_subscribe,u_timage,  NULL,     s_timage}, 
+ {EL_VISIBLE|EL_DYNAMIC,         "TEXTAREA",     i_textarea, d_textarea, u_textarea,NULL,     s_textarea}, 
 
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
@@ -106,6 +122,13 @@ static int click_element(ELEMENT *el, WINDOW *win, int x, int y,int b) {
   return(0);
 }
 
+char *element2a(ELEMENT *el) {
+  int j=(el->type&0xff);
+  if(j==EL_IGNORE) return(el->line);
+  else if(eltyps[j].tostring) return( (eltyps[j].tostring)(el));
+  return(NULL);
+}
+
 
 static void update_element(ELEMENT *el, WINDOW *win, STRING message) {
   int j=(el->type&0xff);
@@ -116,8 +139,6 @@ static void draw_element(ELEMENT *el, WINDOW *win) {
   if(eltyps[j].draw) (eltyps[j].draw)(el,win);
 }
 
-DASH *global_dash;
-WINDOW *global_window;
 
 void init_dash(DASH *dash) {
   /*
@@ -188,6 +209,9 @@ void free_element(ELEMENT *el) {
     free(el->data[j].pointer);
     el->data[j].pointer=NULL;
     el->data[j].len=0;
+    free(el->data2[j].pointer);
+    el->data2[j].pointer=NULL;
+    el->data2[j].len=0;
   }  
 }
 
@@ -210,7 +234,10 @@ void draw_dash(DASH *dash, WINDOW *win) {
   int i;
   open_all_fonts();
   for(i=0;i<dash->anzelement;i++) {
-    if((dash->tree[i].type&EL_VISIBLE)==EL_VISIBLE) draw_element(&(dash->tree[i]),win); 
+    if((dash->tree[i].type&EL_VISIBLE)==EL_VISIBLE) draw_element(&(dash->tree[i]),win);
+    else if(do_show_invisible) {
+      draw_invisible_element(&(dash->tree[i]),win);
+    }
   }
   SDL_Flip(win->display); 
   mqtt_subscribe_all();
@@ -229,8 +256,26 @@ void update_topic_message(int sub,const char *topic_name, STRING message) {
   SDL_Flip(win->display);
 }
 
+/* Starting at the end of the element tree, find the first element which 
+   is under the koordinates (x,y) and return its id. If not found
+   -1 is returned.*/
+
+int find_element(DASH *dash,int st, int x, int y, unsigned int mask, unsigned int match) {
+  int i;
+  if(st<0) st=dash->anzelement-1;
+  for(i=st;i>=0;i--) {
+    if((dash->tree[i].type&mask)==match) {
+      if(dash->tree[i].x<=x && dash->tree[i].y<=y &&
+  	 dash->tree[i].x+dash->tree[i].w>x &&
+  	 dash->tree[i].y+dash->tree[i].h>y)
+	 return(i);
+    } 
+  }
+  return(i);
+}
 
 
+/* Handle the user input on a dashboard. */
 
 int handle_dash(DASH *dash, WINDOW *win) {
   int x,y,b,s;
@@ -274,31 +319,16 @@ void free_dash(DASH *dash) {
   free(dash);
 }
 
-DASH *load_dash(const char *filename) {
-  DASH *dash=calloc(sizeof(DASH),1);
-  return(merge_dash(dash,filename));
-}
-DASH *merge_dash(DASH *dash, const char *fname) {
-  char b[256];
-  FILE *dptr=fopen(fname,"rb"); 
-  int len=lof(dptr);   /* Filelaenge rauskriegen */
-  fclose(dptr);
-  if(verbose>0) printf("<-- %s ",fname);
-  dash->buffer=realloc(dash->buffer,dash->bufferlen+len+1);
-  if(dash->name) {
-    snprintf(b,sizeof(b),"%s+%s",dash->name,fname);
-    free(dash->name);
-    dash->name=strdup(b);
-  } else {
-    dash->name=strdup(fname);
-  }
-  bload(fname,dash->buffer+dash->bufferlen,len);
-  dash->bufferlen+=len;
-  
+/* Prepare the dashboard after it has been loaded into the buffer. 
+   All elements will be created.
+ */
+
+static void prepare_dash(DASH *dash) {
    /* Zeilenzahl herausbekommen */
   char *pos=dash->buffer;
   int oldanz=dash->anzelement;
   int i=0;
+
   dash->anzelement=0;
   
   /*Erster Durchgang */
@@ -318,11 +348,12 @@ DASH *merge_dash(DASH *dash, const char *fname) {
     }
     if(i>0 && dash->buffer[i-1]!=0) dash->anzelement++;  /*letzte Zeile hatte kein \n*/
     dash->tree=(ELEMENT *)realloc(dash->tree,dash->anzelement*sizeof(ELEMENT));
-    bzero(dash->tree+oldanz*sizeof(ELEMENT),(dash->anzelement-oldanz)*sizeof(ELEMENT));
- 
+
+    bzero(&(dash->tree[oldanz]),(dash->anzelement-oldanz)*sizeof(ELEMENT));
+
 
     /* Zweiter Durchgang */
-
+    int len;
     len=i=0;
     while(i<dash->bufferlen) {
       if(dash->buffer[i]==1) {
@@ -343,6 +374,46 @@ DASH *merge_dash(DASH *dash, const char *fname) {
     dash->tree[len++].line=pos;  /* Potenzielle letzte Zeile ohne \n */
     dash->buffer[i]=0; /*stelle sicher dass die letzte Zeile durch ein 0 beendet ist*/
   }
+}
+
+/* Create a simple new dashboard to start with in dashdesign. */
+
+DASH *new_dash(const char *filename) {
+  DASH *dash=calloc(sizeof(DASH),1);
+  dash->name=strdup(filename);
+  dash->buffer=strdup(
+    "# New Dashboard generated by dashdesign\n"
+    "BROKER: URL=\"tcp://localhost:1883\"\n"
+    "PANEL:  TITLE=\"MQTT-Hyperdash main.dash\" W=640 H=400 FGC=$ffffffff BGC=$40ff\n"
+    "TEXT:   X=10 Y=20 FGC=$ffff00FF h=40 TEXT=\"Title\" FONT=\"Arial_Bold\" FONTSIZE=20\n"
+  );
+  dash->bufferlen=strlen(dash->buffer);
+  prepare_dash(dash);
+  return(dash);
+}
+/* load a dashboard from file */
+DASH *load_dash(const char *filename) {
+  DASH *dash=calloc(sizeof(DASH),1);
+  return(merge_dash(dash,filename));
+}
+/* merge a dashboard file to the existing dashboard */
+DASH *merge_dash(DASH *dash, const char *fname) {
+  char b[256];
+  FILE *dptr=fopen(fname,"rb"); 
+  int len=lof(dptr);   /* Filelaenge rauskriegen */
+  fclose(dptr);
+  if(verbose>0) printf("<-- %s ",fname);
+  dash->buffer=realloc(dash->buffer,dash->bufferlen+len+1);
+  if(dash->name) {
+    snprintf(b,sizeof(b),"%s+%s",dash->name,fname);
+    free(dash->name);
+    dash->name=strdup(b);
+  } else {
+    dash->name=strdup(fname);
+  }
+  bload(fname,dash->buffer+dash->bufferlen,len);
+  dash->bufferlen+=len;
+  prepare_dash(dash);
   if(verbose>=0) printf("(%d elements)\n",dash->anzelement);
   return(dash);
 }

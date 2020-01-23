@@ -43,6 +43,7 @@
 extern char *broker_override;
 extern char *broker_user;
 extern char *broker_passwd;
+extern int do_connection;
 
 void i_broker(ELEMENT *el,char *pars) {
   int rc;
@@ -64,21 +65,19 @@ void i_broker(ELEMENT *el,char *pars) {
   el->y=0;
   el->w=0;
   el->h=0;
-  /* connect to mqtt broker */
-  rc=mqtt_broker(el->filename,el->text,el->format,NULL);
-  while(rc==-1) {
-    char buffer[256];
-    snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n"
+  if(do_connection) {
+    /* connect to mqtt broker */
+    rc=mqtt_broker(el->filename,el->text,el->format,NULL);
+    while(rc==-1) {
+      char buffer[256];
+      snprintf(buffer,sizeof(buffer),"ERROR:\nCould not connect to the MQTT broker:\n"
                                    "%s\n\nUser=%s\n\nTry again?\n",
 				   el->filename,el->text);
-    if(message_dialog("MQTT Hyperdash Error",buffer,2)==1) {
-      rc=mqtt_broker(el->filename,el->text,el->format,NULL);
-    } else rc=0;
+      if(message_dialog("MQTT Hyperdash Error",buffer,2)==1) {
+       rc=mqtt_broker(el->filename,el->text,el->format,NULL);
+      } else rc=0;
+    }
   }
-  free(el->format);  /* such that the password will not persist in memory
-                        longer than necessary
-		      */
-  el->format=NULL;
 }
 
 /* Initialoize the panel/window, get title and default values... */
@@ -204,7 +203,7 @@ void i_bar(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","10"));
   el->h=atoi(key_value(pars,"H","10"));
   
-  el->bgc=(long)myatof(key_value(pars,"BGC","$000000ff"));
+  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
   el->fgc=(long)myatof(key_value(pars,"FGC","$00ff00ff"));
   el->agc=(long)myatof(key_value(pars,"AGC","$ffffffff"));
   /* MIN MAX */
@@ -288,13 +287,18 @@ void i_bitmaplabel(ELEMENT *el,char *pars) {
     el->label[i].pointer=strdup(w1);
     el->label[i].len=strlen(el->label[i].pointer);
     if(*w2) {
-    snprintf(f,sizeof(f),"%s/%s",bitmapdir,w2);
-    if(exist(f)) {
-      el->data[i]=get_bitmap(f,&w,&h);
-      if(verbose>0) printf("Bitmap: <%s> %dx%d\n",f,w,h);
-    } else {
-      printf("Error: Bitmap %s not found!\n",f);
-    }
+      el->data2[i].pointer=strdup(w2);   /* Store the name of the Bitmaps*/
+      el->data2[i].len=strlen(el->data2[i].pointer);
+
+      snprintf(f,sizeof(f),"%s/%s",bitmapdir,w2);
+      if(exist(f)) {
+        el->data[i]=get_bitmap(f,&w,&h);
+        if(verbose>0) printf("Bitmap: <%s> %dx%d\n",f,w,h);
+      } else {
+        printf("Error: Bitmap %s not found!\n",f);
+	el->data[i].pointer=NULL;
+	el->data[i].len=0;
+      }
     }
     el->labelcolor[i]=(long)myatof(w3);
   }
@@ -402,7 +406,6 @@ void i_tinnumber(ELEMENT *el,char *pars) {
   el->min=myatof(key_value(pars,"MIN","-1"));
   el->max=myatof(key_value(pars,"MAX","1"));
   el->increment=myatof(key_value(pars,"TIC","0.1"));
-  el->format=strdup(key_value(pars,"FORMAT","%g"));
 }
 
 void i_tticker(ELEMENT *el,char *pars) {
@@ -415,7 +418,16 @@ void i_tticker(ELEMENT *el,char *pars) {
   el->increment=myatof(key_value(pars,"TIC","0"));
   el->format=strdup(key_value(pars,"FORMAT","%g"));
 }
+
+void draw_invisible_element(ELEMENT *el,WINDOW *win) {
+    rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),0xffff0080);
+}
+
+
 void d_subscribe(ELEMENT *el,WINDOW *win) {
+  if(do_show_invisible) {
+    draw_invisible_element(el,win);
+  }
   ELEMENT_SUBSCRIBE();
 }
 
@@ -535,6 +547,7 @@ void d_vscaler(ELEMENT *el,WINDOW *win) {
 void d_tstring(ELEMENT *el,WINDOW *win) {
   if(el->w<0) el->w=(int)strlen(el->topic)*fonts[el->fontnr].height;
   if(el->h<0) el->h=fonts[el->fontnr].height;
+  if(do_show_invisible) u_tstring(el,win,el->topic,strlen(el->topic));
   ELEMENT_SUBSCRIBE();
 }
 void d_textlabel(ELEMENT *el,WINDOW *win) {
@@ -554,6 +567,7 @@ void d_tnumber(ELEMENT *el,WINDOW *win) {
 }
 void d_plot(ELEMENT *el,WINDOW *win) {
   u_plot(el,win,"",0);
+  if(do_show_invisible) put_font_text(win->display,-1,el->topic,el->x,el->y,0x80808080,el->h);
   ELEMENT_SUBSCRIBE();
 }
 
@@ -1252,3 +1266,269 @@ int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   }
   return(0);
 }
+
+
+/* Functions to make an ASCII string out of an Element. */
+
+extern const ELDEF eltyps[];
+
+static char elementstring[1024];
+
+static char i2abuf[128];
+
+static char *i2a(unsigned i, char *a, unsigned r) {
+  if(i/r>0) a=i2a(i/r,a,r);
+  *a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@$!?"[i % r];
+  return a+1;
+}
+static char *tohex(unsigned i) {
+  int j;
+  static int f=0;
+  char *p=i2abuf+f*32;
+  
+  for(j=0;j<16;j++) p[j]='0';
+  *i2a(i,p,16)=0;
+  f++;
+  f=f&3;
+  return(p);
+}
+
+
+char *s_broker(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"BROKER: URL=\"%s\"", 
+    el->filename);
+  if(el->text) sprintf(elementstring+strlen(elementstring)," USER=\"%s\"",el->text);
+  if(el->format) sprintf(elementstring+strlen(elementstring)," PASSWD=\"%s\"",el->format);
+  return(elementstring);
+}
+
+char *s_panel(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"PANEL: W=%d H=%d",el->w, el->h);
+  if(el->text) sprintf(elementstring+strlen(elementstring)," TITLE=\"%s\"",el->text);
+  if(el->font) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if(el->bgc)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0xff0000)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  return(elementstring);
+}
+
+char *s_line(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"LINE: X=%d Y=%d X2=%d Y2=%d FGC=$%s", 
+  el->x, el->y, el->x2, el->y2, tohex(el->fgc));
+  if(el->linewidth>1) 
+   sprintf(elementstring+strlen(elementstring)," LINEWIDTH=%d",el->linewidth);
+  
+  return(elementstring);
+}
+
+char *s_box(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d FGC=$%s", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, tohex(el->fgc));
+  return(elementstring);
+}
+char *s_pbox(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d FGC=$%s BGC=$%s", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, tohex(el->fgc),tohex(el->bgc));
+  return(elementstring);
+}
+char *s_frame(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h);
+  if(el->revert!=0)  sprintf(elementstring+strlen(elementstring)," REVERT=%d",el->revert);
+  return(elementstring);
+}
+char *s_bitmap(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d BITMAP=\"%s\" FGC=$%s", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->filename, tohex(el->fgc));
+  return(elementstring);
+}
+char *s_icon(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d ICON=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->filename);
+  if(el->agc)  sprintf(elementstring+strlen(elementstring)," TGC=$%s",tohex(el->agc));
+  return(elementstring);
+}
+char *s_string(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d TEXT=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->text);
+  if(el->w>=0) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
+  if(el->h>=0) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
+  if(el->font) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if(el->fontsize!=16) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
+  if(el->bgc)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0xff0000)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  return(elementstring);
+}
+char *s_tstring(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d TOPIC=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->topic);
+  if(el->w>=0) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
+  if(el->h>=0) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
+  if(el->font) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if(el->fontsize!=16) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
+  if(el->bgc)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0xff0000)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  return(elementstring);
+}
+char *s_tnumber(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d TOPIC=\"%s\" FORMAT=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->topic, el->format);
+  if(el->w>=0) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
+  if(el->h>=0) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
+  if(el->font) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if(el->fontsize!=16) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
+  if(el->bgc)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0xff0000)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  return(elementstring);
+}
+char *s_bar(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" MIN=%g MAX=%g", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic, el->min, el->max);
+  if(el->bgc!=0x000000ff)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0x00ff00ff)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  if(el->agc!=0xffffffff)  sprintf(elementstring+strlen(elementstring)," AGC=$%s",tohex(el->agc));
+  return(elementstring);
+}
+char *s_meter(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" MIN=%g MAX=%g AMIN=%g AMAX=%g", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic, el->min, el->max, el->amin, el->amax);
+  if(el->bgc!=0x000000ff)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0x00ff00ff)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  if(el->agc!=0xffffffff)  sprintf(elementstring+strlen(elementstring)," AGC=$%s",tohex(el->agc));
+  return(elementstring);
+}
+char *s_textlabel(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d TOPIC=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->topic);
+  if(el->w>=0) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
+  if(el->h>=0) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
+  if(el->font) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if(el->fontsize!=16) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
+  if(el->bgc)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  int i;
+  char p[256];
+  for(i=0;i<10;i++) {
+    if(!el->label[i].pointer) break;
+    snprintf(p,sizeof(p),"TEXT[%d]",i);
+    if(strcmp(el->label[i].pointer,p)) {
+      sprintf(elementstring+strlen(elementstring)," %s=\"%s|%s|$%s\"",p,el->label[i].pointer,el->data[i].pointer,tohex(el->labelcolor[i]));
+    }
+  }
+  return(elementstring);
+}
+char *s_bitmaplabel(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d TOPIC=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->topic);
+//  if(el->w>=0) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
+//  if(el->h>=0) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
+  if(el->bgc)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  int i;
+  char p[256];
+  for(i=0;i<10;i++) {
+    if(!el->label[i].pointer) break;
+    snprintf(p,sizeof(p),"BITMAP[%d]",i);
+    if(strcmp(el->label[i].pointer,p)) {
+      sprintf(elementstring+strlen(elementstring)," %s=\"%s|%s|$%s\"",p,el->label[i].pointer,el->data2[i].pointer,tohex(el->labelcolor[i]));
+    }
+  }
+  return(elementstring);
+}
+
+char *s_scmdlabel(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d TOPIC=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->topic);
+  if(el->w>=0) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
+  if(el->h>=0) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
+  int i;
+  char p[256];
+  for(i=0;i<10;i++) {
+    if(!el->label[i].pointer) break;
+    snprintf(p,sizeof(p),"CMD[%d]",i);
+    if(strcmp(el->label[i].pointer,p)) {
+      sprintf(elementstring+strlen(elementstring)," %s=\"%s|%s\"",p,el->label[i].pointer,el->data[i].pointer);
+    }
+  }
+  return(elementstring);
+}
+char *s_framelabel(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" MATCH=\"%s\"", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic,el->label[0].pointer);
+  return(elementstring);
+}
+char *s_shellcmd(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d CMD=\"%s\"", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->text);
+  return(elementstring);
+}
+char *s_subdash(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d DASH=\"%s\"", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->text);
+  return(elementstring);
+}
+
+char *s_tinarea(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" VALUE=\"%s\"", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic,el->text);
+  if(el->revert!=0)  sprintf(elementstring+strlen(elementstring)," QOS=%d",el->revert);
+  return(elementstring);
+}
+
+char *s_tinstring(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\"", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic);
+  if(el->revert!=0)  sprintf(elementstring+strlen(elementstring)," QOS=%d",el->revert);
+  return(elementstring);
+}
+
+char *s_tinnumber(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" FORMAT=\"%s\" MIN=%g MAX=%g TIC=%g", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic, el->format, el->min, el->max, el->increment);
+  if(el->revert!=0)  sprintf(elementstring+strlen(elementstring)," QOS=%d",el->revert);
+  return(elementstring);
+}
+char *s_scaler(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" FORMAT=\"%s\" "
+  "MIN=%g MAX=%g TIC=%g AMIN=%g AMAX=%g", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic, el->format, 
+    el->min, el->max, el->increment, el->amin, el->amax);
+  if(el->bgc!=0x000000ff)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0x808080ff)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  if(el->agc!=0xffffffff)  sprintf(elementstring+strlen(elementstring)," AGC=$%s",tohex(el->agc));
+  if(el->revert!=0)  sprintf(elementstring+strlen(elementstring)," QOS=%d",el->revert);
+  return(elementstring);
+}
+char *s_ticker(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" FORMAT=\"%s\" MIN=%g MAX=%g TIC=%g", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic, el->format, el->min, el->max, el->increment);
+  if(el->revert!=0)  sprintf(elementstring+strlen(elementstring)," QOS=%d",el->revert);
+  return(elementstring);
+}
+char *s_plot(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" FORMAT=\"%s\" "
+  "MIN=%g MAX=%g AMIN=%g AMAX=%g", 
+    eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic, el->format, 
+    el->min, el->max,  el->amin, el->amax);
+  if(el->x2!=-1) sprintf(elementstring+strlen(elementstring)," N=%d",el->x2);
+  if(el->y2!=0) sprintf(elementstring+strlen(elementstring)," OFFSET=%d",el->y2);
+  if(el->revert!=0)  sprintf(elementstring+strlen(elementstring)," TYPE=%d",el->revert);
+  if(el->bgc!=0x000000ff)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0x808080ff)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  if(el->agc!=0xffffffff)  sprintf(elementstring+strlen(elementstring)," AGC=$%s",tohex(el->agc));
+  if(el->revert!=0)  sprintf(elementstring+strlen(elementstring)," QOS=%d",el->revert);
+  return(elementstring);
+}
+
+char *s_textarea(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" ALIGN=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic, el->format);
+  if(el->font) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if(el->fontsize!=16) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
+  if(el->bgc)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
+  if(el->fgc!=0xff0000)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
+  return(elementstring);
+}
+char *s_timage(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\"", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic);
+  return(elementstring);
+}
+

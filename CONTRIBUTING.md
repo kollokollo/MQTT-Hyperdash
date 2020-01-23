@@ -41,13 +41,13 @@ More things left to do:
 - test the thing and find more bugs,
 - optimize a bit more, improve performance,
 - the WINDOWS-version needs more work,
-- work on the sound system, invent a cool SOUND element,
 - what about using regular expressions instead of only exact match in 
   BITMAPLABEL, TEXTLABEL and FRAMELABEL?
-- do you want to program a graphical dashboard designer, with drag and 
+- do you want to help program the graphical dashboard designer, with drag and 
   drop features and a predefined library of element groups to be used?
 - the documentation needs more work,
 - hddashgen needs more work,
+- dashdesign needs more work,
 - translate the user manual into other languares (german, french,...)
 - make and maintain a debian package for Ubuntu and OpenSuse, 
 - make and maintain a debian package for Rasbian, 

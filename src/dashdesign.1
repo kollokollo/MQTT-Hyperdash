@@ -1,0 +1,98 @@
+.TH DASHDESIGN 1 04-Jan-2019 "Version 1.02" "MQTT Hyperdash"
+.SH NAME
+dashdesign \- The MQTT dashboard graphical editor 
+.SH SYNOPSIS
+.B dashdesign
+.RI "[ " option " ] " 
+.I "[ " <filename> " ] " 
+
+.SH DESCRIPTION
+
+MQTT Hyperdash is a fast and efficient dashboard (GUI) for the MQTT framework. 
+
+dashdesign allows to edit those dashboards, using a mouse. The Application is 
+not yet ready to be used.
+
+
+.SH Filenames
+
+.B hyperdash
+optionally load one dashboard file at startup. The suffix of the input file is 
+usually .dash.
+
+.SH OPTIONS
+.TP
+.BR \-q
+Be quiet and print less debug information. 
+.TP
+.BR \-v
+Be more verbose and print debug information. 
+.TP
+.BR \-\-version
+shows version, program and other information and exits.
+.TP
+.BR \-h ", " \-\-help
+print a short help and exit.
+.TP
+.BR \-\-dashpath " " \fIpath\fR
+specify a path where .dash files are to be searched. 
+Hyperdash first searches for the given filename in the current directory, if not
+fond there, it looks into this specified directory. It defaults to 
+$HOME/.hyperdash/dashboards if that exist and /usr/share/hyperdash/dashboards else.
+.TP
+.BR \-\-fontpath " " \fIpath\fR
+specify a path where the true type fonts used by hyperdash are searched for. 
+It defaults to /usr/share/fonts/truetype/msttcorefonts . 
+.TP
+.BR \-\-iconpath " " \fIpath\fR
+specify a path where the icons (png files) used by hyperdash are searched for. 
+It defaults to /usr/share/hyperdash/icons .
+.TP
+.BR \-\-bitmappath " " \fIpath\fR
+specify a path where the bitmaps (monochrome) used by hyperdash are searched for. 
+It defaults to /usr/share/hyperdash/bitmaps .
+.PP
+For detailed help and description of the MQTT principle take a 
+look at the README file coming with the package. 
+
+
+.SH EXAMPLES
+.nf
+dashdesign &
+.fi
+
+
+
+.SH VERSION
+Page was created for V.1.02
+
+.SH BUG REPORTS       
+
+If you find a bug in the MQTT hyperdash software, you should report it. But
+first, you should make sure that it really is a bug, and that it appears in
+the latest version of the MQTT-Hyperdash package that you have.
+
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that
+as well! Suggestions may be mailed to the bug tracking system.
+
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+
+.SH COPYRIGHT
+Copyright (C) 2019-2020 Markus Hoffmann 
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software 
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+.SH SEE ALSO
+hyperdash(1), mqtt-list-topics(1), haddashgen(1)

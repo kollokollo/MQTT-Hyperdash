@@ -181,10 +181,18 @@ void put_graphics(WINDOW *window, STRING data,int x,int y,unsigned int w, unsign
   if(data.len==0 || !data.pointer) return;
   SDL_RWops *rw=SDL_RWFromMem(data.pointer,data.len);
   SDL_Surface *bmpdata=SDL_LoadBMP_RW(rw,1);
+  
+  
+  
   SDL_Surface *image=SDL_DisplayFormat(bmpdata);
-  SDL_SetColorKey(image,SDL_SRCCOLORKEY,tgc); /*set transparent color*/
+  if(image) {
+    SDL_SetColorKey(image,SDL_SRCCOLORKEY,tgc); /*set transparent color*/
+    SDL_FreeSurface(bmpdata);
+  } else {  
+    printf("Error: SDL_DisplayFormat\n");
+    image=bmpdata;
+  }
 
-  SDL_FreeSurface(bmpdata);
 /*
 
   SDL_Surface *bmpdata;
@@ -241,11 +249,16 @@ void put_bitmap(WINDOW *window, const char *adr,int x,int y,unsigned int w, unsi
   pal[4]=(col&0xff);
    
   image=SDL_DisplayFormat(data);
-  SDL_FreeSurface(data);
-  SDL_Rect a={0,0,image->w,image->h};
-  SDL_Rect b={x,y,image->w,image->h};
+  if(image) {
+    SDL_FreeSurface(data);
+  } else {
+    printf("Error: SDL_DisplayFormat\n");
+    image=data;
+  }
+    SDL_Rect a={0,0,image->w,image->h};
+    SDL_Rect b={x,y,image->w,image->h};
 //  printf("putbitmap: %dx%d %d %d\n",image->w,image->h,bpl,image->pitch);
-  SDL_BlitSurface(image, &a,window->display, &b);
+    SDL_BlitSurface(image, &a,window->display, &b);
   SDL_FreeSurface(image);
 }
 
@@ -253,7 +266,8 @@ void put_font_text(SDL_Surface *display, int fidx, char *text, int x,int y,unsig
   SDL_Surface *message = NULL;
   TTF_Font *ttffont = NULL;
   SDL_Color textColor = { (fgc&0xff000000)>>24, (fgc&0xff0000)>>16, (fgc&0xff00)>>8 };
-  ttffont=fonts[fidx].font;
+  if(fidx>=0) ttffont=fonts[fidx].font;
+  else ttffont=NULL;
   if(ttffont==NULL) {
     stringColor(display,x,y+(h-8)/2,text,fgc);
     return;

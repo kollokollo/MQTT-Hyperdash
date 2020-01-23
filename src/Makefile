@@ -53,12 +53,15 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS) `pkg-config --cflags gtk+-2.0`
 
 # these are objects which are compiled to binary
 
-MAINOBJS= main.o hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
+
+LIBOBJS=  hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
           bitmap.o input.o elements.o subscribe.o
+
+MAINOBJS= main.o $(LIBOBJS)
 
 CSRC=    $(MAINOBJS:.o=.c)
 
-CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c
+CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c dashdesign.c
 
 RULESRC=  commander.rule  demo.rule  syslogger.rule  sysmeasure.rule
 
@@ -68,7 +71,8 @@ DEPSRC=  $(CSRC)  mqtt-list-topics.c
 # Headerfiles which should be added to the distribution
 
 HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
-       input.h elements.h subscribe.h basics.h config.h hddashgen.h
+       input.h elements.h subscribe.h basics.h config.h hddashgen.h \
+       dashdesign.h
 
 # example dash files 
 
@@ -92,9 +96,10 @@ BITMAPS= ../bitmaps/alarmRing ../bitmaps/bombe_gross  ../bitmaps/Hygrometer \
 	 ../bitmaps/SmallCircle  ../bitmaps/warning     ../bitmaps/biene    \
 	 ../bitmaps/GridPlug     ../bitmaps/SmallDonut  ../bitmaps/WarnTS   \
          ../bitmaps/bombe        ../bitmaps/helfer      \
-	 ../bitmaps/SmallTriagDown ../bitmaps/TickLeft ../bitmaps/TickRight
+	 ../bitmaps/SmallTriagDown ../bitmaps/TickLeft ../bitmaps/TickRight \
+	 ../bitmaps/Sun
 
-MANPAGES= hddashgen.1  hyperdash.1  mqtt-list-topics.1
+MANPAGES= hddashgen.1  hyperdash.1  mqtt-list-topics.1 dashdesign.1
 
 # Image files
 
@@ -138,7 +143,7 @@ MYWINLIBS = WINDOWS/lib/libgfx.lib
 
 
 
-all :    hyperdash mqtt-list-topics sysmeasure hddashgen
+all :    hyperdash mqtt-list-topics sysmeasure hddashgen dashdesign
 
 configure : configure.in
 	autoconf
@@ -158,6 +163,11 @@ hyperdash :  $(MAINOBJS)
 hyperdash.exe: $(CSRC) $(MYWINLIBS)
 	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  $(CSRC) \
 	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
+
+
+dashdesign :  dashdesign.o $(LIBOBJS)
+	$(CC) -L. $(LINKFLAGS) -o $@ dashdesign.o $(LIBOBJS) $(LIBS)
+
 
 hddashgen : hddashgen.c file.o hddashgen.h file.h
 	$(CC) hddashgen.c file.o -o $@ -lm 
@@ -200,11 +210,13 @@ install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics $(MANPAGES) cr
 	install -s -m 755 hyperdash $(BINDIR)/
 	install -s -m 755 mqtt-list-topics $(BINDIR)/
 	install -s -m 755 hddashgen $(BINDIR)/
+	install -s -m 755 dashdesign $(BINDIR)/
 	install -s -m 755 sysmeasure $(BINDIR)/
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
 	install -m 644 hyperdash.1 $(MANDIR)/man1/
 	install -m 644 hddashgen.1 $(MANDIR)/man1/
+	install -m 644 dashdesign.1 $(MANDIR)/man1/
 	install -m 644 mqtt-list-topics.1 $(MANDIR)/man1/
 	install -d $(DATADIR)/hyperdash
 	install -m 644 create_tree.sh $(DATADIR)/hyperdash/
@@ -220,9 +232,11 @@ uninstall :
 	rm -f $(BINDIR)/hyperdash
 	rm -f $(BINDIR)/mqtt-list-topics
 	rm -f $(BINDIR)/hddashgen
+	rm -f $(BINDIR)/dashdesign
 	rm -f $(BINDIR)/sysmeasure
 	rm -f $(MANDIR)/man1/hyperdash.1
 	rm -f $(MANDIR)/man1/hddashgen.1
+	rm -f $(MANDIR)/man1/dashdesign.1
 	rm -f $(MANDIR)/man1/mqtt-list-topics.1
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons

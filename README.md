@@ -13,7 +13,7 @@ Summary     : A universal MQTT Dashboard.
 Description :
 
 This is a fast and efficient dashboard (GUI) for the MQTT framework. It uses
-the SDL library for graphics rendering, the paho library for communication and
+the SDL library for graphics rendering, the paho.mqtt.c library for communication and
 the gtk2 framework for user input. The dashboard runs on Linux, 
 but a port to other operating systems is possible. 
 
@@ -39,8 +39,23 @@ user input with the mouse to manipulate topics contents.
 A description of the [dash file format](doc/MQTT-Hyperdash-file-format.md) can
 be found in the doc/ section.
 
+#### dashdesign (HyperDash Dashboard Designer)
 
-#### hddashgen (HyperDash DashboardGenerator)
+dashdesign is a graphical tool to create and edit the .dash files. 
+
+However this program is still stub, not ready to be used. 
+This program is still work in progress.
+
+The dash files must be created and edited using a text editor
+by hand. Sorry for that. (for now).
+
+A brief explanation how to use dashdesign is in its man-page 
+[dashdesign man-page](src/dashdesign.1).
+
+The usage with the graphical interface should be self-explanatory. 
+
+
+#### hddashgen (HyperDash Dashboard-Generator)
 
 Making dashboard file by hand with a text editor can be a lot of annoying  manual
 work. To help this, have made a tool to automatically create dash files from
@@ -54,7 +69,6 @@ naming convention. The naming convention used is explained in
 A brief explanation how to use hddashgen is in its man-page 
 [hddashgen man-page](src/hddashgen.1).
 
-hddashgen is still work in progress. 
 
 #### mqtt-list-topics
 

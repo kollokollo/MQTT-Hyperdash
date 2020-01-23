@@ -30,7 +30,10 @@
 
 char ifilename[128]="main.dash";
 int verbose=0;
+int do_connection=1;      /* make real connections to broker */
+int do_show_invisible=0;  /* Also draw invisible elements. */
 
+int dofullscreen=0;
 char *broker_override=NULL;
 char *broker_user=NULL;
 char *broker_passwd=NULL;
@@ -38,21 +41,6 @@ char *topic_prefix=NULL;
 
 char call_options[256]="";
 
-int dofullscreen=0;
-static void hyperdash_set_defaults() {
-  /* Set the default path where the .dash files are searched for. 
-   * The path can be overridden by a commandline parameter.
-   */
-  char path[256];
-  char *envptr=getenv("HOME");
-  if(envptr!=NULL) {
-    snprintf(path,sizeof(path),"%s/.hyperdash/dashboards",envptr);
-    if(verbose>0) printf("Try dashboard path: %s\n",path);
-    if(exist(path)) { /* It does exist! */
-      strncpy(dashboarddir,path,256);
-    } else if(verbose>=0) printf("%s does not exist.\n",path);
-  } else if(verbose>=0) printf("$HOME not set.\n");
-}
 static void intro() {
   printf("**********************************************************\n"
          "*    %10s                    V." VERSION "            *\n"
@@ -66,7 +54,6 @@ static void usage() {
   printf(
     "Usage: %s [-h] [<filename>] --- display dashboard [%s]\n\n"
     " -h --help\t\t--- usage\n"
-    " --help <topic>\t\t--- print help on topic\n"
     " --iconpath <path>\t--- set path for icon files [%s]\n"
     " --bitmappath <path>\t--- set path for bitmap files [%s]\n"
     " --dashpath <path>\t--- set path for dash files [%s]\n"

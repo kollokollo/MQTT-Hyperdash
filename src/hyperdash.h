@@ -9,12 +9,12 @@
 #define __HYPERDASH
 
 #define EL_IGNORE  0
-#define EL_BROKER  1
-#define EL_PANEL   0x800
-#define EL_DYNAMIC 0x100
-#define EL_INPUT   0x200
-#define EL_VISIBLE 0x400
-#define EL_TYPMASK 0xf00
+#define EL_BROKER  0x1000
+#define EL_PANEL    0x800
+#define EL_DYNAMIC  0x100
+#define EL_INPUT    0x200
+#define EL_VISIBLE  0x400
+#define EL_TYPMASK 0x1f00
 
 #include "subscribe.h"
 
@@ -26,6 +26,7 @@ typedef struct {
   void (*draw)();
   void (*update)();
   int (*click)();
+  char * (*tostring)();
 } ELDEF;
 typedef struct {
   short type;
@@ -48,6 +49,7 @@ typedef struct {
   double amin,amax;
   STRING label[10];
   STRING data[10];
+  STRING data2[10];
   unsigned long labelcolor[10];
   int subscription;
   int fontnr;
@@ -74,7 +76,10 @@ extern char icondir[];
 extern char bitmapdir[];
 extern char fontdir[];
 extern char dashboarddir[];
+extern int do_show_invisible;
 
+void hyperdash_set_defaults();
+DASH *new_dash(const char *filename);
 DASH *load_dash(const char *filename);
 DASH *merge_dash(DASH *dash, const char *fname);
 void free_dash(DASH *dash);
@@ -83,5 +88,6 @@ void close_dash(DASH *dash);
 void draw_dash(DASH *dash, WINDOW *win);
 int handle_dash(DASH *dash, WINDOW *win);
 void update_topic_message(int sub,const char *, STRING message);
-
+int find_element(DASH *dash,int st, int x, int y, unsigned int mask, unsigned int match);
+char *element2a(ELEMENT *el);
 #endif
