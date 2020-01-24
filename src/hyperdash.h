@@ -82,6 +82,7 @@ void hyperdash_set_defaults();
 DASH *new_dash(const char *filename);
 DASH *load_dash(const char *filename);
 DASH *merge_dash(DASH *dash, const char *fname);
+void save_dash(DASH *dash, const char *filename);
 void free_dash(DASH *dash);
 void init_dash(DASH *dash);
 void close_dash(DASH *dash);
@@ -90,4 +91,8 @@ int handle_dash(DASH *dash, WINDOW *win);
 void update_topic_message(int sub,const char *, STRING message);
 int find_element(DASH *dash,int st, int x, int y, unsigned int mask, unsigned int match);
 char *element2a(ELEMENT *el);
+
+void call_a_dash(char *filename);
+
+
 #endif

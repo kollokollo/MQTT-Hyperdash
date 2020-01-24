@@ -1037,17 +1037,17 @@ int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     return(1);
   } else if(b==3) {
     char newdash[256];
-    char buf[256];
 
     newdash[0]=0;
     /* open a file selector to select a new dash to display.*/
     int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
     if(rc && newdash[0]) {
-      if(exist(newdash))  snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s &",newdash);
-      else snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s/%s.dash &",dashboarddir,newdash);
-      if(verbose>0) printf("Dash start: <%s>\n",newdash);
-      if(verbose>0) printf("call: <%s>\n",buf);
-      if(system(buf)==-1) printf(MQTT_HYPERDASH_EXECUTABLE_NAME " ERROR: system\n");  
+      if(exist(newdash))  call_a_dash(newdash);
+      else {
+        char buf[256];
+        snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME " %s/%s &",dashboarddir,newdash);
+        call_a_dash(buf);
+      }
     }
     return(1);
   }
@@ -1055,12 +1055,8 @@ int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 }
 
 
+/* Ticker: get last known value, add increment, format it and then publish it. */
 
-
-
-
-
-/* get last known value, add increment, format it and then publish it. */
 int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
     char *def=subscriptions[el->subscription].last_value.pointer;
@@ -1198,13 +1194,9 @@ extern char call_options[];
 
 int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   char filename[256];
-  char buf[256];
   if(b==1) {
     snprintf(filename,sizeof(filename),"%s.dash",el->text);
-    snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME "%s %s &",call_options,filename);
-    if(verbose>=0) printf("Dash start: <%s>\n",filename);
-    if(verbose>=0) printf("call: <%s>\n",buf);
-    if(system(buf)==-1) printf("Error: system\n");  
+    call_a_dash(filename);
     return(1);
   }
   return(0);

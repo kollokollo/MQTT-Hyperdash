@@ -139,15 +139,31 @@ static void init_newloaded_dash() {
   update_drawarea();
 }
 
+static void emergency_save_dialog() {
+  printf("WARNING: Dashboard has not been saved!\n");
+  char buffer[256];
+  snprintf(buffer,sizeof(buffer),"ERROR:\nCurrent Dashboard has not yet been saved.\n"
+  				 "Do you want to save it now?\n\n"
+  				 "%s\n\n",
+        			 ifilename);
+  if(message_dialog("MQTT Hyperdash Dashdesign Warning",buffer,2)==1) {
+    save_dash(maindash,ifilename);
+    is_modified=0;
+    update_title(ifilename);
+  } else {    
+    /* Emergency-save the dashboard. */
+    char newname[strlen(ifilename)+12];
+    strcpy(newname,ifilename);
+    strcat(newname,".autosave");
+    save_dash(maindash,newname);
+  }
+}
 
 static void menu_new(MENUENTRY *me) {
 
 /* Check if current file is nodified. If so open Warning dialog and offer to save the file */
 
-  if(is_modified) {
-    printf("WARNING: Dashboard has not been saved!\n");
-    /* Todo: Emergency-save the dashboard. */
-  }
+  if(is_modified) emergency_save_dialog();
   
 /* Then free the menu and create a new one. */
   
@@ -160,10 +176,7 @@ static void menu_load(MENUENTRY *me) {
   char newdash[256];
   newdash[0]=0;
   /* Check if current file is nodified. If so open Warning dialog and offer to save the file */
-  if(is_modified) {
-    printf("WARNING: Dashboard has not been saved!\n");
-    /* Todo: Emergency-save the dashboard. */
-  }
+  if(is_modified) emergency_save_dialog();
 
   /* open a file selector to select a new dash to display.*/
   int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
@@ -187,7 +200,7 @@ static void menu_merge(MENUENTRY *me) {
   /* open a file selector to select a new dash to display.*/
   int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
   if(rc && newdash[0]) {
-    if(exist(newdash))  snprintf(buf,sizeof(ifilename),"%s",newdash);
+    if(exist(newdash))  snprintf(buf,sizeof(buf),"%s",newdash);
     else snprintf(buf,sizeof(buf),"%s/%s",dashboarddir,newdash);
     if(exist(buf)) {
       maindash=merge_dash(maindash,buf);
@@ -196,19 +209,41 @@ static void menu_merge(MENUENTRY *me) {
   }
 }
 static void menu_save(MENUENTRY *me) {
-  int i;
-  for(i=0;i<maindash->anzelement;i++) {
-    printf("%d: %s\n",i,element2a(&maindash->tree[i]));
+  if(is_modified || 1) {  /* Do it anyways... */
+    save_dash(maindash,ifilename);
+    is_modified=0;
+    update_title(ifilename);
   }
-
+}
+static void menu_save_as(MENUENTRY *me) {
+  char newdash[256];
+  newdash[0]=0;
+  /* open a file selector to select a new dash save to.*/
+  int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
+  if(rc && newdash[0]) {
+    if(exist(newdash)) {
+      char buffer[256];
+      snprintf(buffer,sizeof(buffer),"WARNING:\nSelected file \n%s \ndoes already exist.\n"
+  				 "Do you want to overwrite it now?\n\n",
+        			 newdash);
+      if(message_dialog("MQTT Hyperdash Dashdesign Warning",buffer,2)!=1) return;
+    }
+    snprintf(ifilename,sizeof(ifilename),"%s",newdash);
+    menu_save(me);
+  }
+}
+static void menu_start_hyperdash(MENUENTRY *me) {
+  if(is_modified) emergency_save_dialog();
+  if(is_modified) {
+    char newname[strlen(ifilename)+12];
+    strcpy(newname,ifilename);
+    strcat(newname,".autosave");
+    call_a_dash(newname);
+  } else call_a_dash(ifilename);
 }
 static void menu_quit(MENUENTRY *me) {
 /* Check if current file is nodified. If so open Warning dialog and offer to save the file */
-  if(is_modified) {
-    printf("WARNING: Dashboard has not been saved!\n");
-    /* Todo: Emergency-save the dashboard. */
-  }
-
+  if(is_modified) emergency_save_dialog();
 
   gtk_main_quit();
 }
@@ -233,12 +268,17 @@ const char *action_names[]={
 #define MENU_ENTRY 0
 
 MENUENTRY menuentries[]={
-{0,"New",        menu_new,NULL},
-{0,"Load ...",   menu_load,NULL},
-{0,"Merge ...",  menu_merge,NULL},
-{0,"Save",       menu_save,NULL},
-{0,"Save As ...",menuitem_response,NULL},
-{0,"Quit",       menu_quit,NULL},
+{0,"New",          menu_new,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Load ...",     menu_load,NULL},
+{0,"Merge ...",    menu_merge,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Save",         menu_save,NULL},
+{0,"Save As ...",  menu_save_as,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Run Dashboard",menu_start_hyperdash,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Quit",         menu_quit,NULL},
 {MENU_TITLE,"File",NULL,NULL},
 {0,"Undo delete",     menuitem_response,NULL},
 {0,"Delete Elements", menuitem_response,NULL},
@@ -266,7 +306,6 @@ MENUENTRY menuentries[]={
 {MENU_TITLE,"Action",NULL,NULL},
 
 {0,"Grid",menuitem_response,NULL},
-{0,"Start hyperdash",menuitem_response,NULL},
 
 {MENU_TITLE,"Settings",NULL,NULL},
 
@@ -511,7 +550,7 @@ int main(int argc, char *argv[]) {
      while(menuentries[i].text) {     
        if(menuentries[i].typ==MENU_TITLE) {
          /* Create a new menu-item with a name... */
-         menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
+	 menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
          /* Show the widget */
          gtk_widget_show (menuentries[i].widget);
          /* Now we specify that we want our newly created "menu" to be the menu
@@ -527,7 +566,8 @@ int main(int argc, char *argv[]) {
           gtk_menu_shell_append (GTK_MENU_SHELL (menu_bar),menuentries[i].widget );
        } else {
          /* Create a new menu-item with a name... */
-         menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
+         if(*menuentries[i].text=='-') menuentries[i].widget=gtk_separator_menu_item_new();
+         else menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
          /* ...and add it to the menu. */
          gtk_menu_shell_append (GTK_MENU_SHELL (menu),menuentries[i].widget);
 	 /* Do something interesting when the menuitem is selected */

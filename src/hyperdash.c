@@ -154,7 +154,7 @@ void init_dash(DASH *dash) {
   global_dash=dash;
 
   for(i=0;i<dash->anzelement;i++) {
-    xtrim(dash->tree[i].line,1,dash->tree[i].line);
+    if(dash->tree[i].line[0]!='#') xtrim(dash->tree[i].line,1,dash->tree[i].line);
     if(dash->tree[i].line[0]==0) {
       dash->tree[i].type=EL_IGNORE;    
     } else if(dash->tree[i].line[0]=='#') {
@@ -416,4 +416,37 @@ DASH *merge_dash(DASH *dash, const char *fname) {
   prepare_dash(dash);
   if(verbose>=0) printf("(%d elements)\n",dash->anzelement);
   return(dash);
+}
+/* save a dashboard to file */
+void save_dash(DASH *dash, const char *filename) {
+  if(!filename) return;
+  int i;
+  if(exist(filename)) {
+    char newname[strlen(filename)+8];
+    strcpy(newname,filename);
+    strcat(newname,".bck");
+    printf("%s already exist. Save a backup copy %s.\n",filename,newname);
+    int ret=rename(filename,newname);
+    if(ret) printf("Error: unable to rename the file");
+  }
+  if(verbose>=0) printf("--> %s [",filename);
+  FILE *fptr=fopen(filename,"w");
+  if(fptr == NULL) {
+      printf("Error opening file %s\n",filename);   
+      return;
+  }
+  fprintf(fptr,"# saved by dashdesign. %s %s\n",date_string(),time_string());
+  for(i=0;i<dash->anzelement;i++) {
+    fprintf(fptr,"%s\n",element2a(&dash->tree[i]));
+  }
+  fclose(fptr);
+  if(verbose>=0) printf("] (%d)\n",dash->anzelement);
+}
+extern char call_options[];
+void call_a_dash(char *filename) {
+  char buf[256];
+  snprintf(buf,sizeof(buf),MQTT_HYPERDASH_EXECUTABLE_NAME "%s %s &",call_options,filename);
+  if(verbose>=0) printf("Dash start: <%s>\n",filename);
+  if(verbose>=0) printf("call: <%s>\n",buf);
+  if(system(buf)==-1) printf(MQTT_HYPERDASH_EXECUTABLE_NAME "Error: system\n");
 }

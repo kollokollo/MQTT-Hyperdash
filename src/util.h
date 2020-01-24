@@ -19,3 +19,5 @@ STRING do_using(double num,STRING format);
 double myatof(char *n);
 STRING create_string(const char *n);
 STRING double_string(const STRING *a);
+char *date_string();
+char *time_string();

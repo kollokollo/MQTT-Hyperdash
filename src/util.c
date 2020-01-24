@@ -10,7 +10,8 @@
 #include <string.h>
 #include <ctype.h> 
 #include <locale.h> 
-#include <math.h> 
+#include <math.h>
+#include <time.h> 
 #include "basics.h"
 #include "util.h"
 
@@ -190,15 +191,7 @@ STRING do_using(double num,STRING format) {
 locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
 locale_t old = uselocale(safe_locale);
 #endif
-//  struct lconv *lc;
-  
-//  lc=localeconv();
-//  printf("Locale-> <%s>\n",lc->decimal_point);
-  
-//  printf("DO__USING: %13.13g, <%s>\n",num,format.pointer);
-  
-  
-  if (*format.pointer=='%') { /* c-style format */
+  if(*format.pointer=='%') { /* c-style format */
     char b[32];
     snprintf(b,sizeof(b),format.pointer,num);
     dest.len=strlen(b);
@@ -233,19 +226,15 @@ locale_t old = uselocale(safe_locale);
    }
    neg=(num<0); 
    num=fabs(num);
- //  printf("Rauten vor Punkt: %d, rauten danach: %d, exponent: %d, vorzeichen: %d\n",r,a,ex,v);
 
    /* Vorzeichen als erstes: */
    for(i=0;i<dest.len;i++) {
      if(format.pointer[i]=='+') {dest.pointer[i]=(neg ? '-':'+');}
      else if(format.pointer[i]=='-') {dest.pointer[i]=(neg ? '-':' ');}
    }
-   //printf("destpointer: <%s>\n",dest.pointer);
-
    
    if(ex>2) {
      snprintf(des,sizeof(des),"%16.16e",num); 
-     // printf("preformat: <%s>\n",des);
      j=i=0;
      while(des[i] && des[i]!='e') i++;
      while(dest.pointer[j] && dest.pointer[j]!='^') j++;
@@ -265,11 +254,10 @@ locale_t old = uselocale(safe_locale);
        return(dest);    
      } else xfill(dest.pointer,&des[i],'^',dest.len);
    } else snprintf(des,sizeof(des),"%16.16f",num);
-   //  printf("preformat: <%s>\n",des); 
      /*Jetzt muss die Zahl gerundet werden.*/
      num=myatof(des)+pow(0.1,a)*0.5;
      snprintf(des,sizeof(des),"%16.16f",num);
-   //  printf("preformat2: <%s>\n",des); 
+
     /*Hierzu brauchen wir die Anzahl der tatsaechlichen STellen vor dem Komma*/
     int count=0;
     i=0;
@@ -277,12 +265,9 @@ locale_t old = uselocale(safe_locale);
       if(des[i]>='0' && des[i]<='9') count++;
       i++;
     }
- //   printf("%d Stellen bis Punkt, davon %d signifikant.\n",i,count);
- //   printf("des=<%s>\n",des);
     i=0;
     while(des[i] && des[i]!='.') i++; 
     j=0;
-    // printf("destpointer=<%s>\n",dest.pointer);
     while(dest.pointer[j] && dest.pointer[j]!='.') j++;
     if(dest.pointer[j]) {
       if(des[i]) {
@@ -290,7 +275,6 @@ locale_t old = uselocale(safe_locale);
         xfill(dest.pointer+j+1,&des[i+1],'#',dest.len-j-1);
       } else xfill(dest.pointer+j+1,"0000000000000000",'#',dest.len-j-1);
     }
-    // printf("destpointer=<%s>\n",dest.pointer);
     
     b=0;
     /*Jetzt noch Leerzeichen am Anfang entfernen und ggf minus einfügen.*/
@@ -306,15 +290,12 @@ locale_t old = uselocale(safe_locale);
       p2++;
     }
     p[b]=0;
-    // printf("Verbleiben: <%s> b=%d fuer %d stellen\n",p,b,r);
     if(b==r) xfillx(dest.pointer,p,dest.len);
     else if(b<r) {
       char buf[r+1];
       for(i=0;i<r-b;i++)  buf[i]=' ';
       for(i=r-b;i<r;i++)  buf[i]=p[i-(r-b)];
       buf[r]=0;  
-      // printf("buf=<%s>\n",buf);
-
       xfillx(dest.pointer,buf,dest.len);
     } else {
       for(i=0;i<dest.len;i++) dest.pointer[i]='*';    
@@ -445,3 +426,23 @@ void xtrim(const char *t,int f, char *w ) {
     if(*t) t++;
   } *w=0;
 }
+
+char *date_string() {
+  static char ergebnis[12];
+  time_t timec;
+  struct tm * loctim;
+  timec = time(&timec);
+  loctim=localtime(&timec);
+  sprintf(ergebnis,"%02d.%02d.%04d",loctim->tm_mday,loctim->tm_mon+1,1900+loctim->tm_year);
+  return(ergebnis);
+}
+char *time_string() {
+  static char ergebnis[10];
+  time_t timec;
+  timec = time(&timec);
+  strncpy(ergebnis,ctime(&timec)+11,8);
+  ergebnis[8]=0;
+  return(ergebnis);
+}
+
+
