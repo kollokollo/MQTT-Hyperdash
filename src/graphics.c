@@ -189,7 +189,7 @@ void put_graphics(WINDOW *window, STRING data,int x,int y,unsigned int w, unsign
     SDL_SetColorKey(image,SDL_SRCCOLORKEY,tgc); /*set transparent color*/
     SDL_FreeSurface(bmpdata);
   } else {  
-    printf("Error: SDL_DisplayFormat\n");
+    if(verbose>0) printf("Error: SDL_DisplayFormat\n");
     image=bmpdata;
   }
 
@@ -252,7 +252,7 @@ void put_bitmap(WINDOW *window, const char *adr,int x,int y,unsigned int w, unsi
   if(image) {
     SDL_FreeSurface(data);
   } else {
-    printf("Error: SDL_DisplayFormat\n");
+    if(verbose>0) printf("Error: SDL_DisplayFormat\n");
     image=data;
   }
     SDL_Rect a={0,0,image->w,image->h};

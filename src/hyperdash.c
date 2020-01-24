@@ -425,7 +425,7 @@ void save_dash(DASH *dash, const char *filename) {
     char newname[strlen(filename)+8];
     strcpy(newname,filename);
     strcat(newname,".bck");
-    printf("%s already exist. Save a backup copy %s.\n",filename,newname);
+    printf("%s already exist.\nSave a backup copy %s.\n",filename,newname);
     int ret=rename(filename,newname);
     if(ret) printf("Error: unable to rename the file");
   }

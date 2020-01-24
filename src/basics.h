@@ -15,10 +15,19 @@ typedef struct {
   unsigned int len;
   char *pointer;
 } STRING;
-#ifndef min
-#define min(a,b) ((a<b)?a:b)
+
+
+#ifdef min
+#undef min
 #endif
+#ifdef max
+#undef max
+#endif
+#define min(a,b) ((a<b)?a:b)
+#define max(a,b) ((a>b)?a:b)
 #define PI       3.141592653589793
+
+
 #ifdef WINDOWS
   #define bzero(p, l) memset(p, 0, l)
 #endif
