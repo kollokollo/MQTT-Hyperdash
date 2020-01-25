@@ -19,14 +19,19 @@ enum ACTIONS {
   A_NONE,
   A_MOVE,
   A_RESIZE,
-  
+  A_MTB,
+  A_ADD,
+  A_DELETE
 
 };
 
 const char *action_names[]={
 "Identify",
 "Move",
-"Resize"
+"Resize",
+"Move to Bkg",
+"Add",
+"Delete"
 };
 
 

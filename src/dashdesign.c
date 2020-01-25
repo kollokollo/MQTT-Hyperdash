@@ -119,6 +119,9 @@ static void kommandozeile(int anzahl, char *argumente[]) {
 static void menuitem_response(MENUENTRY *me) {
     printf ("%s\n",me->text);
 }
+static void menu_elements(char *typ) {
+    printf("Elements: %s\n",typ);
+}
 
 static void about_dialog(MENUENTRY *me) {
   message_dialog(PACKAGE_NAME " Info",
@@ -259,9 +262,12 @@ static void menu_grid_onoff(MENUENTRY *me) {
   update_drawarea();
 }
 
-static void menu_move(MENUENTRY *me)     {current_action=A_MOVE; update_statusline();}
-static void menu_identify(MENUENTRY *me) {current_action=A_NONE; update_statusline();}
+static void menu_move(MENUENTRY *me)     {current_action=A_MOVE;   update_statusline();}
+static void menu_identify(MENUENTRY *me) {current_action=A_NONE;   update_statusline();}
 static void menu_resize(MENUENTRY *me)   {current_action=A_RESIZE; update_statusline();}
+static void menu_mtb(MENUENTRY *me)      {current_action=A_MTB;    update_statusline();}
+static void menu_add(MENUENTRY *me)      {current_action=A_ADD;    update_statusline();}
+static void menu_delete(MENUENTRY *me)   {current_action=A_DELETE; update_statusline();}
 
 
 
@@ -282,19 +288,20 @@ MENUENTRY menuentries[]={
 {0,"Quit",         menu_quit,NULL},
 {MENU_TITLE,"File",NULL,NULL},
 {0,"Undo delete",     menuitem_response,NULL},
-{0,"Delete Elements", menuitem_response,NULL},
+{0,"Delete Elements", menu_delete,NULL},
 {0,"Copy Elements",   menuitem_response,NULL},
 {0,"Paste Elements",  menuitem_response,NULL},
 
 {MENU_TITLE,"Edit",NULL,NULL},
 
+{0,"# elements",  menu_elements,NULL},
 {MENU_TITLE,"Element",NULL,NULL},
 {0,"Identify",  menu_identify,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Move",      menu_move,NULL},
 {0,"Resize",    menu_resize,NULL},
 {0,"-------------",NULL,NULL},
-{0,"Move to Background",menuitem_response,NULL},
+{0,"Move to Background",menu_mtb,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Rotate left",  menuitem_response,NULL},
 {0,"Rotate right", menuitem_response,NULL},
@@ -309,6 +316,8 @@ MENUENTRY menuentries[]={
 {0,"-------------",NULL,NULL},
 {0,"Select Font",  menuitem_response,NULL},
 {0,"Select Layout",menuitem_response,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Add Element",  menu_add,NULL},
 
 {MENU_TITLE,"Action",NULL,NULL},
 
@@ -630,6 +639,10 @@ static void update_title(const char *t) {
 static void update_drawarea() {
   gtk_widget_set_size_request (GTK_WIDGET (drawing_area), maindash->tree[maindash->panelelement].w, maindash->tree[maindash->panelelement].h);
 }
+
+extern const int anzeltyp;
+extern const ELDEF eltyps[];
+
 int main(int argc, char *argv[]) {
     GtkWidget *menu;
     GtkWidget *menu_bar;
@@ -705,6 +718,21 @@ int main(int argc, char *argv[]) {
          /* Create a new menu-item with a name... */
          if(*menuentries[i].text=='-') menuentries[i].widget=gtk_separator_menu_item_new();
 	 else if(*menuentries[i].text=='[') menuentries[i].widget=gtk_check_menu_item_new_with_label(menuentries[i].text+4);
+        else if(*menuentries[i].text=='#') {
+	  menuentries[i].widget=gtk_separator_menu_item_new();
+	  int k;
+	  GtkWidget *gw;
+	  for(k=1;k<anzeltyp;k++) {
+	    if(strcmp(eltyps[k].name,"BROKER") && strcmp(eltyps[k].name,"PANEL")) {
+	      gw=gtk_menu_item_new_with_label(eltyps[k].name);
+              gtk_menu_shell_append(GTK_MENU_SHELL (menu),gw);
+	      g_signal_connect_swapped(gw, "activate",
+	    			  G_CALLBACK (menuentries[i].function), 
+        			  (void *) eltyps[k].name); 
+	      gtk_widget_show (gw);
+	    }
+	  }
+	}
          else menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
          /* ...and add it to the menu. */
          gtk_menu_shell_append (GTK_MENU_SHELL (menu),menuentries[i].widget);
