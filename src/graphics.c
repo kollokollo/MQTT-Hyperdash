@@ -373,31 +373,35 @@ int add_font(const char *name, int size) {
     fonts[i].anz=1;
     fonts[i].size=size;
     fonts[i].name=strdup(name);
+    fonts[i].font=NULL;
   }
   return(i);
 }
+
+void open_font(int i) {
+  char fontname[256];
+  if(fonts[i].anz>0) {
+    snprintf(fontname,sizeof(fontname),"%s/%s.ttf",fontdir,fonts[i].name);
+    if(!exist(fontname)) {
+      if(strcmp(fonts[i].name,"SMALL")) printf("ERROR: font not found: <%s>\n",fontname);
+      fonts[i].font=NULL;
+      fonts[i].height=8;
+    } else {
+      if(verbose>0) printf("%d: %s : %d\n",i,fontname,fonts[i].size);
+      fonts[i].font=TTF_OpenFont(fontname,fonts[i].size);
+      if(fonts[i].font==NULL) {
+    	printf("ERROR: could not open font <%s> size=%d\n",fontname,fonts[i].size);
+  	fonts[i].height=8;
+      } else fonts[i].height=TTF_FontHeight(fonts[i].font);
+    }
+  }
+}
+
 void open_all_fonts() {
   if(verbose>0) printf("Open_all_fonts:\nwe have %d fonts:\n",anzfonts);
   if(anzfonts>0) {
-    char fontname[256];
     int i;
-    for(i=0;i<anzfonts;i++) {
-      if(fonts[i].anz>0) {
-        snprintf(fontname,sizeof(fontname),"%s/%s.ttf",fontdir,fonts[i].name);
-        if(!exist(fontname)) {
-          if(strcmp(fonts[i].name,"SMALL")) printf("ERROR: font not found: <%s>\n",fontname);
-          fonts[i].font=NULL;
-	  fonts[i].height=8;
-        } else {
-  	  if(verbose>0) printf("%d: %s : %d\n",i,fontname,fonts[i].size);
-          fonts[i].font=TTF_OpenFont(fontname,fonts[i].size);
-          if(fonts[i].font==NULL) {
-	    printf("ERROR: could not open font <%s> size=%d\n",fontname,fonts[i].size);
-            fonts[i].height=8;
-          } else fonts[i].height=TTF_FontHeight(fonts[i].font);
-        }
-      }
-    }
+    for(i=0;i<anzfonts;i++) open_font(i);
   }
 }
 STRING get_icon(const char *name, int *w, int *h) {

@@ -35,7 +35,6 @@ int do_show_invisible=1; /* Also draw invisible elements. */
 DASH *maindash;
 WINDOW *mainwindow;
 
-extern WINDOW *global_window;  /* TODO */
 char *broker_override=NULL;
 char *broker_user=NULL;
 char *broker_passwd=NULL;
@@ -43,8 +42,12 @@ char *topic_prefix=NULL;
 char call_options[256]="";
 
 
+#define DEFAULT_ELEMENT 3   /* BOX */
 
-int current_action=0;
+int current_element=DEFAULT_ELEMENT;
+int current_action=A_NONE;
+
+
 int is_modified=0;
 
 int current_mouse_x=0;
@@ -52,9 +55,14 @@ int current_mouse_y=0;
 
 int do_grid=0;
 
+extern const int anzeltyp;
+extern const ELDEF eltyps[];
+extern WINDOW *global_window;  /* TODO */
 
 SDL_Surface *surface;
 GtkWidget *textarea;
+GtkWidget *window;
+GtkWidget *drawing_area;
 /* Backing pixmap for drawing area */
 static GdkPixmap *pixmap = NULL;
 
@@ -62,6 +70,10 @@ static GdkPixmap *pixmap = NULL;
 static void update_statusline();
 static void update_title(const char *t);
 static void update_drawarea();
+
+
+ELEMENT *undo_element=NULL;
+
 
 static void intro() {
   printf("**********************************************************\n"
@@ -114,13 +126,33 @@ static void kommandozeile(int anzahl, char *argumente[]) {
 }
 
 
-/* Print a string when a menu item is selected */
-
-static void menuitem_response(MENUENTRY *me) {
-    printf ("%s\n",me->text);
+static void menu_undodelete(MENUENTRY *me) {
+  printf ("%s\n",me->text);
+  if(undo_element) {
+    printf("Restore element...\n");
+    add_element(maindash,undo_element);
+    undo_element=NULL;
+    is_modified=1;
+    draw_dash(maindash,mainwindow);
+ 
+    if(pixmap) g_object_unref(pixmap);
+    pixmap=NULL;
+    update_drawarea();
+    update_title(ifilename);
+    gtk_widget_queue_draw_area(drawing_area,0,0,mainwindow->w,mainwindow->h);
+  }
 }
+
 static void menu_elements(char *typ) {
-    printf("Elements: %s\n",typ);
+  int i;
+  for(i=0;i<anzeltyp;i++) {
+    if(!strcmp(typ,eltyps[i].name)) current_element=i;
+  }
+  if(current_element>=0) {
+    current_action=A_ADD;
+    update_statusline();
+    printf("Elements: %s, opcode=%d\n",typ,current_element);
+  }
 }
 
 static void about_dialog(MENUENTRY *me) {
@@ -263,13 +295,13 @@ static void menu_grid_onoff(MENUENTRY *me) {
 }
 
 static void menu_move(MENUENTRY *me)     {current_action=A_MOVE;   update_statusline();}
+static void menu_copy(MENUENTRY *me)     {current_action=A_COPY;   update_statusline();}
 static void menu_identify(MENUENTRY *me) {current_action=A_NONE;   update_statusline();}
 static void menu_resize(MENUENTRY *me)   {current_action=A_RESIZE; update_statusline();}
 static void menu_mtb(MENUENTRY *me)      {current_action=A_MTB;    update_statusline();}
 static void menu_add(MENUENTRY *me)      {current_action=A_ADD;    update_statusline();}
 static void menu_delete(MENUENTRY *me)   {current_action=A_DELETE; update_statusline();}
-
-
+static void menu_edit_prop(MENUENTRY *me){current_action=A_EDIT;   update_statusline();}
 
 #define MENU_TITLE 1
 #define MENU_ENTRY 0
@@ -287,35 +319,38 @@ MENUENTRY menuentries[]={
 {0,"-------------",NULL,NULL},
 {0,"Quit",         menu_quit,NULL},
 {MENU_TITLE,"File",NULL,NULL},
-{0,"Undo delete",     menuitem_response,NULL},
+{0,"Undo delete",     menu_undodelete,NULL},
 {0,"Delete Elements", menu_delete,NULL},
-{0,"Copy Elements",   menuitem_response,NULL},
-{0,"Paste Elements",  menuitem_response,NULL},
+//{0,"Copy Elements",   menuitem_response,NULL},
+//{0,"Paste Elements",  menuitem_response,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Edit Properties ...",menu_edit_prop,NULL},
 
 {MENU_TITLE,"Edit",NULL,NULL},
 
 {0,"# elements",  menu_elements,NULL},
 {MENU_TITLE,"Element",NULL,NULL},
-{0,"Identify",  menu_identify,NULL},
+{0,"Identify Elements",  menu_identify,NULL},
 {0,"-------------",NULL,NULL},
-{0,"Move",      menu_move,NULL},
-{0,"Resize",    menu_resize,NULL},
+{0,"Move Element",      menu_move,NULL},
+{0,"Copy Element",      menu_copy,NULL},
+{0,"Resize Element",    menu_resize,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Move to Background",menu_mtb,NULL},
 {0,"-------------",NULL,NULL},
-{0,"Rotate left",  menuitem_response,NULL},
-{0,"Rotate right", menuitem_response,NULL},
+//{0,"Rotate left",  menuitem_response,NULL},
+//{0,"Rotate right", menuitem_response,NULL},
 {0,"-------------",NULL,NULL},
-{0,"Change Text",  menuitem_response,NULL},
-{0,"Change Topic", menuitem_response,NULL},
-{0,"Change Format",menuitem_response,NULL},
+//{0,"Change Text",  menuitem_response,NULL},
+//{0,"Change Topic", menuitem_response,NULL},
+//{0,"Change Format",menuitem_response,NULL},
 {0,"-------------",NULL,NULL},
-{0,"Select forground color",menuitem_response,NULL},
-{0,"Select background color",menuitem_response,NULL},
-{0,"Set default background",menuitem_response,NULL},
+//{0,"Select forground color",menuitem_response,NULL},
+//{0,"Select background color",menuitem_response,NULL},
+//{0,"Set default background",menuitem_response,NULL},
 {0,"-------------",NULL,NULL},
-{0,"Select Font",  menuitem_response,NULL},
-{0,"Select Layout",menuitem_response,NULL},
+//{0,"Select Font",  menuitem_response,NULL},
+//{0,"Select Layout",menuitem_response,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Add Element",  menu_add,NULL},
 
@@ -373,27 +408,14 @@ static gboolean expose_event(GtkWidget *widget, GdkEventExpose *event) {
   return FALSE;
 }
 
-/* Draw a rectangle on the screen */
-static void draw_brush(GtkWidget *widget, gdouble x, gdouble y) {
-  GdkRectangle update_rect;
-  update_rect.x = x - 4;
-  update_rect.y = y - 4;
-  update_rect.width = 8;
-  update_rect.height = 8;
-  gdk_draw_rectangle(pixmap,
-		      widget->style->black_gc,
-		      TRUE,
-		      update_rect.x, update_rect.y,
-		      update_rect.width, update_rect.height);
-  gtk_widget_queue_draw_area(widget, 
-		              update_rect.x, update_rect.y,
-		              update_rect.width, update_rect.height);
-}
 static void update_statusline() {
   char status_text[256];
+  char buf[128];
+  if(current_action==A_ADD) snprintf(buf,sizeof(buf),"%s %s",action_names[current_action],eltyps[current_element].name);
+  else snprintf(buf,sizeof(buf),"%s",action_names[current_action]);
 
   snprintf(status_text,sizeof(status_text),"%d elements, (%dx%d), X=%d, Y=%d, Action: %s",
-    maindash->anzelement,mainwindow->w,mainwindow->h,current_mouse_x,current_mouse_y,action_names[current_action]);
+    maindash->anzelement,mainwindow->w,mainwindow->h,current_mouse_x,current_mouse_y,buf);
   gtk_label_set_text(GTK_LABEL(textarea),status_text);
 }
 
@@ -419,7 +441,88 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
       }
       printf("}\n");
       break;
+    case A_ADD:
+      selected_element=maindash->anzelement;
+      mouse_rel_x=current_mouse_x;
+      mouse_rel_y=current_mouse_y;
+      ELEMENT el=default_element(current_element);
+      el.x=current_mouse_x;
+      el.y=current_mouse_y;
+      el.w=5;
+      el.h=5;
+      add_element(maindash,&el);
+      
+      gdk_draw_rectangle(pixmap,widget->style->white_gc,FALSE,
+        current_mouse_x, current_mouse_y,5,5);
+      gtk_widget_queue_draw_area(widget,current_mouse_x, current_mouse_y,5+1, 5+1);
+      break;
+    case A_DELETE:
+      if(!((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
+	printf("Delete Element: #%d\n",idx);
+	/* in den undo-buffer überführen...*/
+        if(undo_element) {
+	  free_element(undo_element);
+	  free(undo_element);
+	}
+	undo_element=calloc(1,sizeof(ELEMENT));
+	*undo_element=maindash->tree[idx];
+	delete_element(maindash,idx);
+	
+	is_modified=1;
+	draw_dash(maindash,mainwindow);
+ 
+	if(pixmap) g_object_unref(pixmap);
+        pixmap=NULL;
+        update_drawarea();
+        update_title(ifilename);
+	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+      }
+      break;
+    case A_EDIT:
+	printf("Edit Element: #%d\n",idx);
+
+        edit_element(&(maindash->tree[idx]));
+
+
+	
+	is_modified=1;
+	draw_dash(maindash,mainwindow);
+ 
+	if(pixmap) g_object_unref(pixmap);
+        pixmap=NULL;
+        update_drawarea();
+        update_title(ifilename);
+	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+      break;
+    case A_MTB:
+      if(!((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
+	ELEMENT el=duplicate_element(&(maindash->tree[idx]));
+	delete_element(maindash,idx);
+        /* Suche Panel element.*/
+	int k=0;
+	for(k=0;k<maindash->anzelement;k++) {
+	  if((maindash->tree[k].type&EL_PANEL)==EL_PANEL) {
+	    k++;
+	    break;
+	  }
+	}
+	printf("Move Element: #%d to background ... (%d)\n",idx,k);
+	
+        insert_element(maindash,k,&el);
+
+	
+	is_modified=1;
+	draw_dash(maindash,mainwindow);
+ 
+	if(pixmap) g_object_unref(pixmap);
+        pixmap=NULL;
+        update_drawarea();
+        update_title(ifilename);
+	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+      }
+      break;
     case A_MOVE:
+    case A_COPY:
     case A_RESIZE:
       if(!((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
         selected_element=idx;
@@ -472,6 +575,37 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
       }
       break;
+    case A_COPY:
+      if(selected_element>=0) {
+        int idx=selected_element;
+	int new_x=maindash->tree[idx].x+current_mouse_x-mouse_rel_x;
+	int new_y=maindash->tree[idx].y+current_mouse_y-mouse_rel_y;
+	if(new_x<0) new_x=0;
+	if(new_y<0) new_y=0;
+	if(new_x>mainwindow->w) new_x=mainwindow->w-1;
+	if(new_y>mainwindow->h) new_y=mainwindow->h-1;
+	if(do_grid) {
+	  new_x-=(new_x%5);
+	  new_y-=(new_y%5);
+	}
+        printf("Copy Element #%d from (%d,%d) to (%d,%d)\n",selected_element,maindash->tree[idx].x,maindash->tree[idx].y, 
+  	  new_x,new_y);
+        ELEMENT el=duplicate_element(&(maindash->tree[idx]));
+        el.x=new_x;
+	el.y=new_y;
+	add_element(maindash,&el);
+	is_modified=1;
+	selected_element=-1;
+	draw_dash(maindash,mainwindow);
+ 
+	if(pixmap) g_object_unref(pixmap);
+        pixmap=NULL;
+        update_drawarea();
+        update_title(ifilename);
+	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+      }
+      break;
+     case A_ADD:
      case A_RESIZE:
       if(selected_element>=0) {
         int idx=selected_element;
@@ -486,9 +620,9 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	  new_h-=(new_h%5);
 	}
         printf("Resize Element #%d from (%d,%d) to (%d,%d)\n",selected_element,maindash->tree[idx].w,maindash->tree[idx].h, 
-	new_w,new_h);
-        maindash->tree[idx].w=new_w;
-        maindash->tree[idx].h=new_h;
+	  new_w,new_h);
+	scale_element(&(maindash->tree[idx]),new_w,new_h);
+
 	is_modified=1;
 	selected_element=-1;
 	draw_dash(maindash,mainwindow);
@@ -526,6 +660,7 @@ static gboolean motion_notify_event(GtkWidget *widget,GdkEventMotion *event) {
   if(state&GDK_BUTTON1_MASK && pixmap != NULL) {
     switch(current_action) {
     case A_MOVE:
+    case A_COPY:
       if(selected_element>=0) {
         int mx=maindash->tree[selected_element].x+current_mouse_x-mouse_rel_x;
 	int my=maindash->tree[selected_element].y+current_mouse_y-mouse_rel_y;
@@ -544,6 +679,7 @@ static gboolean motion_notify_event(GtkWidget *widget,GdkEventMotion *event) {
       }
       break;
     case A_RESIZE:
+    case A_ADD:
       if(selected_element>=0) {
         int mx=maindash->tree[selected_element].x;
 	int my=maindash->tree[selected_element].y;
@@ -559,8 +695,6 @@ static gboolean motion_notify_event(GtkWidget *widget,GdkEventMotion *event) {
 	omh=mh;
       }
       break;
-    default:
-      draw_brush(widget, current_mouse_x, current_mouse_y);
     }
   }
   return TRUE;
@@ -624,10 +758,6 @@ void close_pixmap(WINDOW *nw) {
   free(nw);
 }
 
-
-GtkWidget *window;
-GtkWidget *drawing_area;
-
 static void update_title(const char *t) {
   char buf[256];
   if(window) {
@@ -640,39 +770,34 @@ static void update_drawarea() {
   gtk_widget_set_size_request (GTK_WIDGET (drawing_area), maindash->tree[maindash->panelelement].w, maindash->tree[maindash->panelelement].h);
 }
 
-extern const int anzeltyp;
-extern const ELDEF eltyps[];
 
 int main(int argc, char *argv[]) {
-    GtkWidget *menu;
-    GtkWidget *menu_bar;
-    GtkWidget *scrollarea;
+  GtkWidget *menu;
+  GtkWidget *menu_bar;
+  GtkWidget *scrollarea;
+  GtkWidget *vbox;
+  int i;
+  
+  hyperdash_set_defaults();
+  kommandozeile(argc,argv);    /* process command line */
+  if(!exist(ifilename)) {
+    char buf[strlen(ifilename)+1];
+    strcpy(buf,ifilename);
+    snprintf(ifilename,sizeof(ifilename),"%s/%s",dashboarddir,buf);
+  }
 
-    GtkWidget *vbox;
+  gtk_init (&argc, &argv);
+  init_sdl();
     
-    int i;
+  if(exist(ifilename)) maindash=load_dash(ifilename);
+  else {
+    maindash=new_dash(ifilename);
+    if(verbose>=0) printf("could not load %s. New!\n",ifilename);
+  }
+  is_modified=0;
+  init_dash(maindash);
 
-
-    hyperdash_set_defaults();
-    kommandozeile(argc,argv);    /* process command line */
-    if(!exist(ifilename)) {
-      char buf[strlen(ifilename)+1];
-      strcpy(buf,ifilename);
-      snprintf(ifilename,sizeof(ifilename),"%s/%s",dashboarddir,buf);
-    }
-
-    gtk_init (&argc, &argv);
-    init_sdl();
-    
-    if(exist(ifilename)) {
-      maindash=load_dash(ifilename);
-    } else {
-      maindash=new_dash(ifilename);
-      printf("ERROR: could not load %s. New!\n",ifilename);
-    }
-    is_modified=0;
-    init_dash(maindash);
-    mainwindow=open_pixmap(maindash->tree[maindash->panelelement].text,PACKAGE_NAME,0,0,maindash->tree[maindash->panelelement].w,maindash->tree[maindash->panelelement].h,0);
+  mainwindow=open_pixmap(maindash->tree[maindash->panelelement].text,PACKAGE_NAME,0,0,maindash->tree[maindash->panelelement].w,maindash->tree[maindash->panelelement].h,0);
     global_window=mainwindow; /* TODO */
     draw_dash(maindash,mainwindow);
 
@@ -680,15 +805,15 @@ int main(int argc, char *argv[]) {
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_widget_set_size_request (GTK_WIDGET (window), 320, 200);
     update_title(ifilename);
-    g_signal_connect(window, "delete-event",G_CALLBACK (gtk_main_quit), NULL);
+    g_signal_connect(window,"delete-event",G_CALLBACK (gtk_main_quit), NULL);
 
     /* Init the menu-widget, and remember -- never
      * gtk_show_widget() the menu widget!! 
      * This is the menu that holds the menu items, the one that
      * will pop up when you click on the "Root Menu" in the app */
-    menu = gtk_menu_new ();
+    menu=gtk_menu_new();
     /* Create a menu-bar to hold the menus and add it to our main window */
-    menu_bar = gtk_menu_bar_new ();
+    menu_bar=gtk_menu_bar_new();
 
     /* Next we make a little loop that makes three menu-entries for "test-menu".
      * Notice the call to gtk_menu_shell_append.  Here we are adding a list of
@@ -722,9 +847,13 @@ int main(int argc, char *argv[]) {
 	  menuentries[i].widget=gtk_separator_menu_item_new();
 	  int k;
 	  GtkWidget *gw;
+	  GSList *group = NULL;
 	  for(k=1;k<anzeltyp;k++) {
 	    if(strcmp(eltyps[k].name,"BROKER") && strcmp(eltyps[k].name,"PANEL")) {
-	      gw=gtk_menu_item_new_with_label(eltyps[k].name);
+//	      gw=gtk_menu_item_new_with_label(eltyps[k].name);
+	      gw=gtk_radio_menu_item_new_with_label(group,eltyps[k].name);
+	      group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (gw));
+	      if(k==DEFAULT_ELEMENT) gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(gw),TRUE);
               gtk_menu_shell_append(GTK_MENU_SHELL (menu),gw);
 	      g_signal_connect_swapped(gw, "activate",
 	    			  G_CALLBACK (menuentries[i].function), 
@@ -761,32 +890,22 @@ int main(int argc, char *argv[]) {
     update_drawarea();
     gtk_widget_show (drawing_area);
     
-      /* Signals used to handle backing pixmap */
+  /* Signals used to handle backing pixmap */
 
-  g_signal_connect (drawing_area, "expose_event",
-		    G_CALLBACK (expose_event), NULL);
-  g_signal_connect (drawing_area, "configure_event",
-		    G_CALLBACK (configure_event), NULL);
+  g_signal_connect(drawing_area,"expose_event",G_CALLBACK (expose_event), NULL);
+  g_signal_connect(drawing_area,"configure_event",G_CALLBACK (configure_event), NULL);
 
-     /* Event signals */
+  /* Event signals (mouse) */
 
-  g_signal_connect (drawing_area, "motion_notify_event",
-		    G_CALLBACK (motion_notify_event), NULL);
-  g_signal_connect (drawing_area, "button_press_event",
-		    G_CALLBACK (button_press_event), NULL);
-  g_signal_connect (drawing_area, "button_release_event",
-		    G_CALLBACK (button_release_event), NULL);
+  g_signal_connect(drawing_area,"motion_notify_event",G_CALLBACK(motion_notify_event), NULL);
+  g_signal_connect(drawing_area,"button_press_event", G_CALLBACK(button_press_event),  NULL);
+  g_signal_connect(drawing_area,"button_release_event",G_CALLBACK(button_release_event), NULL);
 
-  gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
+  gtk_widget_set_events(drawing_area, GDK_EXPOSURE_MASK
 			 | GDK_LEAVE_NOTIFY_MASK
 			 | GDK_BUTTON_PRESS_MASK| GDK_BUTTON_RELEASE_MASK
 			 | GDK_POINTER_MOTION_MASK
 			 | GDK_POINTER_MOTION_HINT_MASK);
-
-    
-    
-    
-    
     
     scrollarea=gtk_scrolled_window_new(NULL,NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrollarea),
@@ -794,17 +913,14 @@ int main(int argc, char *argv[]) {
                                    GTK_POLICY_AUTOMATIC);     //  vertical
   //  gtk_widget_set_size_request (GTK_WIDGET (scrollarea), -1, -1);
 
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrollarea), drawing_area);
-
-
+  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrollarea), drawing_area);
+  gtk_widget_show(scrollarea);
+  gtk_box_pack_end(GTK_BOX (vbox), scrollarea, TRUE, TRUE, 2);
     
-    gtk_widget_show(scrollarea);
-    gtk_box_pack_end (GTK_BOX (vbox), scrollarea, TRUE, TRUE, 2);
-    
-    /* always display the window as the last step so it all splashes on
-     * the screen at once. */
-    gtk_widget_show (window);
-    update_statusline();
+  /* always display the window as the last step so it all splashes on
+   * the screen at once. */
+  gtk_widget_show (window);
+  update_statusline();
 
   /* Main User Input Handling etc... */
 
@@ -822,4 +938,3 @@ int main(int argc, char *argv[]) {
   free_dash(maindash);
   return(EX_OK);
 }
-

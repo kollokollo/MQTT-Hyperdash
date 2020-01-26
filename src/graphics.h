@@ -43,6 +43,7 @@ void put_graphics(WINDOW *window, STRING data,int x,int y,unsigned int w, unsign
 
 int add_font(const char *name, int size);
 void open_all_fonts();
+void open_font(int i);
 void clear_all_fonts();
 void put_font_text(SDL_Surface *display, int fidx, char *text, int x,int y,unsigned long int fgc, int h);
 void put_font_long_text(SDL_Surface *display, int fidx, char *text, int x,int y,unsigned long int fgc, int w, int h);

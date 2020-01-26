@@ -18,20 +18,24 @@ typedef struct {
 enum ACTIONS {
   A_NONE,
   A_MOVE,
+  A_COPY,
   A_RESIZE,
   A_MTB,
   A_ADD,
-  A_DELETE
+  A_DELETE,
+  A_EDIT
 
 };
 
 const char *action_names[]={
 "Identify",
 "Move",
+"Copy",
 "Resize",
 "Move to Bkg",
 "Add",
-"Delete"
+"Delete",
+"Edit"
 };
 
 

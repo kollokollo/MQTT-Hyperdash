@@ -43,11 +43,7 @@ be found in the doc/ section.
 
 dashdesign is a graphical tool to create and edit the .dash files. 
 
-However this program is still stub, not ready to be used. 
 This program is still work in progress.
-
-The dash files must be created and edited using a text editor
-by hand. Sorry for that. (for now).
 
 A brief explanation how to use dashdesign is in its man-page 
 [dashdesign man-page](src/dashdesign.1).

@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.02
 
-RELEASE=6
+RELEASE=7
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -66,7 +66,7 @@ CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c dashdesign.c
 RULESRC=  commander.rule  demo.rule  syslogger.rule  sysmeasure.rule
 
 
-DEPSRC=  $(CSRC)  mqtt-list-topics.c
+DEPSRC=  $(CSRC)  mqtt-list-topics.c hddashgen.c dashdesign.c
 
 # Headerfiles which should be added to the distribution
 

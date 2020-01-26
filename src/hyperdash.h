@@ -94,5 +94,15 @@ char *element2a(ELEMENT *el);
 
 void call_a_dash(char *filename);
 
+void delete_element(DASH *dash, int idx);
+void free_element(ELEMENT *el);
+void add_element(DASH *dash, ELEMENT *el);
+ELEMENT duplicate_element(ELEMENT *el);
+void insert_element(DASH *dash, int idx, ELEMENT *el);
+ELEMENT default_element(int type);
+void scale_element(ELEMENT *el,int w,int h);
+
+void edit_element(ELEMENT *el);
+
 
 #endif

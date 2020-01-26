@@ -182,11 +182,90 @@ void init_dash(DASH *dash) {
       } else printf("Unknown element #%d <%s>\n",i,dash->tree[i].line);
     }
   }
-  
-  /* Now do the subscriptions */
-  
-  
 }
+
+/* Creates a default element with default values depending on the elements type */
+
+ELEMENT default_element(int type) {
+  ELEMENT rel;
+  bzero(&rel,sizeof(ELEMENT));
+  rel.type=eltyps[type].opcode|type;
+  rel.w=32;
+  rel.h=32;
+  rel.fgc=0xffffffff;
+  rel.bgc=0x40ff;
+  rel.agc=0xff00ff;
+  if((eltyps[type].opcode&EL_DYNAMIC)==EL_DYNAMIC) {
+    rel.topic=strdup("TOPIC_AD");
+  }
+  if(!strcmp(eltyps[type].name,"BROKER")) {
+    rel.text=strdup(DEFAULT_BROKER);
+  } else if(!strcmp(eltyps[type].name,"TEXT")) {
+    rel.text=strdup("Text");
+    rel.fontsize=8;
+    rel.h=8;
+    rel.w=4*8;
+    rel.font=strdup("SMALL");
+  }
+  
+  return(rel);
+}
+
+/* Scales properties of element according to type, 
+   (e.g. font size) 
+ */
+
+void scale_element(ELEMENT *el,int w,int h) {
+ // double scale_x=(double)w/(double)el->w;
+  double scale_y=(double)h/(double)el->h;
+  
+  int new_fs=el->fontsize*scale_y;
+  if(new_fs!=el->fontsize && el->font) {
+    int i=add_font(el->font,new_fs);
+    if(!fonts[i].font) open_font(i);
+    el->fontnr=i;
+  }
+  el->fontsize=new_fs;
+
+  el->w=w;
+  el->h=h;
+}
+
+/* Opens a dialog to let the user edit all properties of an element. */
+
+void edit_element(ELEMENT *el) {
+
+
+
+}
+ELEMENT duplicate_element(ELEMENT *el) {
+  ELEMENT rel=*el;
+  if(el->topic) rel.topic=strdup(el->topic);
+  if(el->font)  rel.topic=strdup(el->font);
+  if(el->text)  rel.topic=strdup(el->text);
+  if(el->filename)  rel.topic=strdup(el->filename);
+  if(el->format)  rel.topic=strdup(el->format);
+  
+  int j;
+  for(j=0;j<10;j++) {
+    if(el->label[j].pointer) {
+      rel.label[j].pointer=malloc(el->label[j].len);
+      memcpy(rel.label[j].pointer,el->label[j].pointer,el->label[j].len);
+    }
+    if(el->data[j].pointer) {
+      rel.data[j].pointer=malloc(el->data[j].len);
+      memcpy(rel.data[j].pointer,el->data[j].pointer,el->data[j].len);
+    }
+    if(el->data2[j].pointer) {
+      rel.data2[j].pointer=malloc(el->data2[j].len);
+      memcpy(rel.data2[j].pointer,el->data2[j].pointer,el->data2[j].len);
+    }
+  }
+  return(rel);
+}
+
+
+
 void free_element(ELEMENT *el) {
   free(el->topic);
   el->topic=NULL;
@@ -225,6 +304,44 @@ void close_dash(DASH *dash) {
   }
   clear_all_fonts();
 }
+
+/* Delete Element from list but do not free it.*/
+void delete_element(DASH *dash, int idx) {
+  if(idx<0 || idx>=dash->anzelement) return;
+  if(idx==dash->anzelement-1) {
+    dash->anzelement--;
+    return;
+  }
+  int i;
+  for(i=idx+1;i<dash->anzelement;i++) {
+    dash->tree[i-1]=dash->tree[i];
+  }
+  dash->anzelement--;
+}
+
+
+/* Insert Element at position idx.*/
+void insert_element(DASH *dash, int idx, ELEMENT *el) {
+  if(idx<0 || idx>dash->anzelement) return;
+  if(idx==dash->anzelement) return(add_element(dash,el));
+  int i;
+  i=dash->anzelement++;
+  dash->tree=realloc(dash->tree,dash->anzelement*sizeof(ELEMENT));
+  int j;
+  for(j=i-1;j>=idx;j--) {
+    dash->tree[j+1]=dash->tree[j];
+  }
+  dash->tree[idx]=*el;
+}
+
+
+void add_element(DASH *dash, ELEMENT *el) {
+  int i;
+  i=dash->anzelement++;
+  dash->tree=realloc(dash->tree,dash->anzelement*sizeof(ELEMENT));
+  dash->tree[i]=*el;
+}
+
 
 
 void draw_dash(DASH *dash, WINDOW *win) {
