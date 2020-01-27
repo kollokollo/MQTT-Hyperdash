@@ -102,7 +102,7 @@ void insert_element(DASH *dash, int idx, ELEMENT *el);
 ELEMENT default_element(int type);
 void scale_element(ELEMENT *el,int w,int h);
 
-void edit_element(ELEMENT *el);
+int edit_element(ELEMENT *el);
 
 
 #endif

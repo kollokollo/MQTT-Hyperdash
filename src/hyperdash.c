@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <math.h>
+#include <locale.h> 
 #include "config.h"
 #include "basics.h"
 #include "graphics.h"
@@ -20,6 +21,7 @@
 #include "util.h"
 #include "mqtt.h"
 #include "elements.h"
+#include "input.h"
 
 #ifdef WINDOWS
 char icondir[256]="icons";
@@ -121,9 +123,14 @@ static int click_element(ELEMENT *el, WINDOW *win, int x, int y,int b) {
 
 char *element2a(ELEMENT *el) {
   int j=(el->type&0xff);
+  char *ret=NULL;
   if(j==EL_IGNORE) return(el->line);
-  else if(eltyps[j].tostring) return( (eltyps[j].tostring)(el));
-  return(NULL);
+  locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
+  locale_t old = uselocale(safe_locale);
+  if(eltyps[j].tostring) ret=(eltyps[j].tostring)(el);
+  uselocale(old);
+  freelocale(safe_locale);
+  return(ret);
 }
 
 
@@ -137,6 +144,37 @@ static void draw_element(ELEMENT *el, WINDOW *win) {
 }
 
 
+void init_element(ELEMENT *el,const char *line) {
+  char a[256*4];
+  char b[256*4];
+  el->type=EL_IGNORE;
+  if(!line || *line==0)   return;
+  if(*line=='#') return;    
+  if(wort_sep(line,':',1,a,b)==2) {
+    xtrim(a,1,a);
+    xtrim(b,1,b);
+    //        printf("Keyword: <%s> <%s>\n",a,b);
+    int j;
+    for(j=0;j<anzeltyp;j++) {
+      if(!strcmp(eltyps[j].name,a)) {
+  	el->type=eltyps[j].opcode|(j&0xff);
+  	// printf("found...%x\n",dash->tree[i].type);
+  	if((el->type&EL_DYNAMIC)==EL_DYNAMIC) 
+  	  el->topic=strdup(key_value(b,"TOPIC","TOPIC"));
+  	if((el->type&EL_VISIBLE)==EL_VISIBLE ||
+  	   (el->type&EL_INPUT)==EL_INPUT) {
+  	  el->x=atoi(key_value(b,"X","0"));
+  	  el->y=atoi(key_value(b,"Y","0"));
+        }
+  	if(eltyps[j].init) (eltyps[j].init)(el,b);
+  	break;
+      }
+    }
+    if(j==anzeltyp) printf("Unknown element <%s>\n",line);
+  } else printf("Unknown element <%s>\n",line);
+}
+
+
 void init_dash(DASH *dash) {
   /*
    Alle element typen aus Zeilen bestimen. 
@@ -146,40 +184,15 @@ void init_dash(DASH *dash) {
    
   */
   int i;
-  char a[256*4];
-  char b[256*4];
   global_dash=dash;
 
   for(i=0;i<dash->anzelement;i++) {
     if(dash->tree[i].line[0]!='#') xtrim(dash->tree[i].line,1,dash->tree[i].line);
-    if(dash->tree[i].line[0]==0) {
-      dash->tree[i].type=EL_IGNORE;    
-    } else if(dash->tree[i].line[0]=='#') {
-      dash->tree[i].type=EL_IGNORE;    
-    } else {
-      if(wort_sep(dash->tree[i].line,':',1,a, b)==2) {
-        xtrim(a,1,a);
-        xtrim(b,1,b);
-    //    printf("Keyword: <%s> <%s>\n",a,b);
-	int j;
-        for(j=0;j<anzeltyp;j++) {
-	  if(!strcmp(eltyps[j].name,a)) {
-	    dash->tree[i].type=eltyps[j].opcode|(j&0xff);
-	    // printf("found...%x\n",dash->tree[i].type);
-	    if((dash->tree[i].type&EL_DYNAMIC)==EL_DYNAMIC) 
-	      dash->tree[i].topic=strdup(key_value(b,"TOPIC","TOPIC"));
-	    if((dash->tree[i].type&EL_VISIBLE)==EL_VISIBLE ||
-	       (dash->tree[i].type&EL_INPUT)==EL_INPUT) {
-	      dash->tree[i].x=atoi(key_value(b,"X","0"));
-	      dash->tree[i].y=atoi(key_value(b,"Y","0"));
-            }
-	    if(eltyps[j].init) (eltyps[j].init)(&(dash->tree[i]),b);
-	    break;
-	  }
-	}
-        if(j==anzeltyp) printf("Unknown element #%d <%s>\n",i,dash->tree[i].line);
-        else if((dash->tree[i].type&EL_PANEL)==EL_PANEL) dash->panelelement=i;
-      } else printf("Unknown element #%d <%s>\n",i,dash->tree[i].line);
+    if(dash->tree[i].line[0]==0) dash->tree[i].type=EL_IGNORE;    
+    else if(dash->tree[i].line[0]=='#') dash->tree[i].type=EL_IGNORE;    
+    else {
+      init_element(&(dash->tree[i]),dash->tree[i].line);
+      if((dash->tree[i].type&EL_PANEL)==EL_PANEL) dash->panelelement=i;
     }
   }
 }
@@ -233,10 +246,15 @@ void scale_element(ELEMENT *el,int w,int h) {
 
 /* Opens a dialog to let the user edit all properties of an element. */
 
-void edit_element(ELEMENT *el) {
-
-
-
+int edit_element(ELEMENT *el) {
+  printf("Edit element: %s\n",eltyps[el->type&0xff].name);
+  char *t=element2a(el);
+  int rc=property_dialog(t);
+  if(rc==1) {
+    free_element(el);
+    init_element(el,t);
+  }
+  return(rc);
 }
 ELEMENT duplicate_element(ELEMENT *el) {
   ELEMENT rel=*el;

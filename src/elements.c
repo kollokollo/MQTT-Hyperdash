@@ -525,23 +525,28 @@ void d_vbar(ELEMENT *el,WINDOW *win) {
   ELEMENT_SUBSCRIBE();
 }
 void d_tvmeter(ELEMENT *el,WINDOW *win) {
-  u_tvmeter(el,win,"NaN",3);
+  if(do_show_invisible) u_tvmeter(el,win,"0",1);
+  else u_tvmeter(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_thmeter(ELEMENT *el,WINDOW *win) {
-  u_thmeter(el,win,"NaN",3);
+  if(do_show_invisible) u_thmeter(el,win,"0",1);
+  else u_thmeter(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_meter(ELEMENT *el,WINDOW *win) {
-  u_meter(el,win,"NaN",3);
+  if(do_show_invisible) u_meter(el,win,"0",1);
+  else u_meter(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_hscaler(ELEMENT *el,WINDOW *win) {
-  u_hscaler(el,win,"NaN",3);
+  if(do_show_invisible) u_hscaler(el,win,"0",1);
+  else u_hscaler(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_vscaler(ELEMENT *el,WINDOW *win) {
-  u_vscaler(el,win,"NaN",3);
+  if(do_show_invisible) u_vscaler(el,win,"0",1);
+  else u_vscaler(el,win,"NaN",3);
   ELEMENT_SUBSCRIBE();
 }
 void d_tstring(ELEMENT *el,WINDOW *win) {
@@ -1265,25 +1270,6 @@ int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 extern const ELDEF eltyps[];
 
 static char elementstring[1024];
-
-static char i2abuf[128];
-
-static char *i2a(unsigned i, char *a, unsigned r) {
-  if(i/r>0) a=i2a(i/r,a,r);
-  *a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@$!?"[i % r];
-  return a+1;
-}
-static char *tohex(unsigned i) {
-  int j;
-  static int f=0;
-  char *p=i2abuf+f*32;
-  
-  for(j=0;j<16;j++) p[j]='0';
-  *i2a(i,p,16)=0;
-  f++;
-  f=f&3;
-  return(p);
-}
 
 
 char *s_broker(ELEMENT *el) {

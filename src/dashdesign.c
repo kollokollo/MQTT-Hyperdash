@@ -303,6 +303,17 @@ static void menu_add(MENUENTRY *me)      {current_action=A_ADD;    update_status
 static void menu_delete(MENUENTRY *me)   {current_action=A_DELETE; update_statusline();}
 static void menu_edit_prop(MENUENTRY *me){current_action=A_EDIT;   update_statusline();}
 
+static void menu_edit_broker(MENUENTRY *me) {
+  int k=0;
+  for(k=0;k<maindash->anzelement;k++) {
+    if((maindash->tree[k].type&EL_BROKER)==EL_BROKER) {
+      if(edit_element(&(maindash->tree[k]))) is_modified=1;
+      break;
+    }
+  }
+}
+
+
 #define MENU_TITLE 1
 #define MENU_ENTRY 0
 
@@ -323,6 +334,8 @@ MENUENTRY menuentries[]={
 {0,"Delete Elements", menu_delete,NULL},
 //{0,"Copy Elements",   menuitem_response,NULL},
 //{0,"Paste Elements",  menuitem_response,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Edit Broker",menu_edit_broker,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Edit Properties ...",menu_edit_prop,NULL},
 
@@ -360,7 +373,7 @@ MENUENTRY menuentries[]={
 
 {MENU_TITLE,"Settings",NULL,NULL},
 
-{0,"About MQTT-Hyperdash dashdesign ...",about_dialog,NULL},
+{0,"About MQTT-Hyperdash DashDesign ...",about_dialog,NULL},
 {MENU_TITLE,"About",NULL,NULL},
 
 {0,NULL,NULL,NULL}
@@ -457,7 +470,7 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
       gtk_widget_queue_draw_area(widget,current_mouse_x, current_mouse_y,5+1, 5+1);
       break;
     case A_DELETE:
-      if(!((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
+      if(idx>=0 && !((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
 	printf("Delete Element: #%d\n",idx);
 	/* in den undo-buffer überführen...*/
         if(undo_element) {
@@ -479,23 +492,22 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
       }
       break;
     case A_EDIT:
-	printf("Edit Element: #%d\n",idx);
-
-        edit_element(&(maindash->tree[idx]));
-
-
-	
-	is_modified=1;
-	draw_dash(maindash,mainwindow);
+      printf("Edit Element: #%d\n",idx);
+      if(idx>=0) {
+        if(edit_element(&(maindash->tree[idx]))) {
+          is_modified=1;
+	  draw_dash(maindash,mainwindow);
  
-	if(pixmap) g_object_unref(pixmap);
-        pixmap=NULL;
-        update_drawarea();
-        update_title(ifilename);
-	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+	  if(pixmap) g_object_unref(pixmap);
+          pixmap=NULL;
+          update_drawarea();
+          update_title(ifilename);
+	  gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+        }
+      }
       break;
     case A_MTB:
-      if(!((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
+      if(idx>=0 && !((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
 	ELEMENT el=duplicate_element(&(maindash->tree[idx]));
 	delete_element(maindash,idx);
         /* Suche Panel element.*/
@@ -524,7 +536,7 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
     case A_MOVE:
     case A_COPY:
     case A_RESIZE:
-      if(!((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
+      if(idx>=0 && !((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
         selected_element=idx;
         mouse_rel_x=current_mouse_x;
         mouse_rel_y=current_mouse_y;
@@ -698,10 +710,6 @@ static gboolean motion_notify_event(GtkWidget *widget,GdkEventMotion *event) {
     }
   }
   return TRUE;
-}
-
-void quit() {
-  exit(0);
 }
 
 

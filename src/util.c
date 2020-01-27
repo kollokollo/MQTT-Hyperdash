@@ -446,3 +446,24 @@ char *time_string() {
 }
 
 
+static char i2abuf[128];
+
+static char *i2a(unsigned i, char *a, unsigned r) {
+  if(i/r>0) a=i2a(i/r,a,r);
+  *a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@$!?"[i % r];
+  return a+1;
+}
+
+char *tohex(unsigned i) {
+  int j;
+  static int f=0;
+  char *p=i2abuf+f*32;
+  
+  for(j=0;j<16;j++) p[j]='0';
+  *i2a(i,p,16)=0;
+  f++;
+  f=f&3;
+  return(p);
+}
+
+

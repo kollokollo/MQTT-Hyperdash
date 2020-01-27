@@ -10,7 +10,7 @@
 # Global settings and default values
 #
 BROKER: URL="tcp://localhost:1883"
-PANEL:  TITLE="MQTT-Hyperdash main.dash" W=420 H=500 FGC=$ffffffff BGC=$000040ff
+PANEL:  TITLE="MQTT-Hyperdash main.dash" W=420 H=540 FGC=$ffffffff BGC=$000040ff
 
 #
 # Static drawing
@@ -50,15 +50,25 @@ TEXT: x=220 y=290 TEXT="dashboard tree to make that work" FONT="Arial" FONTSIZE=
 LINE: x=217 y=285 X2=195 Y2=270 FGC=$ffffffff
 
 
-SHELLCMD:     x=270 y=460 w=130 h=25 CMD="bitmap &"
-PBOX:         x=270 y=460 w=130 h=25 BGC=$444444ff 
-TEXT:         x=280 y=460 w=130 h=25 TEXT="bitmap editor" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
-FRAMETOGGLE:  x=270 y=460 w=130 h=25
+SHELLCMD:     x=270 y=500 w=130 h=25 CMD="bitmap &"
+PBOX:         x=270 y=500 w=130 h=25 BGC=$444444ff 
+TEXT:         x=280 y=500 w=130 h=25 TEXT="bitmap editor" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
+FRAMETOGGLE:  x=270 y=500 w=130 h=25
 
-SHELLCMD:     x=20  y=460 w=240 h=25 CMD="firefox https://github.com/kollokollo/MQTT-Hyperdash &"
-PBOX:         x=20  y=460 w=240 h=25 BGC=$444444ff 
-TEXT:         x=30  y=460 w=240 h=25 TEXT="MQTT-Hyperdash Homepage" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
-FRAMETOGGLE:  x=20  y=460 w=240 h=25
+SHELLCMD:     x=20  y=500 w=240 h=25 CMD="firefox https://github.com/kollokollo/MQTT-Hyperdash &"
+PBOX:         x=20  y=500 w=240 h=25 BGC=$444444ff 
+TEXT:         x=30  y=500 w=240 h=25 TEXT="MQTT-Hyperdash Homepage" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
+FRAMETOGGLE:  x=20  y=500 w=240 h=25
+
+SHELLCMD:     x=220 y=460 w=180 h=25 CMD="dashdesign &"
+PBOX:         x=220 y=460 w=180 h=25 BGC=$444444ff 
+TEXT:         x=230 y=460 w=180 h=25 TEXT="Dashboard Designer" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
+FRAMETOGGLE:  x=220 y=460 w=180 h=25
+
+#SHELLCMD:     x=20  y=460 w=240 h=25 CMD="firefox https://github.com/kollokollo/MQTT-Hyperdash &"
+#PBOX:         x=20  y=460 w=240 h=25 BGC=$444444ff 
+#TEXT:         x=30  y=460 w=240 h=25 TEXT="MQTT-Hyperdash Homepage" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=16
+#FRAMETOGGLE:  x=20  y=460 w=240 h=25
 
 SHELLCMD:     x=20  y=420 w=200 h=25 CMD="sh /usr/share/hyperdash/create_tree.sh &"
 PBOX:         x=20  y=420 w=200 h=25 BGC=$444444ff 
