@@ -28,7 +28,7 @@
 #endif
 
 
-char ifilename[128]="main.dash";
+char ifilename[SIZEOF_IFILENAME]="main.dash";
 int verbose=0;
 int do_connection=1;      /* make real connections to broker */
 int do_show_invisible=0;  /* Also draw invisible elements. */
@@ -39,7 +39,7 @@ char *broker_user=NULL;
 char *broker_passwd=NULL;
 char *topic_prefix=NULL;
 
-char call_options[256]="";
+char call_options[SIZEOF_CALL_OPTIONS]="";
 
 static void intro() {
   printf("**********************************************************\n"

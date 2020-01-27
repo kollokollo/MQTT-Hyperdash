@@ -77,6 +77,10 @@ extern char bitmapdir[];
 extern char fontdir[];
 extern char dashboarddir[];
 extern int do_show_invisible;
+extern const int anzeltyp;
+extern const ELDEF eltyps[];
+
+
 
 void hyperdash_set_defaults();
 DASH *new_dash(const char *filename);
@@ -99,7 +103,7 @@ void free_element(ELEMENT *el);
 void add_element(DASH *dash, ELEMENT *el);
 ELEMENT duplicate_element(ELEMENT *el);
 void insert_element(DASH *dash, int idx, ELEMENT *el);
-ELEMENT default_element(int type);
+ELEMENT default_element(int type,unsigned long int fgc,unsigned long int bgc, const char *font);
 void scale_element(ELEMENT *el,int w,int h);
 
 int edit_element(ELEMENT *el);

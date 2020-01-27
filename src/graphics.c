@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "basics.h"
 #include "graphics.h"
+#include "bitmap.h"
 #include "hyperdash.h"
 #include "file.h"
 #include "util.h"
@@ -409,6 +410,9 @@ STRING get_icon(const char *name, int *w, int *h) {
   STRING a;
   a=get_file(name);
   ret=pngtobmp((unsigned char *)a.pointer,(size_t)a.len);
+  BITMAPINFOHEADER *iheader=(BITMAPINFOHEADER *)(ret.pointer+BITMAPFILEHEADERLEN);
+  *w=iheader->biWidth;
+  *h=iheader->biHeight;
   free(a.pointer);
   return(ret);
 }

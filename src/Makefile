@@ -61,18 +61,18 @@ MAINOBJS= main.o $(LIBOBJS)
 
 CSRC=    $(MAINOBJS:.o=.c)
 
-CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c dashdesign.c
+CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c dashdesign.c menu.c
 
 RULESRC=  commander.rule  demo.rule  syslogger.rule  sysmeasure.rule
 
 
-DEPSRC=  $(CSRC)  mqtt-list-topics.c hddashgen.c dashdesign.c
+DEPSRC=  $(CSRC)  mqtt-list-topics.c hddashgen.c dashdesign.c menu.c
 
 # Headerfiles which should be added to the distribution
 
 HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
        input.h elements.h subscribe.h basics.h config.h hddashgen.h \
-       dashdesign.h
+       dashdesign.h menu.h
 
 # example dash files 
 
@@ -166,8 +166,8 @@ hyperdash.exe: $(CSRC) $(MYWINLIBS)
 	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
 
 
-dashdesign :  dashdesign.o $(LIBOBJS)
-	$(CC) -L. $(LINKFLAGS) -o $@ dashdesign.o $(LIBOBJS) $(LIBS)
+dashdesign :  dashdesign.o menu.o $(LIBOBJS)
+	$(CC) -L. $(LINKFLAGS) -o $@ dashdesign.o menu.o $(LIBOBJS) $(LIBS)
 
 
 hddashgen : hddashgen.c file.o hddashgen.h file.h

@@ -199,28 +199,83 @@ void init_dash(DASH *dash) {
 
 /* Creates a default element with default values depending on the elements type */
 
-ELEMENT default_element(int type) {
+ELEMENT default_element(int type,unsigned long int fgc,unsigned long int bgc, const char *font) {
   ELEMENT rel;
   bzero(&rel,sizeof(ELEMENT));
   rel.type=eltyps[type].opcode|type;
   rel.w=32;
   rel.h=32;
-  rel.fgc=0xffffffff;
-  rel.bgc=0x40ff;
+  rel.fgc=fgc;
+  rel.bgc=bgc;
   rel.agc=0xff00ff;
+  rel.min=-1;
+  rel.max=1;
+  rel.increment=0.1;
   if((eltyps[type].opcode&EL_DYNAMIC)==EL_DYNAMIC) {
-    rel.topic=strdup("TOPIC_AD");
+    rel.topic=strdup(DEFAULT_TOPIC);
   }
   if(!strcmp(eltyps[type].name,"BROKER")) {
     rel.text=strdup(DEFAULT_BROKER);
-  } else if(!strcmp(eltyps[type].name,"TEXT")) {
+  } 
+  if(!strcmp(eltyps[type].name,"TEXT") || 
+            !strcmp(eltyps[type].name,"TEXTLABEL") ||
+            !strcmp(eltyps[type].name,"TOPICSTRING") ||
+	    !strcmp(eltyps[type].name,"TOPICNUMBER") ) {
     rel.text=strdup("Text");
-    rel.fontsize=8;
-    rel.h=8;
-    rel.w=4*8;
-    rel.font=strdup("SMALL");
+    rel.fontsize=DEFAULT_FONTSIZE;
+    rel.h=DEFAULT_FONTSIZE;
+    rel.w=4*DEFAULT_FONTSIZE;
+    rel.font=strdup(font);
+  }
+  if(!strcmp(eltyps[type].name,"TEXTAREA")) {
+    rel.font=strdup(DEFAULT_FONT);  
+    rel.fontsize=DEFAULT_FONTSIZE;
   }
   
+  if(!strcmp(eltyps[type].name,"PANEL")) {
+    rel.font=strdup(DEFAULT_FONT);  
+  }
+  if(!strcmp(eltyps[type].name,"TOPICNUMBER") || 
+     !strcmp(eltyps[type].name,"TOPICINNUMBER")) {
+    rel.format=strdup(DEFAULT_FORMAT);  
+  }
+  if(!strcmp(eltyps[type].name,"BITMAP")) {
+    char f[256];
+    rel.filename=strdup(DEFAULT_BITMAP);
+    snprintf(f,sizeof(f),"%s/%s",bitmapdir,rel.filename);
+    if(exist(f)) {
+      int w,h;
+      rel.data[0]=get_bitmap(f,&w,&h);
+      if(verbose>0) printf("Bitmap: %dx%d\n",rel.w,rel.h);
+      rel.w=w;
+      rel.h=h;
+    }
+  }
+  if(!strcmp(eltyps[type].name,"ICON")) {
+    char f[256];
+    int w=32,h=32;
+    rel.filename=strdup(DEFAULT_ICON);  
+    snprintf(f,sizeof(f),"%s/%s",icondir,rel.filename);
+    if(exist(f)) {
+      rel.data[0]=get_icon(f,&w,&h);
+      rel.w=w;
+      rel.h=h;
+    } 
+  }
+  if(!strcmp(eltyps[type].name,"DASH")) {
+    rel.text=strdup(DEFAULT_DASH);  
+  }
+  if(!strcmp(eltyps[type].name,"SHELLCMD")) {
+    rel.text=strdup(DEFAULT_SHELLCMD);  
+  }
+  if(!strcmp(eltyps[type].name,"LINE")) {
+    rel.x2=rel.x+rel.w;
+    rel.y2=rel.y+rel.h;
+  }
+  if(!strcmp(eltyps[type].name,"METER")) {
+    rel.amin=-225;
+    rel.amax=45;
+  }
   return(rel);
 }
 
@@ -239,21 +294,29 @@ void scale_element(ELEMENT *el,int w,int h) {
     el->fontnr=i;
   }
   el->fontsize=new_fs;
-
-  el->w=w;
-  el->h=h;
+  if(strcmp(eltyps[el->type&0xff].name,"BITMAP") && 
+     strcmp(eltyps[el->type&0xff].name,"ICON")) {
+    el->w=w;
+    el->h=h;
+  }
+  if(!strcmp(eltyps[el->type&0xff].name,"LINE")) {
+    el->x2=el->x+el->w;
+    el->y2=el->y+el->h;
+  }
 }
 
 /* Opens a dialog to let the user edit all properties of an element. */
-
+extern int s_maxval;
 int edit_element(ELEMENT *el) {
   printf("Edit element: %s\n",eltyps[el->type&0xff].name);
+  s_maxval=1;
   char *t=element2a(el);
   int rc=property_dialog(t);
   if(rc==1) {
     free_element(el);
     init_element(el,t);
   }
+  s_maxval=0;
   return(rc);
 }
 ELEMENT duplicate_element(ELEMENT *el) {

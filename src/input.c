@@ -185,12 +185,12 @@ static void color_changed_cb(GtkWidget *widget,GtkColorSelection *colorsel) {
   gtk_color_selection_get_current_color (colorsel, &ncolor);
 }
 
-int colorselect_dialog(char *gc) {
+int colorselect_dialog(const char *title,char *gc) {
   int ret=0;
   unsigned int fgc=(unsigned int)myatof(gc);
   gint response;
   GtkColorSelection *colorsel;
-  if(!colw) colw=gtk_color_selection_dialog_new ("Select color");
+  if(!colw) colw=gtk_color_selection_dialog_new (title);
   colorsel=GTK_COLOR_SELECTION(GTK_COLOR_SELECTION_DIALOG(colw)->colorsel);
   color.red=(fgc&0xff000000)>>16;
   color.blue=(fgc&0xff00);
@@ -331,9 +331,9 @@ static void on_fontbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   char newdash[256];
   strcpy(newdash,gtk_entry_get_text(GTK_ENTRY(val->widget)));
   if(*newdash=='\"') memmove(newdash,newdash+1,strlen(newdash)-2);
-  /* open a file selector to select a new dash to display.*/
+  /* open a file selector to select a new font.*/
   int rc=fileselect_dialog(newdash,fontdir,"*.ttf");
-  if(rc && newdash[0]) {
+  if(rc && *newdash) {
     if(!fnmatch("*.ttf",newdash,FNM_NOESCAPE)) {
       newdash[strlen(newdash)-4]=0;
       printf("Kürze auf: <%s>\n",newdash);
@@ -364,7 +364,7 @@ static void on_colorbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   char newdash[256];
   strcpy(newdash,gtk_entry_get_text(GTK_ENTRY(val->widget)));
   if(*newdash=='\"') memmove(newdash,newdash+1,strlen(newdash)-2);
-  int rc=colorselect_dialog(newdash);
+  int rc=colorselect_dialog("Select color",newdash);
   if(rc) {
     gtk_entry_set_text(GTK_ENTRY(val->widget),newdash);
   }  
@@ -475,7 +475,7 @@ int property_dialog(char *elline) {
     pval[anzpval].widget=gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(pval[anzpval].widget),p);
     
-    if(!strcmp(a,"BGC") || !strcmp(a,"FGC") || !strcmp(a,"AGC")) {
+    if(!strcmp(a,"BGC") || !strcmp(a,"FGC") || !strcmp(a,"AGC") || !strcmp(a,"TGC")) {
       wd=gtk_button_new_with_label("Browse");
       g_signal_connect(wd,"clicked",G_CALLBACK (on_colorbrowsebutton_clicked), (gpointer) &pval[anzpval]);
       gtk_box_pack_end(GTK_BOX(hb),wd,TRUE, TRUE, 0);      

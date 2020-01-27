@@ -6,12 +6,6 @@
  * COPYING for details
  */
 
-typedef struct {
-  int typ;
-  char *text;
-  void (*function)();
-  GtkWidget *widget;
-} MENUENTRY;
 
 /* Define Actions */
 
@@ -23,22 +17,35 @@ enum ACTIONS {
   A_MTB,
   A_ADD,
   A_DELETE,
-  A_EDIT
+  A_EDIT,
+  A_SFGC,
+  A_SBGC,
+  A_SFONT
 
 };
 
-const char *action_names[]={
-"Identify",
-"Move",
-"Copy",
-"Resize",
-"Move to Bkg",
-"Add",
-"Delete",
-"Edit"
-};
-
+extern const char *action_names[];
 
 WINDOW *open_pixmap(const char *title, const char* info,int x,int y,unsigned int w,unsigned int h, int fullscreen);
-
 void close_pixmap(WINDOW *nw);
+void init_newloaded_dash();
+void emergency_save_dialog();
+void update_statusline();
+void update_drawarea();
+void update_title(const char *t);
+
+extern char ifilename[];
+extern int verbose;
+extern int current_element;
+extern int current_action;
+unsigned long int current_fgc;
+unsigned long int current_bgc;
+extern char current_font[];
+extern int is_modified;
+extern int do_grid;
+
+extern DASH *maindash;
+extern WINDOW *mainwindow;
+extern GdkPixmap *pixmap;
+extern ELEMENT *undo_element;
+extern GtkWidget *drawing_area;

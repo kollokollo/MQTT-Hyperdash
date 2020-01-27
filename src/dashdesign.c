@@ -9,7 +9,6 @@
 /*
  * Thease are the sources for the MQTT Hyperdash dashboad grafical editor.
  * 
- * TODO: The whole thing it still al lot of mess.... help!
  */ 
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,8 +18,10 @@
 #include "graphics.h"
 #include "hyperdash.h"
 #include "file.h"
+#include "util.h"
 #include "input.h"
 #include "dashdesign.h"
+#include "menu.h"
 
 #if defined WINDOWS 
   #define EX_OK 0
@@ -28,7 +29,7 @@
   #include <sysexits.h>
 #endif
 
-char ifilename[128]="new.dash";
+char ifilename[SIZEOF_IFILENAME]="new.dash";
 int verbose=0;
 int do_connection=0;   /* Do not connect to a broker .*/
 int do_show_invisible=1; /* Also draw invisible elements. */
@@ -39,7 +40,7 @@ char *broker_override=NULL;
 char *broker_user=NULL;
 char *broker_passwd=NULL;
 char *topic_prefix=NULL;
-char call_options[256]="";
+char call_options[SIZEOF_CALL_OPTIONS]="";
 
 
 #define DEFAULT_ELEMENT 3   /* BOX */
@@ -47,16 +48,16 @@ char call_options[256]="";
 int current_element=DEFAULT_ELEMENT;
 int current_action=A_NONE;
 
+unsigned long int current_fgc=0xffffffff;
+unsigned long int current_bgc=0x40ff;
+char current_font[256]=DEFAULT_FONT;
 
 int is_modified=0;
+int do_grid=0;
 
 int current_mouse_x=0;
 int current_mouse_y=0;
 
-int do_grid=0;
-
-extern const int anzeltyp;
-extern const ELDEF eltyps[];
 extern WINDOW *global_window;  /* TODO */
 
 SDL_Surface *surface;
@@ -64,20 +65,28 @@ GtkWidget *textarea;
 GtkWidget *window;
 GtkWidget *drawing_area;
 /* Backing pixmap for drawing area */
-static GdkPixmap *pixmap = NULL;
-
-
-static void update_statusline();
-static void update_title(const char *t);
-static void update_drawarea();
-
+GdkPixmap *pixmap = NULL;
 
 ELEMENT *undo_element=NULL;
+
+const char *action_names[]={
+"Identify",
+"Move",
+"Copy",
+"Resize",
+"Move to Bkg",
+"Add",
+"Delete",
+"Edit",
+"Set foreground color",
+"Set background color",
+"Set font"
+};
 
 
 static void intro() {
   printf("**********************************************************\n"
-         "*  %10s  dashdesign          V." VERSION "            *\n"
+         "*  %10s  " MQTT_DASHDESIGN_EXECUTABLE_NAME "          V." VERSION "            *\n"
          "*                       by Markus Hoffmann 2019-2020 (c) *\n"
          "* version date:           %30s *\n"
          "**********************************************************\n\n",
@@ -94,10 +103,10 @@ static void usage() {
     " --broker <url>\t\t--- use this broker by default.\n"
     " --user <user>\t\t--- use this username for broker.\n"
     " --passwd <passwd>\t\t--- use this password for broker.\n"
-    ,"dashdesign",ifilename,icondir,bitmapdir,dashboarddir,fontdir);
+    ,MQTT_DASHDESIGN_EXECUTABLE_NAME,ifilename,icondir,bitmapdir,dashboarddir,fontdir);
 }
-#define COLLECT()
-#define COLLECT2()
+#define COLLECT() snprintf(call_options+strlen(call_options),sizeof(call_options)-strlen(call_options)," %s",argumente[count])
+#define COLLECT2() snprintf(call_options+strlen(call_options),sizeof(call_options)-strlen(call_options)," %s %s",argumente[count-1],argumente[count])
 static void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
   /* process command line parameters and */
@@ -125,44 +134,8 @@ static void kommandozeile(int anzahl, char *argumente[]) {
   if(quitflag) exit(EX_OK);
 }
 
-
-static void menu_undodelete(MENUENTRY *me) {
-  printf ("%s\n",me->text);
-  if(undo_element) {
-    printf("Restore element...\n");
-    add_element(maindash,undo_element);
-    undo_element=NULL;
-    is_modified=1;
-    draw_dash(maindash,mainwindow);
- 
-    if(pixmap) g_object_unref(pixmap);
-    pixmap=NULL;
-    update_drawarea();
-    update_title(ifilename);
-    gtk_widget_queue_draw_area(drawing_area,0,0,mainwindow->w,mainwindow->h);
-  }
-}
-
-static void menu_elements(char *typ) {
-  int i;
-  for(i=0;i<anzeltyp;i++) {
-    if(!strcmp(typ,eltyps[i].name)) current_element=i;
-  }
-  if(current_element>=0) {
-    current_action=A_ADD;
-    update_statusline();
-    printf("Elements: %s, opcode=%d\n",typ,current_element);
-  }
-}
-
-static void about_dialog(MENUENTRY *me) {
-  message_dialog(PACKAGE_NAME " Info",
-                 PACKAGE_NAME "\n===============\n\n Version " VERSION "\n\n" 
-		 VERSION_DATE "\n\nDash-Designer\n\n (c) by Markus Hoffmann et. al.\n",1);
-
-}
-
-static void init_newloaded_dash() {
+/* Initialize after open of a new dashboard file. */
+void init_newloaded_dash() {
   is_modified=0;
   init_dash(maindash);
   close_pixmap(mainwindow);
@@ -170,20 +143,22 @@ static void init_newloaded_dash() {
   global_window=mainwindow; /* TODO */
   draw_dash(maindash,mainwindow);
 
-  if(pixmap) g_object_unref(pixmap);
-  pixmap=NULL;
+  current_fgc=maindash->tree[maindash->panelelement].fgc;
+  current_bgc=maindash->tree[maindash->panelelement].bgc;
+  if(maindash->tree[maindash->panelelement].font)
+    strncpy(current_font,maindash->tree[maindash->panelelement].font,sizeof(current_font));
+
+  if(pixmap) {g_object_unref(pixmap);pixmap=NULL;}
   update_title(ifilename);
   update_drawarea();
   update_statusline();
 }
 
-static void emergency_save_dialog() {
-  printf("WARNING: Dashboard has not been saved!\n");
+void emergency_save_dialog() {
   char buffer[256];
-  snprintf(buffer,sizeof(buffer),"ERROR:\nCurrent Dashboard has not yet been saved.\n"
+  snprintf(buffer,sizeof(buffer),"WARNING:\nCurrent dashboard has not yet been saved.\n"
   				 "Do you want to save it now?\n\n"
-  				 "%s\n\n",
-        			 ifilename);
+  				 "%s\n\n",ifilename);
   if(message_dialog("MQTT Hyperdash Dashdesign Warning",buffer,2)==1) {
     save_dash(maindash,ifilename);
     is_modified=0;
@@ -192,192 +167,10 @@ static void emergency_save_dialog() {
     /* Emergency-save the dashboard. */
     char newname[strlen(ifilename)+12];
     strcpy(newname,ifilename);
-    strcat(newname,".autosave");
+    strcat(newname,AUTOSAVE_ENDING);
     save_dash(maindash,newname);
   }
 }
-
-static void menu_new(MENUENTRY *me) {
-
-/* Check if current file is nodified. If so open Warning dialog and offer to save the file */
-
-  if(is_modified) emergency_save_dialog();
-  
-/* Then free the menu and create a new one. */
-  
-  snprintf(ifilename,sizeof(ifilename),"new.dash");
-  free_dash(maindash);
-  maindash=new_dash(ifilename);
-  init_newloaded_dash();
-}
-static void menu_load(MENUENTRY *me) {
-  char newdash[256];
-  newdash[0]=0;
-  /* Check if current file is nodified. If so open Warning dialog and offer to save the file */
-  if(is_modified) emergency_save_dialog();
-
-  /* open a file selector to select a new dash to display.*/
-  int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
-  if(rc && newdash[0]) {
-    if(exist(newdash))  snprintf(ifilename,sizeof(ifilename),"%s",newdash);
-    else snprintf(ifilename,sizeof(ifilename),"%s/%s",dashboarddir,newdash);
-    free_dash(maindash); 
-    if(exist(ifilename)) {
-      maindash=load_dash(ifilename);
-    } else {
-      maindash=new_dash(ifilename);
-      printf("ERROR: could not load %s. New!\n",ifilename);
-    }
-    init_newloaded_dash();
-  }
-}
-static void menu_merge(MENUENTRY *me) {
-  char newdash[256];
-  char buf[256];
-  newdash[0]=0;
-  /* open a file selector to select a new dash to display.*/
-  int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
-  if(rc && newdash[0]) {
-    if(exist(newdash))  snprintf(buf,sizeof(buf),"%s",newdash);
-    else snprintf(buf,sizeof(buf),"%s/%s",dashboarddir,newdash);
-    if(exist(buf)) {
-      maindash=merge_dash(maindash,buf);
-      init_newloaded_dash();
-    }
-  }
-}
-static void menu_save(MENUENTRY *me) {
-  if(is_modified || 1) {  /* Do it anyways... */
-    save_dash(maindash,ifilename);
-    is_modified=0;
-    update_title(ifilename);
-  }
-}
-static void menu_save_as(MENUENTRY *me) {
-  char newdash[256];
-  newdash[0]=0;
-  /* open a file selector to select a new dash save to.*/
-  int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
-  if(rc && newdash[0]) {
-    if(exist(newdash)) {
-      char buffer[256];
-      snprintf(buffer,sizeof(buffer),"WARNING:\nSelected file \n%s \ndoes already exist.\n"
-  				 "Do you want to overwrite it now?\n\n",
-        			 newdash);
-      if(message_dialog("MQTT Hyperdash Dashdesign Warning",buffer,2)!=1) return;
-    }
-    snprintf(ifilename,sizeof(ifilename),"%s",newdash);
-    menu_save(me);
-  }
-}
-static void menu_start_hyperdash(MENUENTRY *me) {
-  if(is_modified) emergency_save_dialog();
-  if(is_modified) {
-    char newname[strlen(ifilename)+12];
-    strcpy(newname,ifilename);
-    strcat(newname,".autosave");
-    call_a_dash(newname);
-  } else call_a_dash(ifilename);
-}
-static void menu_quit(MENUENTRY *me) {
-/* Check if current file is nodified. If so open Warning dialog and offer to save the file */
-  if(is_modified) emergency_save_dialog();
-
-  gtk_main_quit();
-}
-
-static void menu_grid_onoff(MENUENTRY *me) {
-  do_grid=(int)gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(me->widget));
-  printf("grid: %d\n",do_grid);
-  if(pixmap) g_object_unref(pixmap);
-  pixmap=NULL;
-  update_drawarea();
-}
-
-static void menu_move(MENUENTRY *me)     {current_action=A_MOVE;   update_statusline();}
-static void menu_copy(MENUENTRY *me)     {current_action=A_COPY;   update_statusline();}
-static void menu_identify(MENUENTRY *me) {current_action=A_NONE;   update_statusline();}
-static void menu_resize(MENUENTRY *me)   {current_action=A_RESIZE; update_statusline();}
-static void menu_mtb(MENUENTRY *me)      {current_action=A_MTB;    update_statusline();}
-static void menu_add(MENUENTRY *me)      {current_action=A_ADD;    update_statusline();}
-static void menu_delete(MENUENTRY *me)   {current_action=A_DELETE; update_statusline();}
-static void menu_edit_prop(MENUENTRY *me){current_action=A_EDIT;   update_statusline();}
-
-static void menu_edit_broker(MENUENTRY *me) {
-  int k=0;
-  for(k=0;k<maindash->anzelement;k++) {
-    if((maindash->tree[k].type&EL_BROKER)==EL_BROKER) {
-      if(edit_element(&(maindash->tree[k]))) is_modified=1;
-      break;
-    }
-  }
-}
-
-
-#define MENU_TITLE 1
-#define MENU_ENTRY 0
-
-MENUENTRY menuentries[]={
-{0,"New",          menu_new,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Load ...",     menu_load,NULL},
-{0,"Merge ...",    menu_merge,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Save",         menu_save,NULL},
-{0,"Save As ...",  menu_save_as,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Run Dashboard",menu_start_hyperdash,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Quit",         menu_quit,NULL},
-{MENU_TITLE,"File",NULL,NULL},
-{0,"Undo delete",     menu_undodelete,NULL},
-{0,"Delete Elements", menu_delete,NULL},
-//{0,"Copy Elements",   menuitem_response,NULL},
-//{0,"Paste Elements",  menuitem_response,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Edit Broker",menu_edit_broker,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Edit Properties ...",menu_edit_prop,NULL},
-
-{MENU_TITLE,"Edit",NULL,NULL},
-
-{0,"# elements",  menu_elements,NULL},
-{MENU_TITLE,"Element",NULL,NULL},
-{0,"Identify Elements",  menu_identify,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Move Element",      menu_move,NULL},
-{0,"Copy Element",      menu_copy,NULL},
-{0,"Resize Element",    menu_resize,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Move to Background",menu_mtb,NULL},
-{0,"-------------",NULL,NULL},
-//{0,"Rotate left",  menuitem_response,NULL},
-//{0,"Rotate right", menuitem_response,NULL},
-{0,"-------------",NULL,NULL},
-//{0,"Change Text",  menuitem_response,NULL},
-//{0,"Change Topic", menuitem_response,NULL},
-//{0,"Change Format",menuitem_response,NULL},
-{0,"-------------",NULL,NULL},
-//{0,"Select forground color",menuitem_response,NULL},
-//{0,"Select background color",menuitem_response,NULL},
-//{0,"Set default background",menuitem_response,NULL},
-{0,"-------------",NULL,NULL},
-//{0,"Select Font",  menuitem_response,NULL},
-//{0,"Select Layout",menuitem_response,NULL},
-{0,"-------------",NULL,NULL},
-{0,"Add Element",  menu_add,NULL},
-
-{MENU_TITLE,"Action",NULL,NULL},
-
-{0,"[X] Grid",menu_grid_onoff,NULL},
-
-{MENU_TITLE,"Settings",NULL,NULL},
-
-{0,"About MQTT-Hyperdash DashDesign ...",about_dialog,NULL},
-{MENU_TITLE,"About",NULL,NULL},
-
-{0,NULL,NULL,NULL}
-};
 
 char *converted_pixels=NULL;
 
@@ -421,10 +214,18 @@ static gboolean expose_event(GtkWidget *widget, GdkEventExpose *event) {
   return FALSE;
 }
 
-static void update_statusline() {
+void update_statusline() {
   char status_text[256];
   char buf[128];
-  if(current_action==A_ADD) snprintf(buf,sizeof(buf),"%s %s",action_names[current_action],eltyps[current_element].name);
+  if(current_action==A_ADD) snprintf(buf,sizeof(buf),"%s %s, FGC=$%s, BGC=$%s, Font=%s",
+    action_names[current_action],eltyps[current_element].name,tohex(current_fgc), 
+    tohex(current_bgc),current_font);
+  else if(current_action==A_SFGC) snprintf(buf,sizeof(buf),"%s $%s",
+    action_names[current_action],tohex(current_fgc));
+  else if(current_action==A_SBGC) snprintf(buf,sizeof(buf),"%s $%s",
+    action_names[current_action],tohex(current_bgc));
+  else if(current_action==A_SFONT) snprintf(buf,sizeof(buf),"%s %s",
+    action_names[current_action],current_font);
   else snprintf(buf,sizeof(buf),"%s",action_names[current_action]);
 
   snprintf(status_text,sizeof(status_text),"%d elements, (%dx%d), X=%d, Y=%d, Action: %s",
@@ -434,6 +235,17 @@ static void update_statusline() {
 
 int selected_element=-1;
 int mouse_rel_x,mouse_rel_y;
+
+static void redraw_panel(GtkWidget *widget) {
+  draw_dash(maindash,mainwindow);
+
+  if(pixmap) g_object_unref(pixmap);
+  pixmap=NULL;
+  update_drawarea();
+  update_title(ifilename);
+  gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+}
+
 
 static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
   fix_pixmap(widget);
@@ -458,11 +270,13 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
       selected_element=maindash->anzelement;
       mouse_rel_x=current_mouse_x;
       mouse_rel_y=current_mouse_y;
-      ELEMENT el=default_element(current_element);
+      ELEMENT el=default_element(current_element,current_fgc,current_bgc, current_font);
       el.x=current_mouse_x;
       el.y=current_mouse_y;
-      el.w=5;
-      el.h=5;
+      if(do_grid) {
+        el.x-=el.x%5;
+        el.y-=el.y%5;
+      }
       add_element(maindash,&el);
       
       gdk_draw_rectangle(pixmap,widget->style->white_gc,FALSE,
@@ -482,13 +296,7 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
 	delete_element(maindash,idx);
 	
 	is_modified=1;
-	draw_dash(maindash,mainwindow);
- 
-	if(pixmap) g_object_unref(pixmap);
-        pixmap=NULL;
-        update_drawarea();
-        update_title(ifilename);
-	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+	redraw_panel(widget);
       }
       break;
     case A_EDIT:
@@ -496,14 +304,38 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
       if(idx>=0) {
         if(edit_element(&(maindash->tree[idx]))) {
           is_modified=1;
-	  draw_dash(maindash,mainwindow);
- 
-	  if(pixmap) g_object_unref(pixmap);
-          pixmap=NULL;
-          update_drawarea();
-          update_title(ifilename);
-	  gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+	  redraw_panel(widget);
         }
+      }
+      break;
+    case A_SFGC:
+      printf("Set foreground color for element: #%d\n",idx);
+      if(idx>=0) {
+        maindash->tree[idx].fgc=current_fgc;
+        is_modified=1;
+	redraw_panel(widget);
+      }
+      break;
+    case A_SBGC:
+      printf("Set background color for element: #%d\n",idx);
+      if(idx>=0) {
+        maindash->tree[idx].bgc=current_bgc;
+        is_modified=1;
+	redraw_panel(widget);
+      }
+      break;
+    case A_SFONT:
+      printf("Set font for element: #%d\n",idx);
+      if(idx>=0) {
+        if(maindash->tree[idx].font) {
+	  free(maindash->tree[idx].font);
+	  maindash->tree[idx].font=strdup(current_font);
+          int i=add_font(maindash->tree[idx].font,maindash->tree[idx].fontsize);
+          if(!fonts[i].font) open_font(i);
+          maindash->tree[idx].fontnr=i;
+          is_modified=1;
+	  redraw_panel(widget);
+	}
       }
       break;
     case A_MTB:
@@ -518,19 +350,11 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
 	    break;
 	  }
 	}
-	printf("Move Element: #%d to background ... (%d)\n",idx,k);
-	
+	printf("Move element: #%d to background ... (%d)\n",idx,k);
         insert_element(maindash,k,&el);
 
-	
 	is_modified=1;
-	draw_dash(maindash,mainwindow);
- 
-	if(pixmap) g_object_unref(pixmap);
-        pixmap=NULL;
-        update_drawarea();
-        update_title(ifilename);
-	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+	redraw_panel(widget);
       }
       break;
     case A_MOVE:
@@ -766,7 +590,7 @@ void close_pixmap(WINDOW *nw) {
   free(nw);
 }
 
-static void update_title(const char *t) {
+void update_title(const char *t) {
   char buf[256];
   if(window) {
     if(is_modified) snprintf(buf,sizeof(buf),"%s (modified)",t);
@@ -774,8 +598,8 @@ static void update_title(const char *t) {
     gtk_window_set_title (GTK_WINDOW (window),buf);
   }
 }
-static void update_drawarea() {
-  gtk_widget_set_size_request (GTK_WIDGET (drawing_area), maindash->tree[maindash->panelelement].w, maindash->tree[maindash->panelelement].h);
+void update_drawarea() {
+  gtk_widget_set_size_request(GTK_WIDGET(drawing_area),maindash->tree[maindash->panelelement].w, maindash->tree[maindash->panelelement].h);
 }
 
 
@@ -939,7 +763,7 @@ int main(int argc, char *argv[]) {
     /* Emergency-save the dashboard. */
     char newname[strlen(ifilename)+12];
     strcpy(newname,ifilename);
-    strcat(newname,".autosave");
+    strcat(newname,AUTOSAVE_ENDING);
     save_dash(maindash,newname);
   }
   close_pixmap(mainwindow);
