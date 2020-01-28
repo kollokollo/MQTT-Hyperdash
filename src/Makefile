@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.02
 
-RELEASE=7
+RELEASE=8
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -96,14 +96,15 @@ BITMAPS= ../bitmaps/alarmRing ../bitmaps/bombe_gross  ../bitmaps/Hygrometer \
 	 ../bitmaps/SmallCircle  ../bitmaps/warning     ../bitmaps/biene    \
 	 ../bitmaps/GridPlug     ../bitmaps/SmallDonut  ../bitmaps/WarnTS   \
          ../bitmaps/bombe        ../bitmaps/helfer      \
-	 ../bitmaps/SmallTriagDown ../bitmaps/TickLeft ../bitmaps/TickRight \
-	 ../bitmaps/Sun
+	 ../bitmaps/SmallTriagDwn ../bitmaps/TickLeft ../bitmaps/TickRight \
+	 ../bitmaps/Sun ../bitmaps/default
 
 MANPAGES= hddashgen.1  hyperdash.1  mqtt-list-topics.1 dashdesign.1
 
 # Image files
 
-ICONS=   ../icons/MQTT-Hyperdash-logo.png  ../icons/README ../icons/dashtree.png
+ICONS=   ../icons/MQTT-Hyperdash-logo.png  ../icons/README \
+         ../icons/dashtree.png ../icons/default.png
 
 
 DIST= ../README.md ../CONTRIBUTING.md ../doc/MQTT-Hyperdash.txt ../COPYING \

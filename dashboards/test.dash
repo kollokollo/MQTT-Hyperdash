@@ -6,12 +6,12 @@
 # Global settings and default values
 #
 BROKER: URL="tcp://localhost:1883"
-PANEL:  TITLE="Button Test Dashboard" W=512 H=400 FGC=$ffffffff BGC=$000040ff
+PANEL:  TITLE="Button Test Dashboard" W=512 H=400 FGC=$ffffffff BGC=$40FF
 
 #
 # Static drawing, headline etc...
 #
-TEXT:   X=20 Y=10 H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=36
+TEXT:   X=20 Y=10 H=60 FGC=$FFFFFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE=36
 
 
 ##########################################################################
@@ -22,30 +22,30 @@ TEXT:   X=20 Y=10 H=60 FGC=$ffffFFFF TEXT="Test Dashboard" FONT="Arial" FONTSIZE
 # they use the same broker.
 #
 
-BOX: x=20 y=80 w=200 h=120 FGC=$ff00ffff
-TEXT: x=30 y=80 H=20 TEXT="Radio Button Group" FGC=$ffff00ff
+BOX: x=20 y=80 w=200 h=120 FGC=$FF00FFFF
+TEXT: x=30 y=80 H=20 TEXT="Radio Button Group" FGC=$FFFF00FF
 
 # This is a simple button allowing to input the value of a topic
 # Note that when you enter ON or OFF also the states f the buttons change...
 
 TOPICINSTRING: TOPIC="TEST" x=110 y=152 w=100 h=30
-TOPICSTRING: X=110 Y=152 W=100 H=30 TOPIC=TEST FGC=$ffffffff BGC=$00ff
+TOPICSTRING: X=110 Y=152 W=100 H=30 TOPIC=TEST FGC=$FFFFFFFF BGC=$00FF
 FRAMETOGGLE: X=108 Y=150 W=104 H=34
 
 # this is how one ca realize a Radiobutton pair or group
 # e.g. for ON/OFF Switches The Buttons also show the actual state.
 #
 
-PBOX: x=40 y=100 w=50 h=30 bgc=$444444ff
+PBOX: x=40  y=100 w=50 h=30 bgc=$444444ff
 PBOX: x=100 y=100 w=50 h=30 bgc=$444444ff
 PBOX: x=160 y=100 w=50 h=30 bgc=$444444ff
-TEXT: x=45 y=100 w=30 h=30 TEXT="AUTO" fgc=$0078ffff FONT="Arial"
-TEXT: x=110 y=100 w=30 h=30 TEXT="OFF" fgc=$ff0000ff FONT="Arial"
-TEXT: x=170 y=100 w=30 h=30 TEXT="ON" fgc=$00ff00ff FONT="Arial"
-TOPICINAREA: x=40 y=100 w=50 h=30 TOPIC=TEST VALUE="AUTO"
+TEXT: x=45  y=100 w=30 h=30 TEXT="AUTO" fgc=$0078ffff FONT="Arial"
+TEXT: x=110 y=100 w=30 h=30 TEXT="OFF"  fgc=$ff0000ff FONT="Arial"
+TEXT: x=170 y=100 w=30 h=30 TEXT="ON"   fgc=$00ff00ff FONT="Arial"
+TOPICINAREA: x=40  y=100 w=50 h=30 TOPIC=TEST VALUE="AUTO"
 TOPICINAREA: x=100 y=100 w=50 h=30 TOPIC=TEST VALUE="OFF"
 TOPICINAREA: x=160 y=100 w=50 h=30 TOPIC=TEST VALUE="ON"
-FRAMELABEL: TOPIC=TEST x=40 y=100 w=50 h=30 MATCH="AUTO"
+FRAMELABEL: TOPIC=TEST x=40  y=100 w=50 h=30 MATCH="AUTO"
 FRAMELABEL: TOPIC=TEST x=100 y=100 w=50 h=30 MATCH="OFF"
 FRAMELABEL: TOPIC=TEST x=160 y=100 w=50 h=30 MATCH="ON"
 
@@ -61,13 +61,13 @@ TICKER:      X=48 Y=208 W=34 H=34 TOPIC=TESTT TIC=0.2 MIN=0 MAX=4
 FRAMETOGGLE: X=48 Y=208 W=34 H=34
 
 PBOX:        x=50 y=290 w=30 h=30 bgc=$444444ff
-BITMAP:      x=59 y=298 BITMAP="SmallTriagDown" FGC=$ffffffff
+BITMAP:      x=59 y=298 BITMAP="SmallTriagDwn" FGC=$ffffffff
 TICKER:      X=48 Y=288 W=34 H=34 TOPIC=TESTT TIC=-0.2 MIN=0 MAX=4
 FRAMETOGGLE: X=48 Y=288 W=34 H=34
 
-TOPICSTRING: X=10 Y=252 W=100 H=30 TOPIC=TESTT FGC=$00ffffff BGC=$00ff
+TOPICSTRING:    X=10 Y=252 W=100 H=30 TOPIC=TESTT FGC=$00ffffff BGC=$00ff
 TOPICINNUMBER:  X=10 Y=252 W=100 H=30 TOPIC=TESTT FORMAT="%g" MIN=0 MAX=4 
-FRAMETOGGLE: X=8 Y=250 W=104 H=34
+FRAMETOGGLE:    X=8  Y=250 W=104 H=34
 
 
 #
@@ -78,10 +78,10 @@ FRAMETOGGLE: X=8 Y=250 W=104 H=34
 
 
 VMETER:  X=250 Y=100 W=25 H=140 MIN=0 MAX=4 \
-         AGC=$444444FF BGC=$000000ff FGC=$ffffffff TOPIC=TESTT
+         AGC=$444444FF BGC=$00FF FGC=$FFFFFFFF TOPIC=TESTT
 
 METER:   X=350 Y=100 W=100 H=100 MIN=0 MAX=4 \
-         AGC=$444444FF BGC=$000040ff FGC=$ffffffff TOPIC=TESTT
+         AGC=$444444FF BGC=$40FF FGC=$FFFFFFFF TOPIC=TESTT
 
 
 ##########################################################################
@@ -92,10 +92,10 @@ METER:   X=350 Y=100 W=100 H=100 MIN=0 MAX=4 \
 # as long as they use the same broker.
 #
 
-PBOX:    X=90 Y=290 W=220 H=36 BGC=$808080ff FGC=$0
-FRAME:   X=90 Y=290 W=220 H=36 
+PBOX:    X=90  Y=290 W=220 H=36 BGC=$808080FF FGC=$0
+FRAME:   X=90  Y=290 W=220 H=36 
 HSCALER: X=100 Y=300 W=200 H=16 TOPIC=TESTT MIN=0 MAX=4 TIC=0.05 AGC=$0
-FRAME:   X=98 Y=298 W=204 H=20 REVERT=1
+FRAME:   X=98  Y=298 W=204 H=20 REVERT=1
 
 # This is a raw scaler wthout "decoration"
 
@@ -107,8 +107,8 @@ VSCALER: X=300 Y=30 W=20 H=200 TOPIC=TESTT MIN=0 MAX=4  TIC=0.05
 #
 
 SHELLCMD:    x=10 y=360 w=80 h=25 CMD="xload &"
-PBOX:        x=10 y=360 w=80 h=25 BGC=$444444ff 
-TEXT:        x=20 y=360 w=80 h=25 TEXT="xload" FGC=$ffffffff FONT="Arial"
+PBOX:        x=10 y=360 w=80 h=25 BGC=$444444FF 
+TEXT:        x=20 y=360 w=80 h=25 TEXT="xload" FGC=$FFFFFFFF FONT="Arial"
 FRAMETOGGLE: x=10 y=360 w=80 h=25
 
 ##########################################################################
@@ -116,8 +116,8 @@ FRAMETOGGLE: x=10 y=360 w=80 h=25
 #
 
 DASH:        x=110 y=360 w=100 h=25 DASH="main"
-PBOX:        x=110 y=360 w=100 h=25 BGC=$444444ff 
-TEXT:        x=120 y=360 w=100 h=25 TEXT="main.dash" FGC=$ffffffff FONT="Arial"
+PBOX:        x=110 y=360 w=100 h=25 BGC=$444444FF 
+TEXT:        x=120 y=360 w=100 h=25 TEXT="main.dash" FGC=$FFFFFFFF FONT="Arial"
 FRAMETOGGLE: x=110 y=360 w=100 h=25
 
 
