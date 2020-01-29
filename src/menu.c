@@ -21,33 +21,111 @@
 #include "util.h"
 #include "menu.h"
 
+static MENUENTRY menuentries[];
 
-static void menu_move(MENUENTRY *me)     {current_action=A_MOVE;   update_statusline();}
-static void menu_copy(MENUENTRY *me)     {current_action=A_COPY;   update_statusline();}
-static void menu_identify(MENUENTRY *me) {current_action=A_NONE;   update_statusline();}
-static void menu_resize(MENUENTRY *me)   {current_action=A_RESIZE; update_statusline();}
-static void menu_mtb(MENUENTRY *me)      {current_action=A_MTB;    update_statusline();}
-static void menu_add(MENUENTRY *me)      {current_action=A_ADD;    update_statusline();}
-static void menu_delete(MENUENTRY *me)   {current_action=A_DELETE; update_statusline();}
-static void menu_edit_prop(MENUENTRY *me){current_action=A_EDIT;   update_statusline();}
-static void menu_set_foreground(MENUENTRY *me){current_action=A_SFGC;   update_statusline();}
-static void menu_set_background(MENUENTRY *me){current_action=A_SBGC;   update_statusline();}
-static void menu_set_font(MENUENTRY *me) {current_action=A_SFONT;   update_statusline();}
+/* Initializes the menu */
+
+GtkWidget *init_menu() {
+  GtkWidget *menu;
+  GtkWidget *menu_bar;
+  int i=0;
+  /* Init the menu-widget, and remember -- never
+   * gtk_show_widget() the menu widget!! 
+   * This is the menu that holds the menu items, the one that
+   * will pop up when you click on the "Root Menu" in the app */
+  menu=gtk_menu_new();
+  /* Create a menu-bar to hold the menus for add it to main window */
+  menu_bar=gtk_menu_bar_new();
+    /* Next we make a little loop that makes menu-entries.
+     * Notice the call to gtk_menu_shell_append.  Here we are adding a list of
+     * menu items to our menu. */
+  while(menuentries[i].text) {     
+       if(menuentries[i].typ==MENU_TITLE) {
+         /* Create a new menu-item with a name... */
+	 menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
+         /* Show the widget */
+         gtk_widget_show (menuentries[i].widget);
+         /* Now we specify that we want our newly created "menu" to be the menu
+          * for the "root menu" */
+         gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuentries[i].widget), menu);
+         /* Init the menu-widget, and remember -- never
+          * gtk_show_widget() the menu widget!! 
+          * This is the menu that holds the menu items, the one that
+          * will pop up when you click on the "Root Menu" in the app */
+          menu = gtk_menu_new ();
+          /* And finally we append the menu-item to the menu-bar -- this is the
+           * "root" menu-item I have been raving about =) */
+          gtk_menu_shell_append (GTK_MENU_SHELL (menu_bar),menuentries[i].widget );
+       } else {
+         /* Create a new menu-item with a name... */
+         if(*menuentries[i].text=='-') menuentries[i].widget=gtk_separator_menu_item_new();
+	 else if(*menuentries[i].text=='[') menuentries[i].widget=gtk_check_menu_item_new_with_label(menuentries[i].text+4);
+        else if(*menuentries[i].text=='#') {
+	  menuentries[i].widget=gtk_separator_menu_item_new();
+	  int k;
+	  GtkWidget *gw;
+	  GSList *group = NULL;
+	  for(k=1;k<anzeltyp;k++) {
+	    if(strcmp(eltyps[k].name,"BROKER") && strcmp(eltyps[k].name,"PANEL")) {
+	      gw=gtk_radio_menu_item_new_with_label(group,eltyps[k].name);
+	      group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (gw));
+	      if(k==DEFAULT_ELEMENT) gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(gw),TRUE);
+              gtk_menu_shell_append(GTK_MENU_SHELL (menu),gw);
+	      g_signal_connect_swapped(gw, "activate",
+	    			  G_CALLBACK (menuentries[i].function), 
+        			  (void *) eltyps[k].name); 
+	      gtk_widget_show (gw);
+	    }
+	  }
+	}
+         else menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
+         /* ...and add it to the menu. */
+         gtk_menu_shell_append (GTK_MENU_SHELL (menu),menuentries[i].widget);
+	 /* Do something interesting when the menuitem is selected */
+	 g_signal_connect_swapped(menuentries[i].widget, "activate",
+	    			  G_CALLBACK (menuentries[i].function), 
+        			  (MENUENTRY *) &menuentries[i]);
+
+      /* Show the widget */
+      gtk_widget_show(menuentries[i].widget);
+    }
+    i++;
+  }
+  return(menu_bar);
+}
+
+GdkCursor *cursor=NULL;
+/* Set the mouse cursor which will be used when the mouse enters the 
+   drawing area.*/
+static void set_cursor(const char *name) {
+  if(!strcmp(name,"delete"))     cursor=gdk_cursor_new(GDK_PIRATE);
+  else if(!strcmp(name,"add"))   cursor=gdk_cursor_new(GDK_PLUS);
+  else if(!strcmp(name,"edit"))  cursor=gdk_cursor_new(GDK_PENCIL);
+  else if(!strcmp(name,"size"))  cursor=gdk_cursor_new(GDK_SIZING);
+  else if(!strcmp(name,"color")) cursor=gdk_cursor_new(GDK_SPRAYCAN);
+  else if(!strcmp(name,"?"))     cursor=gdk_cursor_new(GDK_QUESTION_ARROW);
+  else cursor=gdk_cursor_new_from_name(gdk_display_get_default(),name);
+}
+
+static void menu_move(MENUENTRY *me)     {current_action=A_MOVE;   set_cursor("move");    update_statusline();}
+static void menu_copy(MENUENTRY *me)     {current_action=A_COPY;   set_cursor("copy");    update_statusline();}
+static void menu_identify(MENUENTRY *me) {current_action=A_NONE;   set_cursor("?");       update_statusline();}
+static void menu_resize(MENUENTRY *me)   {current_action=A_RESIZE; set_cursor("size");    update_statusline();}
+static void menu_mtb(MENUENTRY *me)      {current_action=A_MTB;    set_cursor("pointer"); update_statusline();}
+static void menu_add(MENUENTRY *me)      {current_action=A_ADD;    set_cursor("add");     update_statusline();}
+static void menu_delete(MENUENTRY *me)   {current_action=A_DELETE; set_cursor("delete");  update_statusline();}
+static void menu_edit_prop(MENUENTRY *me){current_action=A_EDIT;   set_cursor("edit");    update_statusline();}
+static void menu_set_foreground(MENUENTRY *me){current_action=A_SFGC;  set_cursor("color");   update_statusline();}
+static void menu_set_background(MENUENTRY *me){current_action=A_SBGC;  set_cursor("color");   update_statusline();}
+static void menu_set_font(MENUENTRY *me) {current_action=A_SFONT;  set_cursor("pointer"); update_statusline();}
 
 static void menu_undodelete(MENUENTRY *me) {
-  printf ("%s\n",me->text);
   if(undo_element) {
     printf("Restore element...\n");
     add_element(maindash,undo_element);
     undo_element=NULL;
     is_modified=1;
-    draw_dash(maindash,mainwindow);
- 
-    if(pixmap) g_object_unref(pixmap);
-    pixmap=NULL;
-    update_drawarea();
-    update_title(ifilename);
-    gtk_widget_queue_draw_area(drawing_area,0,0,mainwindow->w,mainwindow->h);
+    redraw_panel(drawing_area);
   }
 }
 
@@ -57,11 +135,7 @@ static void menu_elements(char *typ) {
   for(i=0;i<anzeltyp;i++) {
     if(!strcmp(typ,eltyps[i].name)) current_element=i;
   }
-  if(current_element>=0) {
-    current_action=A_ADD;
-    update_statusline();
-    printf("Elements: %s, opcode=%d\n",typ,current_element);
-  }
+  if(current_element>=0) menu_add(NULL);
 }
 
 static void about_dialog(MENUENTRY *me) {
@@ -159,7 +233,6 @@ static void menu_quit(MENUENTRY *me) {
 }
 static void menu_grid_onoff(MENUENTRY *me) {
   do_grid=(int)gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(me->widget));
-  printf("grid: %d\n",do_grid);
   if(pixmap) g_object_unref(pixmap);
   pixmap=NULL;
   update_drawarea();
@@ -168,17 +241,13 @@ static void menu_select_fgc(MENUENTRY *me) {
   char buf[64];
   snprintf(buf,sizeof(buf),"$%s",tohex(current_fgc));
   int rc=colorselect_dialog("Select foregroud color",buf);
-  if(rc) {
-    current_fgc=(long)myatof(buf);
-  }
+  if(rc) current_fgc=(long)myatof(buf);
 }
 static void menu_select_bgc(MENUENTRY *me) {
   char buf[64];
   snprintf(buf,sizeof(buf),"$%s",tohex(current_bgc));
   int rc=colorselect_dialog("Select backgroud color",buf);
-  if(rc) {
-    current_bgc=(long)myatof(buf);
-  }
+  if(rc) current_bgc=(long)myatof(buf);
 }
 /* open a file selector to select a new font.*/
 static void menu_select_font(MENUENTRY *me) {
@@ -186,9 +255,7 @@ static void menu_select_font(MENUENTRY *me) {
   sprintf(buf,"%s.ttf",current_font);
   int rc=fileselect_dialog(buf,fontdir,"*.ttf");
   if(rc && *buf) {
-    if(!fnmatch("*.ttf",buf,FNM_NOESCAPE)) {
-      buf[strlen(buf)-4]=0;
-    }
+    if(!fnmatch("*.ttf",buf,FNM_NOESCAPE)) buf[strlen(buf)-4]=0;
     if(!strncmp(buf,fontdir,strlen(fontdir))) sprintf(current_font,"%s",buf+strlen(fontdir)+1);
     else sprintf(current_font,"%s",buf);
   }
@@ -217,7 +284,7 @@ static void menu_edit_broker(MENUENTRY *me) {
   }
 }
 
-MENUENTRY menuentries[]={
+static MENUENTRY menuentries[]={
 {0,"New",          menu_new,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Load ...",     menu_load,NULL},
@@ -281,3 +348,7 @@ MENUENTRY menuentries[]={
 
 {0,NULL,NULL,NULL}
 };
+/* Set the default menu states....*/
+void menu_set_default() {
+  menu_identify(NULL); /* Set initial Action and mouse cursor. */
+}

@@ -43,9 +43,6 @@ char *broker_passwd=NULL;
 char *topic_prefix=NULL;
 char call_options[SIZEOF_CALL_OPTIONS]="";
 
-
-#define DEFAULT_ELEMENT 3   /* COMPOUND */
-
 int current_element=DEFAULT_ELEMENT;
 int current_action=A_NONE;
 
@@ -235,7 +232,7 @@ void update_statusline() {
 int selected_element=-1;
 int mouse_rel_x,mouse_rel_y;
 
-static void redraw_panel(GtkWidget *widget) {
+void redraw_panel(GtkWidget *widget) {
   draw_dash(maindash,mainwindow);
 
   if(pixmap) g_object_unref(pixmap);
@@ -620,13 +617,20 @@ void update_drawarea() {
   gtk_widget_set_size_request(GTK_WIDGET(drawing_area),maindash->tree[maindash->panelelement].w, maindash->tree[maindash->panelelement].h);
 }
 
-
+static gboolean on_enter(GtkWidget *darea, GdkEventCrossing *event) {
+  gdk_window_set_cursor(window->window, cursor);
+  return(TRUE);
+}
+static gboolean on_leave(GtkWidget *darea, GdkEventCrossing *event) {
+  GdkDisplay *display = gtk_widget_get_display (darea);
+  GdkCursor *dc=gdk_cursor_new_from_name(display,"default");
+  gdk_window_set_cursor(window->window,dc);
+  return(TRUE);
+}
 int main(int argc, char *argv[]) {
-  GtkWidget *menu;
   GtkWidget *menu_bar;
   GtkWidget *scrollarea;
   GtkWidget *vbox;
-  int i;
   
   hyperdash_set_defaults();
   kommandozeile(argc,argv);    /* process command line */
@@ -657,74 +661,8 @@ int main(int argc, char *argv[]) {
     update_title(ifilename);
     g_signal_connect(window,"delete-event",G_CALLBACK (gtk_main_quit), NULL);
 
-    /* Init the menu-widget, and remember -- never
-     * gtk_show_widget() the menu widget!! 
-     * This is the menu that holds the menu items, the one that
-     * will pop up when you click on the "Root Menu" in the app */
-    menu=gtk_menu_new();
-    /* Create a menu-bar to hold the menus and add it to our main window */
-    menu_bar=gtk_menu_bar_new();
+    menu_bar=init_menu(); /* Create the Menu */
 
-    /* Next we make a little loop that makes three menu-entries for "test-menu".
-     * Notice the call to gtk_menu_shell_append.  Here we are adding a list of
-     * menu items to our menu.  Normally, we'd also catch the "clicked"
-     * signal on each of the menu items and setup a callback for it,
-     * but it's omitted here to save space. */
-
-     i=0;
-     while(menuentries[i].text) {     
-       if(menuentries[i].typ==MENU_TITLE) {
-         /* Create a new menu-item with a name... */
-	 menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
-         /* Show the widget */
-         gtk_widget_show (menuentries[i].widget);
-         /* Now we specify that we want our newly created "menu" to be the menu
-          * for the "root menu" */
-         gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuentries[i].widget), menu);
-         /* Init the menu-widget, and remember -- never
-          * gtk_show_widget() the menu widget!! 
-          * This is the menu that holds the menu items, the one that
-          * will pop up when you click on the "Root Menu" in the app */
-          menu = gtk_menu_new ();
-          /* And finally we append the menu-item to the menu-bar -- this is the
-           * "root" menu-item I have been raving about =) */
-          gtk_menu_shell_append (GTK_MENU_SHELL (menu_bar),menuentries[i].widget );
-       } else {
-         /* Create a new menu-item with a name... */
-         if(*menuentries[i].text=='-') menuentries[i].widget=gtk_separator_menu_item_new();
-	 else if(*menuentries[i].text=='[') menuentries[i].widget=gtk_check_menu_item_new_with_label(menuentries[i].text+4);
-        else if(*menuentries[i].text=='#') {
-	  menuentries[i].widget=gtk_separator_menu_item_new();
-	  int k;
-	  GtkWidget *gw;
-	  GSList *group = NULL;
-	  for(k=1;k<anzeltyp;k++) {
-	    if(strcmp(eltyps[k].name,"BROKER") && strcmp(eltyps[k].name,"PANEL")) {
-//	      gw=gtk_menu_item_new_with_label(eltyps[k].name);
-	      gw=gtk_radio_menu_item_new_with_label(group,eltyps[k].name);
-	      group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (gw));
-	      if(k==DEFAULT_ELEMENT) gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(gw),TRUE);
-              gtk_menu_shell_append(GTK_MENU_SHELL (menu),gw);
-	      g_signal_connect_swapped(gw, "activate",
-	    			  G_CALLBACK (menuentries[i].function), 
-        			  (void *) eltyps[k].name); 
-	      gtk_widget_show (gw);
-	    }
-	  }
-	}
-         else menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
-         /* ...and add it to the menu. */
-         gtk_menu_shell_append (GTK_MENU_SHELL (menu),menuentries[i].widget);
-	 /* Do something interesting when the menuitem is selected */
-	 g_signal_connect_swapped(menuentries[i].widget, "activate",
-	    			  G_CALLBACK (menuentries[i].function), 
-        			  (MENUENTRY *) &menuentries[i]);
-
-         /* Show the widget */
-         gtk_widget_show (menuentries[i].widget);
-       }
-       i++;
-     }
     /* A vbox to put a menu and a button in: */
     vbox = gtk_vbox_new (FALSE, 0);
     gtk_container_add (GTK_CONTAINER (window), vbox);
@@ -750,12 +688,16 @@ int main(int argc, char *argv[]) {
   g_signal_connect(drawing_area,"motion_notify_event",G_CALLBACK(motion_notify_event), NULL);
   g_signal_connect(drawing_area,"button_press_event", G_CALLBACK(button_press_event),  NULL);
   g_signal_connect(drawing_area,"button_release_event",G_CALLBACK(button_release_event), NULL);
+  g_signal_connect(drawing_area,"enter-notify-event",G_CALLBACK(on_enter), NULL);
+  g_signal_connect(drawing_area,"leave-notify-event",G_CALLBACK(on_leave), NULL);
 
   gtk_widget_set_events(drawing_area, GDK_EXPOSURE_MASK
 			 | GDK_LEAVE_NOTIFY_MASK
 			 | GDK_BUTTON_PRESS_MASK| GDK_BUTTON_RELEASE_MASK
 			 | GDK_POINTER_MOTION_MASK
-			 | GDK_POINTER_MOTION_HINT_MASK);
+			 | GDK_POINTER_MOTION_HINT_MASK
+			 | GDK_ENTER_NOTIFY_MASK 
+			 | GDK_LEAVE_NOTIFY_MASK);
     
     scrollarea=gtk_scrolled_window_new(NULL,NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrollarea),
@@ -769,8 +711,8 @@ int main(int argc, char *argv[]) {
     
   /* always display the window as the last step so it all splashes on
    * the screen at once. */
-  gtk_widget_show (window);
-  update_statusline();
+  gtk_widget_show(window);
+  menu_set_default();
 
   /* Main User Input Handling etc... */
 

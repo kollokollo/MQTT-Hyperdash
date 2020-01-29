@@ -33,6 +33,8 @@ void emergency_save_dialog();
 void update_statusline();
 void update_drawarea();
 void update_title(const char *t);
+void redraw_panel(GtkWidget *widget);
+
 
 extern char ifilename[];
 extern int verbose;
@@ -49,3 +51,4 @@ extern WINDOW *mainwindow;
 extern GdkPixmap *pixmap;
 extern ELEMENT *undo_element;
 extern GtkWidget *drawing_area;
+extern GtkWidget *window;

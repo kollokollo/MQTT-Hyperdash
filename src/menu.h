@@ -16,4 +16,10 @@ typedef struct {
 #define MENU_TITLE 1
 #define MENU_ENTRY 0
 
-extern MENUENTRY menuentries[];
+#define DEFAULT_ELEMENT 3   /* COMPOUND */
+
+extern GdkCursor *cursor;
+
+
+GtkWidget *init_menu();
+void menu_set_default();
