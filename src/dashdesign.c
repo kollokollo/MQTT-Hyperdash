@@ -36,6 +36,7 @@ int do_show_invisible=1; /* Also draw invisible elements. */
 DASH *maindash;
 WINDOW *mainwindow;
 
+extern WINDOW *global_window;  /* TODO */
 char *broker_override=NULL;
 char *broker_user=NULL;
 char *broker_passwd=NULL;
@@ -43,7 +44,7 @@ char *topic_prefix=NULL;
 char call_options[SIZEOF_CALL_OPTIONS]="";
 
 
-#define DEFAULT_ELEMENT 3   /* BOX */
+#define DEFAULT_ELEMENT 3   /* COMPOUND */
 
 int current_element=DEFAULT_ELEMENT;
 int current_action=A_NONE;
@@ -57,8 +58,6 @@ int do_grid=0;
 
 int current_mouse_x=0;
 int current_mouse_y=0;
-
-extern WINDOW *global_window;  /* TODO */
 
 SDL_Surface *surface;
 GtkWidget *textarea;
@@ -396,19 +395,31 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	  new_x-=(new_x%5);
 	  new_y-=(new_y%5);
 	}
+	if((maindash->tree[idx].type&EL_COMPOUND)==EL_COMPOUND) {
+          printf("move compound.\n");
+	  int i;
+	  ELEMENT *el;
+	  for(i=0;i<idx;i++) {
+	    el=&(maindash->tree[i]);
+	    if(el->x>=maindash->tree[idx].x && 
+	       el->x+el->w<=maindash->tree[idx].x+maindash->tree[idx].w &&
+	       el->y>=maindash->tree[idx].y && 
+ 	       el->y+el->h<=maindash->tree[idx].y+maindash->tree[idx].h) {
+	         el->x+=new_x-maindash->tree[idx].x;
+	         el->y+=new_y-maindash->tree[idx].y;
+	         printf("Move %d\n",i);
+	    }
+	  }
+	}
         printf("Move Element #%d from (%d,%d) to (%d,%d)\n",selected_element,maindash->tree[idx].x,maindash->tree[idx].y, 
-	new_x,new_y);
+	  new_x,new_y);
         maindash->tree[idx].x=new_x;
         maindash->tree[idx].y=new_y;
+	
+	
 	is_modified=1;
 	selected_element=-1;
-	draw_dash(maindash,mainwindow);
- 
-	if(pixmap) g_object_unref(pixmap);
-        pixmap=NULL;
-        update_drawarea();
-        update_title(ifilename);
-	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+        redraw_panel(widget);
       }
       break;
     case A_COPY:
@@ -424,6 +435,26 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	  new_x-=(new_x%5);
 	  new_y-=(new_y%5);
 	}
+	if((maindash->tree[idx].type&EL_COMPOUND)==EL_COMPOUND) {
+          printf("copy compound.\n");
+	  int i;
+	  ELEMENT *el;
+	  ELEMENT elc;
+	  for(i=0;i<idx;i++) {
+	    el=&(maindash->tree[i]);
+	    if(el->x>=maindash->tree[idx].x && 
+	       el->x+el->w<=maindash->tree[idx].x+maindash->tree[idx].w &&
+	       el->y>=maindash->tree[idx].y && 
+ 	       el->y+el->h<=maindash->tree[idx].y+maindash->tree[idx].h) {
+  	         elc=duplicate_element(&(maindash->tree[i]));
+
+	         elc.x+=new_x-maindash->tree[idx].x;
+	         elc.y+=new_y-maindash->tree[idx].y;
+                 add_element(maindash,&elc);
+	         printf("Copy %d\n",i);
+	    }
+	  }
+	}
         printf("Copy Element #%d from (%d,%d) to (%d,%d)\n",selected_element,maindash->tree[idx].x,maindash->tree[idx].y, 
   	  new_x,new_y);
         ELEMENT el=duplicate_element(&(maindash->tree[idx]));
@@ -432,13 +463,7 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	add_element(maindash,&el);
 	is_modified=1;
 	selected_element=-1;
-	draw_dash(maindash,mainwindow);
- 
-	if(pixmap) g_object_unref(pixmap);
-        pixmap=NULL;
-        update_drawarea();
-        update_title(ifilename);
-	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
+	redraw_panel(widget);
       }
       break;
      case A_ADD:
@@ -461,14 +486,7 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 
 	is_modified=1;
 	selected_element=-1;
-	draw_dash(maindash,mainwindow);
- 
-	if(pixmap) g_object_unref(pixmap);
-        pixmap=NULL;
-        update_drawarea();
-        update_title(ifilename);
-	gtk_widget_queue_draw_area(widget,0,0,mainwindow->w,mainwindow->h);
-
+	redraw_panel(widget);
       }
       break;
     }

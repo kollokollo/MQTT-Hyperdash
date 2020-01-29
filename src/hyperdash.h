@@ -9,12 +9,13 @@
 #define __HYPERDASH
 
 #define EL_IGNORE  0
-#define EL_BROKER  0x1000
-#define EL_PANEL    0x800
-#define EL_DYNAMIC  0x100
-#define EL_INPUT    0x200
-#define EL_VISIBLE  0x400
-#define EL_TYPMASK 0x1f00
+#define EL_COMPOUND 0x2000
+#define EL_BROKER   0x1000
+#define EL_PANEL     0x800
+#define EL_DYNAMIC   0x100
+#define EL_INPUT     0x200
+#define EL_VISIBLE   0x400
+#define EL_TYPMASK  0x3f00
 
 #include "subscribe.h"
 

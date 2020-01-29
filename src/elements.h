@@ -17,8 +17,12 @@ char *s_broker(ELEMENT *el);
 
 void i_panel(ELEMENT *el,char *pars);
 void d_panel(ELEMENT *el,WINDOW *win);
-int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b);
+int  c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b);
 char *s_panel(ELEMENT *el);
+
+void i_compound(ELEMENT *el,char *pars);
+void d_compound(ELEMENT *el,WINDOW *win);
+char *s_compound(ELEMENT *el);
 
 void i_bar(ELEMENT *el,char *pars);
 char *s_bar(ELEMENT *el);

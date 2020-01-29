@@ -231,7 +231,7 @@ MENUENTRY menuentries[]={
 {0,"Quit",         menu_quit,NULL},
 {MENU_TITLE,"File",NULL,NULL},
 {0,"Undo delete",     menu_undodelete,NULL},
-{0,"Delete Elements", menu_delete,NULL},
+{0,"Delete Element", menu_delete,NULL},
 //{0,"Copy Elements",   menuitem_response,NULL},
 //{0,"Paste Elements",  menuitem_response,NULL},
 {0,"-------------",NULL,NULL},

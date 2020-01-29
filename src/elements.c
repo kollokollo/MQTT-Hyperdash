@@ -189,6 +189,10 @@ void i_frame(ELEMENT *el,char *pars) {
   el->h=atoi(key_value(pars,"H","10"));
   el->revert=atoi(key_value(pars,"REVERT","0"));
 }
+void i_compound(ELEMENT *el,char *pars) {
+  el->w=atoi(key_value(pars,"W","32"));
+  el->h=atoi(key_value(pars,"H","32"));
+}
 
 void i_shellcmd(ELEMENT *el,char *pars) {
   el->text=strdup(key_value(pars,"CMD",DEFAULT_SHELLCMD));
@@ -454,6 +458,12 @@ void d_box(ELEMENT *el,WINDOW *win) {
 void d_pbox(ELEMENT *el,WINDOW *win) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
   rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->fgc);
+}
+void d_compound(ELEMENT *el,WINDOW *win) {
+  if(do_show_invisible) {
+    boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,0x80808040);
+    rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),0x80808080);
+  }
 }
 void d_circle(ELEMENT *el,WINDOW *win) {
   ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->fgc);
@@ -1325,6 +1335,11 @@ char *s_frame(ELEMENT *el) {
   snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d", 
   eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h);
   if(el->revert!=0 || s_maxval)  sprintf(elementstring+strlen(elementstring)," REVERT=%d",el->revert);
+  return(elementstring);
+}
+char *s_compound(ELEMENT *el) {
+  snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d", 
+  eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h);
   return(elementstring);
 }
 char *s_bitmap(ELEMENT *el) {

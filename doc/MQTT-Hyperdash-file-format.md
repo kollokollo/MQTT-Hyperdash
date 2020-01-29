@@ -1,10 +1,13 @@
 ## The .dash file format
 
-for MQTT Hyperdash V.1.00 (c) by Markus Hoffmann
+for MQTT Hyperdash V.1.02 (c) by Markus Hoffmann
 
 
 MQTT Hyperdash runs so-called dash-files. Dash-files are simple text files, 
-consisting of UTF-8 encoded ASCII text. They can be edited by any text editor.
+consisting of UTF-8 encoded ASCII text. They can be edited by any text editor, or
+by the special application "dashdesign" which comes with the MQTT-Hyperdash package.
+
+The format is as follows:
 
 Each line contains the definition of one element. If the last character of the
 line is a '\' (backslash), the next line will be linked to this line. You can
@@ -28,7 +31,10 @@ Comments are marked with a '#' at the beginning of a line.
 Empty lines will be ignored. 
 
 Each dash file must contain exactly one "PANEL" element and 
-one "BROKER" element. 
+one "BROKER" element. The PANEL element is expected to be defined 
+at the beginning of the .dash file. Elements are drawn in the order
+they appear in the file. If you want to place element B on top of 
+element A, element A should be defined first. 
 
 
 ### Element types
@@ -72,6 +78,7 @@ Currently there exist following element types:
 |PLOT          | X Y W H TOPIC TYPE N OFFSET MIN MAX AMIN AMAX BGC FGC AGC |
 |TEXTAREA      | X Y W H TOPIC ALIGN FGC BGC FONT FONTSIZE                 |
 |TOPICIMAGE    | X Y W H TOPIC                                             |
+|COMPOUND      | X Y W H                                                   |
 
 
 ### Common keyvalue formats
@@ -640,9 +647,18 @@ Example:
 DASH:        x=110 y=360 w=100 h=25 DASH="main"
 </pre>
 
+#### COMPOUND: X= Y= W= H= 
+
+This special element has the function to mark a group of other elements, 
+so that they can be moved or copied together. The compound element is 
+only visible in the dashdesign application. 
+
+Elements belonging to the group need to be fully inside the area defined
+by the compound element, and they need to be defined before. Elements
+defined after can be made part of the group by moving them to the 
+background. 
+
+#### Other elements
 
 More element types can be thought of, but our goal is to keep everything as
 simple as possible. At the moment we are thinking of maybe having 
-
-* IMAGE (display topic content as image (jpeg, png)).
-* TEXTAREA (formatted text area)

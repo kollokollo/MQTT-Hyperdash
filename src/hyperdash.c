@@ -77,6 +77,7 @@ const ELDEF eltyps[]= {
  {EL_IGNORE,                     "#",          NULL,       NULL,       NULL,     NULL,   NULL}, /* must be there to occupy entry 0 */
  {EL_BROKER,                     "BROKER",     i_broker,   NULL,       NULL,     NULL,   s_broker},
  {EL_PANEL|EL_VISIBLE|EL_INPUT,  "PANEL",      i_panel,    d_panel,    NULL,     c_panel,s_panel},
+ {EL_COMPOUND|EL_VISIBLE,        "COMPOUND",     i_compound, d_compound, NULL,     NULL,       s_compound},
  {EL_VISIBLE,                    "LINE",       i_line,     d_line,     NULL,     NULL,   s_line},
  {EL_VISIBLE,                    "BOX",        i_box,      d_box,      NULL,     NULL,   s_box},
  {EL_VISIBLE,                    "PBOX",       i_pbox,     d_pbox,     NULL,     NULL,   s_pbox},
@@ -107,8 +108,8 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE|EL_DYNAMIC,         "SCMDLABEL",    i_scmdlabel,d_subscribe,u_scmdlabel,NULL,    s_scmdlabel}, 
  {EL_VISIBLE|EL_DYNAMIC,         "TOPICIMAGE",   i_timage,   d_subscribe,u_timage,  NULL,     s_timage}, 
  {EL_VISIBLE|EL_DYNAMIC,         "TEXTAREA",     i_textarea, d_textarea, u_textarea,NULL,     s_textarea}, 
- {EL_INPUT,                      "SHELLCMD",   i_shellcmd, NULL,       NULL,     c_shellcmd, s_shellcmd},
- {EL_INPUT,                      "DASH",       i_subdash,  NULL,       NULL,     c_subdash,  s_subdash},
+ {EL_INPUT,                      "SHELLCMD",     i_shellcmd, NULL,       NULL,     c_shellcmd, s_shellcmd},
+ {EL_INPUT,                      "DASH",         i_subdash,  NULL,       NULL,     c_subdash,  s_subdash},
 
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
