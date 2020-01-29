@@ -145,6 +145,7 @@ void init_newloaded_dash() {
     strncpy(current_font,maindash->tree[maindash->panelelement].font,sizeof(current_font));
 
   if(pixmap) {g_object_unref(pixmap);pixmap=NULL;}
+  gtk_window_resize(GTK_WINDOW(window),mainwindow->w+2,mainwindow->h+54);
   update_title(ifilename);
   update_drawarea();
   update_statusline();
@@ -245,7 +246,7 @@ void redraw_panel(GtkWidget *widget) {
 
 static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
   fix_pixmap(widget);
-  if(event->button==1 && pixmap!=NULL) {
+  if(event->button>0 && pixmap!=NULL) {
     if(event->x<mainwindow->w && event->y<mainwindow->h) {
       current_mouse_x = event->x;
       current_mouse_y = event->y;
@@ -254,13 +255,32 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
     
     switch(current_action) {
     case A_NONE:       /* Identify Elements under the mouse pointer */
-      printf("(%d,%d): {\n",current_mouse_x,current_mouse_y);
-      while(idx>=0) {
-        printf("  Element #%d <%s>\n",idx,element2a(&maindash->tree[idx]));
-	if(idx==0) break;
-        idx=find_element(maindash,idx-1,current_mouse_x,current_mouse_y,0,0);      
+      if(event->button==1) {
+        char buf[1024*2];
+        sprintf(buf,"(%d,%d): {\n",current_mouse_x,current_mouse_y);
+        while(idx>=0) {
+          sprintf(buf+strlen(buf),"  #%d %s\n",idx,element2a(&maindash->tree[idx]));
+	  if(idx==0) break;
+          idx=find_element(maindash,idx-1,current_mouse_x,current_mouse_y,0,0);      
+        }
+        sprintf(buf+strlen(buf),"}\n");
+	int i=0;
+	char *p=buf;
+	while(*p) {
+	  if(*p=='\n') i=0;
+          if(++i>96 && isspace(*p)) {i=0;*p='\n';}
+	  p++;
+	}
+	message_dialog(PACKAGE_NAME " Element Info",buf,1);
+      } else {
+        printf("(%d,%d): {\n",current_mouse_x,current_mouse_y);
+        while(idx>=0) {
+          printf("  Element #%d <%s>\n",idx,element2a(&maindash->tree[idx]));
+	  if(idx==0) break;
+          idx=find_element(maindash,idx-1,current_mouse_x,current_mouse_y,0,0);      
+        }
+        printf("}\n");
       }
-      printf("}\n");
       break;
     case A_ADD:
       selected_element=maindash->anzelement;
@@ -280,27 +300,39 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
       gtk_widget_queue_draw_area(widget,current_mouse_x, current_mouse_y,5+1, 5+1);
       break;
     case A_DELETE:
-      if(idx>=0 && !((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
-	printf("Delete Element: #%d\n",idx);
-	/* in den undo-buffer überführen...*/
-        if(undo_element) {
-	  free_element(undo_element);
-	  free(undo_element);
-	}
-	undo_element=calloc(1,sizeof(ELEMENT));
-	*undo_element=maindash->tree[idx];
-	delete_element(maindash,idx);
+      if(event->button==1) {
+        if(idx>=0 && !((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
+	  printf("Delete Element: #%d\n",idx);
+	  /* in den undo-buffer überführen...*/
+          if(undo_element) {
+	    free_element(undo_element);
+	    free(undo_element);
+	  }
+	  undo_element=calloc(1,sizeof(ELEMENT));
+	  *undo_element=maindash->tree[idx];
+	  delete_element(maindash,idx);
 	
-	is_modified=1;
-	redraw_panel(widget);
+	  is_modified=1;
+	  redraw_panel(widget);
+        }
       }
       break;
     case A_EDIT:
-      printf("Edit Element: #%d\n",idx);
-      if(idx>=0) {
-        if(edit_element(&(maindash->tree[idx]))) {
-          is_modified=1;
-	  redraw_panel(widget);
+      if(event->button==1) {
+        printf("Edit Element: #%d\n",idx);
+        if(idx>=0) {
+          if(edit_element(&(maindash->tree[idx]))) {
+	    if(idx==maindash->panelelement) {
+	      printf("The Panel was changed!\n");
+	      close_pixmap(mainwindow);
+              mainwindow=open_pixmap(maindash->tree[maindash->panelelement].text,PACKAGE_NAME,0,0,maindash->tree[maindash->panelelement].w,maindash->tree[maindash->panelelement].h,0);
+              global_window=mainwindow; /* TODO */
+              draw_dash(maindash,mainwindow);
+              gtk_window_resize(GTK_WINDOW(window),mainwindow->w+2,mainwindow->h+54);
+	    }
+            is_modified=1;
+	    redraw_panel(widget);
+          }
         }
       }
       break;
@@ -356,15 +388,42 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
     case A_MOVE:
     case A_COPY:
     case A_RESIZE:
-      if(idx>=0 && !((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
-        selected_element=idx;
-        mouse_rel_x=current_mouse_x;
-        mouse_rel_y=current_mouse_y;
-	gdk_draw_rectangle(pixmap,widget->style->white_gc,FALSE,
-	maindash->tree[idx].x, maindash->tree[idx].y,maindash->tree[idx].w, maindash->tree[idx].h);
-        gtk_widget_queue_draw_area(widget,maindash->tree[idx].x, maindash->tree[idx].y,
-	  maindash->tree[idx].w+1, maindash->tree[idx].h+1);
-      } else selected_element=-1;
+      if(event->button==1) {
+        if(idx>=0 && !((maindash->tree[idx].type&EL_PANEL)==EL_PANEL)) {
+          selected_element=idx;
+          mouse_rel_x=current_mouse_x;
+          mouse_rel_y=current_mouse_y;
+	  gdk_draw_rectangle(pixmap,widget->style->white_gc,FALSE,
+	  maindash->tree[idx].x, maindash->tree[idx].y,maindash->tree[idx].w, maindash->tree[idx].h);
+          gtk_widget_queue_draw_area(widget,maindash->tree[idx].x, maindash->tree[idx].y,
+ 	    maindash->tree[idx].w+1, maindash->tree[idx].h+1);
+        } else selected_element=-1;
+      } else {
+        if(idx>=0) {
+          char buf[1024*2];
+	  *buf=0;
+	  if((maindash->tree[idx].type&EL_COMPOUND)==EL_COMPOUND) {
+            printf("copy compound to clipboard [");
+	    int i;
+ 	    ELEMENT *el;
+	    for(i=0;i<idx;i++) {
+	      el=&(maindash->tree[i]);
+	      if(el->x>=maindash->tree[idx].x && 
+	         el->x+el->w<=maindash->tree[idx].x+maindash->tree[idx].w &&
+	         el->y>=maindash->tree[idx].y && 
+ 	         el->y+el->h<=maindash->tree[idx].y+maindash->tree[idx].h) {
+                   sprintf(buf+strlen(buf),"%s\n",element2a(&(maindash->tree[i])));
+	           printf(" #%d",i);
+	      }
+	    }
+	  } 
+          sprintf(buf+strlen(buf),"%s\n",element2a(&(maindash->tree[idx])));
+          /* Copy to clipboard */
+          GtkClipboard *clip=gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+          gtk_clipboard_set_text(clip,buf,strlen(buf));
+	  printf("]\nCopy to clipboard: \n%s",buf);
+	}
+      }
       break;
     }
     update_statusline();
@@ -373,7 +432,7 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
 }
 static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
   fix_pixmap(widget);
-  if(event->button==1 && pixmap!=NULL) { 
+  if(event->button==1 && pixmap!=NULL) {
     if(event->x<mainwindow->w && event->y<mainwindow->h) {
       current_mouse_x = event->x;
       current_mouse_y = event->y;
@@ -656,8 +715,9 @@ int main(int argc, char *argv[]) {
     draw_dash(maindash,mainwindow);
 
     /* create a new window */
-    window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_widget_set_size_request (GTK_WIDGET (window), 320, 200);
+    window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_widget_set_size_request(GTK_WIDGET (window), 350, 150);
+    gtk_window_set_default_size(GTK_WINDOW (window), mainwindow->w+2, mainwindow->h+54);
     update_title(ifilename);
     g_signal_connect(window,"delete-event",G_CALLBACK (gtk_main_quit), NULL);
 

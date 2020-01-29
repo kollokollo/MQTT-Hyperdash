@@ -323,10 +323,10 @@ int edit_element(ELEMENT *el) {
 ELEMENT duplicate_element(ELEMENT *el) {
   ELEMENT rel=*el;
   if(el->topic) rel.topic=strdup(el->topic);
-  if(el->font)  rel.topic=strdup(el->font);
-  if(el->text)  rel.topic=strdup(el->text);
-  if(el->filename)  rel.topic=strdup(el->filename);
-  if(el->format)  rel.topic=strdup(el->format);
+  if(el->font)  rel.font=strdup(el->font);
+  if(el->text)  rel.text=strdup(el->text);
+  if(el->filename)  rel.filename=strdup(el->filename);
+  if(el->format)  rel.format=strdup(el->format);
   
   int j;
   for(j=0;j<10;j++) {

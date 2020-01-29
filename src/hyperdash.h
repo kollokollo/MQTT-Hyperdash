@@ -108,6 +108,6 @@ ELEMENT default_element(int type,unsigned long int fgc,unsigned long int bgc, co
 void scale_element(ELEMENT *el,int w,int h);
 
 int edit_element(ELEMENT *el);
-
+void init_element(ELEMENT *el,const char *line);
 
 #endif

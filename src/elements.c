@@ -534,6 +534,7 @@ void d_hbar(ELEMENT *el,WINDOW *win) {
 }
 void d_textarea(ELEMENT *el,WINDOW *win) {
   boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  if(do_show_invisible) put_font_text(win->display,-1,el->topic,el->x,el->y,0x80808080,el->h);
   ELEMENT_SUBSCRIBE();
 }
 

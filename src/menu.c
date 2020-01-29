@@ -128,7 +128,29 @@ static void menu_undodelete(MENUENTRY *me) {
     redraw_panel(drawing_area);
   }
 }
-
+static void menu_paste(MENUENTRY *me) {
+  GtkClipboard *clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+  gchar *text = gtk_clipboard_wait_for_text(clip);
+  printf("Clipboard: <%s>\n",text);
+  if(text && *text) {
+    ELEMENT elc;
+    char *p1,*p2;
+    int done=0;
+    p2=p1=text;
+    while(!done) {
+      while(*p2 && *p2!='\n') p2++;
+      if(*p2==0) {done=1;break;}
+      else *p2=0;
+      bzero(&elc,sizeof(ELEMENT));
+      init_element(&elc,p1);
+      printf("Add Element: <%s>\n",p1);
+      add_element(maindash,&elc);
+      p1=++p2;
+    }
+    is_modified=1;
+    redraw_panel(drawing_area);
+  }
+}
 
 static void menu_elements(char *typ) {
   int i;
@@ -300,7 +322,8 @@ static MENUENTRY menuentries[]={
 {0,"Undo delete",     menu_undodelete,NULL},
 {0,"Delete Element", menu_delete,NULL},
 //{0,"Copy Elements",   menuitem_response,NULL},
-//{0,"Paste Elements",  menuitem_response,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Paste Elements",  menu_paste,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Edit Broker ...",menu_edit_broker,NULL},
 {0,"-------------",NULL,NULL},
@@ -310,6 +333,15 @@ static MENUENTRY menuentries[]={
 
 {0,"# elements",  menu_elements,NULL},
 {MENU_TITLE,"Element",NULL,NULL},
+#if 0
+//{0,"Analog H scaler input with ticker",  menu_,NULL},
+//{0,"Analog V scaler input with ticker",  menu_,NULL},
+{0,"-------------",NULL,NULL},
+//{0,"Analog value display",  menu_,NULL},
+//{0,"Digital value display",  menu_,NULL},
+//{0,"Analog Meter with value display",  menu_,NULL},
+{MENU_TITLE,"Groups",NULL,NULL},
+#endif
 {0,"Identify Elements",  menu_identify,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Move Element",      menu_move,NULL},
@@ -329,8 +361,9 @@ static MENUENTRY menuentries[]={
 {0,"Set background color",menu_set_background,NULL},
 {0,"Set font",            menu_set_font,NULL},
 {0,"-------------",NULL,NULL},
-//{0,"Select Font",  menuitem_response,NULL},
 //{0,"Select Layout",menuitem_response,NULL},
+{0,"-------------",NULL,NULL},
+{0,"Edit Element",menu_edit_prop,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Add Element",  menu_add,NULL},
 
@@ -343,7 +376,7 @@ static MENUENTRY menuentries[]={
 {0,"Select text font ...",       menu_select_font,NULL},
 
 {MENU_TITLE,"Settings",NULL,NULL},
-{0,"About MQTT-Hyperdash DashDesign ...",about_dialog,NULL},
+{0,"About " PACKAGE_NAME " DashDesign ...",about_dialog,NULL},
 {MENU_TITLE,"About",NULL,NULL},
 
 {0,NULL,NULL,NULL}
