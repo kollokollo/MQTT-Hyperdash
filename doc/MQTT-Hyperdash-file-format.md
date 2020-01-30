@@ -60,7 +60,7 @@ Currently there exist following element types:
 |TOPICNUMBER   | X Y H TOPIC FGC BGC FONT FONTSIZE FORMAT                  |
 |HBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX                         |
 |VBAR          | X Y W H TOPIC FGC BGC AGC MIN MAX                         |
-|METER         | X Y W H TOPIC FGC BGC AGC MIN MAX AMIN AMAX 	           |
+|METER         | X Y W H TOPIC FGC BGC AGC MIN MAX AMIN AMAX TYPE          |
 |VMETER        | X Y W H TOPIC FGC BGC AGC MIN MAX		           |
 |HMETER        | X Y W H TOPIC FGC BGC AGC MIN MAX		           |
 |TEXTLABEL     | X Y H TOPIC BGC FONT FONTSIZE TEXT[n]                     |

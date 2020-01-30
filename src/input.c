@@ -211,7 +211,7 @@ int colorselect_dialog(const char *title,char *gc) {
   if(response==GTK_RESPONSE_OK) {
     gtk_color_selection_get_current_color (colorsel, &color);
     int al=gtk_color_selection_get_current_alpha(colorsel);
-    printf("New color: r,g,b,a=%x %x %x %x\n",color.red,color.green,color.blue,al);
+    // printf("New color: r,g,b,a=%x %x %x %x\n",color.red,color.green,color.blue,al);
     fgc=(al>>8)|(color.blue&0xff00)|((color.green&0xff00)<<8)|((color.red&0xff00)<<16);
     sprintf(gc,"$%s",tohex(fgc));
     ret=1;
@@ -312,15 +312,10 @@ static void on_dashbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   /* open a file selector to select a new dash to display.*/
   int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
   if(rc && newdash[0]) {
-    if(!fnmatch("*.dash",newdash,FNM_NOESCAPE)) {
-      newdash[strlen(newdash)-5]=0;
-      printf("Kürze auf: <%s>\n",newdash);
-    }
+    if(!fnmatch("*.dash",newdash,FNM_NOESCAPE)) newdash[strlen(newdash)-5]=0;
     char buf[256];
     if(!strncmp(newdash,dashboarddir,strlen(dashboarddir))) sprintf(buf,"\"%s\"",newdash+strlen(dashboarddir)+1);
     else sprintf(buf,"\"%s\"",newdash);
-    
-    printf("Result. <%s>\n",buf);
     gtk_entry_set_text(GTK_ENTRY(val->widget),buf);
   }
 }
@@ -463,7 +458,6 @@ int property_dialog(char *elline) {
   gtk_box_pack_start (GTK_BOX(box1), button, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX(box1), button2, TRUE, TRUE, 0);
   xtrim(b,1,b);
-  printf("b=<%s>\n",b);
   while(wort_sep(b,' ',1,a,b)) {
     char *p=a;
     while(*p && *p!='=') p++;

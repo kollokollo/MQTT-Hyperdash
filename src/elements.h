@@ -25,6 +25,7 @@ void d_compound(ELEMENT *el,WINDOW *win);
 char *s_compound(ELEMENT *el);
 
 void i_bar(ELEMENT *el,char *pars);
+int  c_bar(ELEMENT *el,WINDOW *win,int x, int y, int b);
 char *s_bar(ELEMENT *el);
 
 void i_bitmap(ELEMENT *el,char *pars);
@@ -114,6 +115,7 @@ void i_tinnumber(ELEMENT *el,char *pars);
 void i_meter(ELEMENT *el,char *pars);
 void d_meter(ELEMENT *el,WINDOW *win);
 void u_meter(ELEMENT *el,WINDOW *win, char *message, int);
+int  c_meter(ELEMENT *el,WINDOW *win,int x, int y, int b);
 char *s_meter(ELEMENT *el);
 
 void d_tvmeter(ELEMENT *el,WINDOW *win);
@@ -151,6 +153,7 @@ char *s_tinstring(ELEMENT *el);
 void i_plot(ELEMENT *el,char *pars);
 void d_plot(ELEMENT *el,WINDOW *win);
 void u_plot(ELEMENT *el,WINDOW *win, char *message, int);
+int  c_plot(ELEMENT *el,WINDOW *win,int x, int y, int b);
 char *s_plot(ELEMENT *el);
 
 void draw_invisible_element(ELEMENT *el,WINDOW *win);

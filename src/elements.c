@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <math.h>
+#include <locale.h>
 
 #include "config.h" 
  
@@ -235,6 +236,7 @@ void i_meter(ELEMENT *el,char *pars) {
   el->max=myatof(key_value(pars,"MAX","1"));
   el->amin=myatof(key_value(pars,"AMIN","-225"));
   el->amax=myatof(key_value(pars,"AMAX","45"));
+  el->revert=myatof(key_value(pars,"TYPE","0"));
 }
 void i_plot(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","64"));
@@ -283,7 +285,7 @@ void i_textlabel(ELEMENT *el,char *pars) {
   ELEMENT_FONT();
   el->h=atoi(key_value(pars,"H","-1"));
   el->w=atoi(key_value(pars,"W","32"));
-  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
+  el->bgc=(long)myatof(key_value(pars,"BGC",DEFAULT_BGC));
 }
 void i_bitmaplabel(ELEMENT *el,char *pars) {
   int i;
@@ -316,7 +318,7 @@ void i_bitmaplabel(ELEMENT *el,char *pars) {
     el->labelcolor[i]=(long)myatof(w3);
   }
 
-  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
+  el->bgc=(long)myatof(key_value(pars,"BGC",DEFAULT_BGC));
   snprintf(f,sizeof(f),"%d",w);
   el->w=atoi(key_value(pars,"W",f));
   snprintf(f,sizeof(f),"%d",h);
@@ -352,7 +354,7 @@ void i_tstring(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","-1"));
   el->h=atoi(key_value(pars,"H","-1"));
   /* FGC BGC  */  
-  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
+  el->bgc=(long)myatof(key_value(pars,"BGC",DEFAULT_BGC));
   el->fgc=(long)myatof(key_value(pars,"FGC",DEFAULT_FGC));
 }
 void i_textarea(ELEMENT *el,char *pars) {
@@ -362,7 +364,7 @@ void i_textarea(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","128"));
   el->h=atoi(key_value(pars,"H","64"));
   /* FGC BGC  */  
-  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
+  el->bgc=(long)myatof(key_value(pars,"BGC",DEFAULT_BGC));
   el->fgc=(long)myatof(key_value(pars,"FGC",DEFAULT_FGC));
   /* ALIGN */
   el->format=strdup(key_value(pars,"ALIGN",DEFAULT_ALIGN));
@@ -375,7 +377,7 @@ void i_tnumber(ELEMENT *el,char *pars) {
   el->w=atoi(key_value(pars,"W","-1"));
   el->h=atoi(key_value(pars,"H","-1"));
   /* FGC BGC  */
-  el->bgc=(long)myatof(key_value(pars,"BGC","$00000000"));
+  el->bgc=(long)myatof(key_value(pars,"BGC",DEFAULT_BGC));
   el->fgc=(long)myatof(key_value(pars,"FGC",DEFAULT_FGC));
 }
 
@@ -488,16 +490,13 @@ void d_frame(ELEMENT *el,WINDOW *win) {
     bc=0x1f1f1fff;
     ac=0xafafafff;
   }
-  lineColor(win->display,el->x,el->y,el->x+el->w,el->y,ac);
+  lineColor(win->display,el->x,el->y,  el->x+el->w,  el->y,  ac);
   lineColor(win->display,el->x,el->y+1,el->x+el->w-1,el->y+1,ac);
-
-  lineColor(win->display,el->x  ,el->y,el->x,el->y+el->h  ,ac);
+  lineColor(win->display,el->x,  el->y,el->x,  el->y+el->h,  ac);
   lineColor(win->display,el->x+1,el->y,el->x+1,el->y+el->h-1,ac);
-
   lineColor(win->display,el->x+el->w  ,el->y  ,el->x+el->w,el->y+el->h    ,bc);
   lineColor(win->display,el->x+el->w-1,el->y+1,el->x+el->w-1,el->y+el->h-2,bc);
-
-  lineColor(win->display,el->x,el->y+el->h  ,el->x+el->w  ,el->y+el->h  ,bc);
+  lineColor(win->display,el->x,  el->y+el->h  ,el->x+el->w  ,el->y+el->h  ,bc);
   lineColor(win->display,el->x+1,el->y+el->h-1,el->x+el->w-2,el->y+el->h-1,bc);
 }
 void d_bitmap(ELEMENT *el,WINDOW *win) {
@@ -512,24 +511,12 @@ void d_icon(ELEMENT *el,WINDOW *win) {
 
 
 void d_bitmaplabel(ELEMENT *el,WINDOW *win) {
-  if(el->data[0].pointer) {
-    put_bitmap(win,el->data[0].pointer,el->x,el->y,el->w,el->h,el->labelcolor[0]);
-  }
+  if(el->data[0].pointer) put_bitmap(win,el->data[0].pointer,el->x,el->y,el->w,el->h,el->labelcolor[0]);
   ELEMENT_SUBSCRIBE();
-  if(do_show_invisible) {
-    draw_invisible_element(el,win);
-  }
+  if(do_show_invisible) draw_invisible_element(el,win);
 }
 void d_framelabel(ELEMENT *el,WINDOW *win) {
   d_frame(el,win);
-  ELEMENT_SUBSCRIBE();
-}
-
-void d_hbar(ELEMENT *el,WINDOW *win) {
-  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
-  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
-  int x=(int)(0-el->min)*el->w/(el->max-el->min);
-  if(el->min<0 && el->max>0) lineColor(win->display,el->x+x,el->y,el->x+x,el->y+el->h,el->agc);
   ELEMENT_SUBSCRIBE();
 }
 void d_textarea(ELEMENT *el,WINDOW *win) {
@@ -538,12 +525,17 @@ void d_textarea(ELEMENT *el,WINDOW *win) {
   ELEMENT_SUBSCRIBE();
 }
 
-
-
+void d_hbar(ELEMENT *el,WINDOW *win) {
+  boxColor      (win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
+  rectangleColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->agc);
+  int x=(int)(0-el->min)*el->w/(el->max-el->min);
+  if(el->min<0 && el->max>0) lineColor(win->display,el->x+x,el->y,el->x+x,el->y+el->h,el->agc);
+  ELEMENT_SUBSCRIBE();
+}
 void d_vbar(ELEMENT *el,WINDOW *win) {
   int y=el->h-1-(int)(0-el->min)*el->h/(el->max-el->min);
-  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
-  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
+  boxColor      (win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
+  rectangleColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y,el->x+el->w,el->y+y,el->agc);
   ELEMENT_SUBSCRIBE();
 }
@@ -584,9 +576,7 @@ void d_textlabel(ELEMENT *el,WINDOW *win) {
     put_font_text(win->display,el->fontnr,el->data[0].pointer,el->x,el->y,el->labelcolor[0],el->h);
   }
   ELEMENT_SUBSCRIBE();
-  if(do_show_invisible) {
-    draw_invisible_element(el,win);
-  }
+  if(do_show_invisible) draw_invisible_element(el,win);
 }
 void d_tnumber(ELEMENT *el,WINDOW *win) {
   if(el->w<0) el->w=(int)strlen(el->format)*fonts[el->fontnr].height;
@@ -607,7 +597,7 @@ void d_plot(ELEMENT *el,WINDOW *win) {
 
 
 void u_tstring(ELEMENT *el,WINDOW *win,char *message, int len) {
-  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
   put_font_text(win->display,el->fontnr,message,el->x,el->y,el->fgc,el->h);
 }
 void u_tnumber(ELEMENT *el,WINDOW *win, char *message, int len) {
@@ -616,7 +606,7 @@ void u_tnumber(ELEMENT *el,WINDOW *win, char *message, int len) {
   format.len=strlen(format.pointer);
   double v=myatof(message);
   STRING a=do_using(v,format);
-  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
   put_font_text(win->display,el->fontnr,a.pointer,el->x,el->y,el->fgc,el->h);
   free(a.pointer);
 }
@@ -629,17 +619,14 @@ void u_textlabel(ELEMENT *el,WINDOW *win, char *message, int len) {
     }
   }
   if(found>=0 && found<10 && el->data[found].pointer) {
-    boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+    boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
     put_font_text(win->display,el->fontnr,el->data[found].pointer,el->x,el->y,el->labelcolor[found],el->h);
   }
 }
 
-/* TODO: */
 
 void u_textarea(ELEMENT *el,WINDOW *win,char *message, int len) {
- // printf("Received long text. Len=%d\n",len);
- // printf("This is the text:\n%s\n",message);
-  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
   put_font_long_text(win->display,el->fontnr,message,el->x,el->y,el->fgc,el->w,el->h);
 }
 void u_scmdlabel(ELEMENT *el,WINDOW *win, char *message, int len) {
@@ -691,33 +678,28 @@ void u_hbar(ELEMENT *el,WINDOW *win, char *message, int len) {
   double v=myatof(message);
   int x0=(int)((0-el->min)*(double)el->w/(el->max-el->min));
   int x=(int)((v-el->min)*(double)el->w/(el->max-el->min));
-  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
   x=min(x,el->w);
   x0=min(x0,el->w);
   if(x<0) x=0;
   if(x0<0) x0=0;
-  if(x>x0)
-    boxColor(win->display,el->x+x0,el->y,(el->x)+x-1,(el->y)+(el->h)-1,el->fgc);
-  else
-    boxColor(win->display,el->x+x,el->y,(el->x)+x0-1,(el->y)+(el->h)-1,el->fgc);
-  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
+  if(x>x0) boxColor(win->display,el->x+x0,el->y,(el->x)+x,(el->y)+(el->h)-1,el->fgc);
+  else     boxColor(win->display,el->x+x,el->y,(el->x)+x0,(el->y)+(el->h)-1,el->fgc);
+  rectangleColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x+x0,el->y,el->x+x0,el->y+el->h,el->agc);
 }
 void u_vbar(ELEMENT *el,WINDOW *win, char *message, int len) {
   double v=myatof(message);
   int y0=el->h-1-(int)((0-el->min)*(double)el->h/(el->max-el->min));
   int y=el->h-1-(int)((v-el->min)*(double)el->h/(el->max-el->min));
-  boxColor(win->display,el->x,el->y,(el->x)+(el->w)-1,(el->y)+(el->h)-1,el->bgc);
+  boxColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->bgc);
   y=min(y,el->h);
   y0=min(y0,el->h);
   if(y<0) y=0;
   if(y0<0) y0=0;
-  
-  if(y>y0)
-    boxColor(win->display,el->x,el->y+y0,(el->x)+el->w-1,(el->y)+y-1,el->fgc);
-  else
-    boxColor(win->display,el->x,el->y+y,(el->x)+el->w-1,(el->y)+y0-1,el->fgc);
-  rectangleColor(win->display,el->x,el->y,(el->x)+(el->w),(el->y)+(el->h),el->agc);
+  if(y>y0) boxColor(win->display,el->x,el->y+y0,(el->x)+el->w-1,(el->y)+y,el->fgc);
+  else     boxColor(win->display,el->x,el->y+y,(el->x)+el->w-1,(el->y)+y0,el->fgc);
+  rectangleColor(win->display,el->x,el->y,el->x+el->w,el->y+el->h,el->agc);
   if(el->min<0 && el->max>0) lineColor(win->display,el->x,el->y+y0,el->x+el->w,el->y+y0,el->agc);
 }
 void u_hscaler(ELEMENT *el,WINDOW *win, char *message, int len) {
@@ -942,21 +924,35 @@ void u_thmeter(ELEMENT *el,WINDOW *win, char *message, int len) {
  *  TODO: auto scala, maybe different style options
  */
 
-const Sint16 zeigerx[7]={0, 200,400,500, 400,200,  0};
-const Sint16 zeigery[7]={25, 25,100,  0,-100,-25,-25};
+const Sint16 zeiger_1_x[7]={0, 200,400,500, 400,200,  0};
+const Sint16 zeiger_1_y[7]={25, 25,100,  0,-100,-25,-25};
+const Sint16 zeiger_2_x[7]={275, 350,400,540, 400,350,275};
+const Sint16 zeiger_2_y[7]={25, 25,45,  0,-45,-25,-25};
 
 void u_meter(ELEMENT *el,WINDOW *win, char *message, int len) {
   int i;
+  const Sint16 *zeigerx,*zeigery;
   double v=myatof(message);
   double phi;
   int lim=(int)(el->amax-el->amin);
   int flag=1;
   if(lim<0) {lim=-lim;flag=-1;}
 
+if(el->revert>=2) {
+  zeigerx=zeiger_2_x;
+  zeigery=zeiger_2_y;
+} else {
+  zeigerx=zeiger_1_x;
+  zeigery=zeiger_1_y;
+}
+
+
+
 /* SDL cannot draw arcs and segments of a circle, however this can be
 implemented using polygons....
 */
-  int anz=2+360;
+/* Draw the background */
+  int anz=5+360*2;
   Sint16 vx[anz],vy[anz];
   phi=PI*el->amin/180;
   for(i=0;i<7;i++) {
@@ -990,27 +986,94 @@ implemented using polygons....
   if(phi>1) phi=1;
   phi=phi*PI/180*(el->amax-el->amin)+PI/180*el->amin;
 
-  
-  vx[0]=el->x+el->w/2;
-  vy[0]=el->y+el->h/2;
+   int dx=el->x+el->w/2;
+   int dy=el->y+el->h/2;
+int j=0;
+if(el->revert<2) {
+  vx[j]=dx;
+  vy[j++]=dy;
+} else {
+  if(flag>0) {
+    vx[j]=dx+el->w/4*cos(PI*(el->amin)/180.0);
+    vy[j++]=dy-el->h/4*sin(PI*(el->amin)/180.0);
+  } else {
+    vx[j]=dx+el->w/4*cos(PI*(el->amax)/180.0);
+    vy[j++]=dy-el->h/4*sin(PI*(el->amax)/180.0);
+
+  }
+}
  // printf("flag=%d, lim=%d\n",flag,lim);
-  for(i=0;i<lim;i++) {
+  for(i=0;i<=lim;i++) {
     if(flag>0) {
-      vx[i+1]=el->w/2*cos(PI*((double)i+el->amin)/180);
-      vy[i+1]=-el->h/2*sin(PI*((double)i+el->amin)/180);
+      vx[j]=(double)el->w/2*cos(PI*((double)i+el->amin)/180.0);
+      vy[j]=-(double)el->h/2*sin(PI*((double)i+el->amin)/180.0);
     } else {
-      vx[i+1]=el->w/2*cos(PI*((double)i+el->amax)/180);
-      vy[i+1]=-el->h/2*sin(PI*((double)i+el->amax)/180);
+      vx[j]=(double)el->w/2*cos(PI*((double)i+el->amax)/180.0);
+      vy[j]=-(double)el->h/2*sin(PI*((double)i+el->amax)/180.0);
     }
     /* translate*/
-    vx[i+1]+=el->x+el->w/2;
-    vy[i+1]+=el->y+el->h/2;
+    vx[j]+=dx;
+    vy[j++]+=dy;
   }
-  vx[i+1]=el->x+el->w/2;
-  vy[i+1]=el->y+el->h/2;
-  filledPolygonColor(win->display,&vx[0],&vy[0],i+2,el->bgc);
+if(el->revert>=2) {
+  for(i=lim;i>=0;i--) {
+    if(flag>0) {
+      vx[j]=(double)el->w/4*cos(PI*((double)i+el->amin)/180.0);
+      vy[j]=-(double)el->h/4*sin(PI*((double)i+el->amin)/180.0);
+    } else {
+      vx[j]=(double)el->w/4*cos(PI*((double)i+el->amax)/180.0);
+      vy[j]=-(double)el->h/4*sin(PI*((double)i+el->amax)/180.0);
+    }
+    /* translate*/
+    vx[j]+=dx;
+    vy[j++]+=dy;
+  }
+}
+  vx[j]=vx[0];
+  vy[j++]=vy[0];
+  filledPolygonColor(win->display,&vx[0],&vy[0],j,el->bgc);
   
-  polygonColor(win->display,&vx[0],&vy[0],i+2,el->agc);
+  /* Now draw borders */
+  
+  polygonColor(win->display,&vx[0],&vy[0],j,el->agc);
+
+
+if(el->revert&1) {
+  /*TODO: draw scala */
+
+   double a=fabs(el->max-el->min);
+   int delta=pow(10,(int)(log10(a)-1+0.5));
+   double phi0,phi1;
+
+   for(i=(int)(el->min/delta);i<(int)(el->max/delta);i++) {
+     phi0=(delta*i-el->min)/(el->max-el->min);
+     phi1=(delta*i+delta/2-el->min)/(el->max-el->min);
+
+    phi0=PI/180*(phi0*(el->amax-el->amin)+el->amin);
+    phi1=PI/180*(phi1*(el->amax-el->amin)+el->amin);
+    vx[0]=(double)el->w/2*0.99*cos(phi0)+dx;
+    vy[0]=-(double)el->h/2*0.99*sin(phi0)+dy;
+    
+    vx[1]=(double)el->w/2*0.85*cos(phi0)+dx;
+    vy[1]=-(double)el->h/2*0.85*sin(phi0)+dy;
+
+    vx[2]=(double)el->w/2*0.85*cos(phi1)+dx;
+    vy[2]=-(double)el->h/2*0.85*sin(phi1)+dy;
+
+    vx[3]=(double)el->w/2*0.99*cos(phi1)+dx;
+    vy[3]=-(double)el->h/2*0.99*sin(phi1)+dy;
+    vx[4]=vx[0];
+    vy[4]=vy[0];
+
+
+//    lineColor(win->display,vx[0],vy[0],vx[1],vy[1],el->agc);
+    filledPolygonColor(win->display,&vx[0],&vy[0],4,el->agc);
+
+   
+   }
+}
+  /* Draw zero mark */
+  
   if(el->min<0 && el->max>0) {
     double phi0=(0-el->min)/(el->max-el->min);
     phi0=phi0*PI/180*(el->amax-el->amin)+PI/180*el->amin;
@@ -1020,6 +1083,9 @@ implemented using polygons....
     vy[1]=-el->h/2*0.8*sin(phi0)+el->y+el->h/2;
     lineColor(win->display,vx[0],vy[0],vx[1],vy[1],el->fgc);
   }
+
+  /* draw hands */
+
   if(!isnan(v)) {
     for(i=0;i<7;i++) {
       /* Rotate */
@@ -1034,15 +1100,19 @@ implemented using polygons....
     }
     filledPolygonColor(win->display,&vx[0],&vy[0],7,el->fgc);
   }
-  filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2/10,el->h/2/10,el->agc);
-  // ellipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2,el->h/2,el->agc);
+
+  /* Draw knob */
+  if(el->revert<2) {
+    filledEllipseColor(win->display,el->x+el->w/2,el->y+el->h/2,el->w/2/10,el->h/2/10,el->agc);
+  }
 }
 
 
 
 
-
+/****************************************************/
 /* User Input (click) functions for all elements....*/
+/****************************************************/
 
 void element_publish(ELEMENT *el, double v,double old_v) {
   if(v>el->max) v=el->max;
@@ -1089,22 +1159,88 @@ int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 /* Ticker: get last known value, add increment, format it and then publish it. */
 
 int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b) {
-  if(b==1) {
+  if(b==1 || (b==4 && el->increment>0) || (b==5 && el->increment<0)) {
     char *def=subscriptions[el->subscription].last_value.pointer;
     double v=myatof(def);
     double old_v=v;
-//    printf("ticker <%s>\n",el->topic);
-//    printf("subscription <%s>\n",subscriptions[el->subscription].topic);
-//    printf("minmax %g/%g\n",el->min,el->max);
-//    printf("increment: %g\n",el->increment);
 //    printf("last value is: <%s> : %g\n",def,v);
     v+=el->increment;
     element_publish(el,v,old_v);  /* Final publish */
-   // return(1); Do not consume it. There may be other action.... 
+    return(0); /* Do not consume it. There may be other action.... */
+  } else if(b==3) {
+    /* open a dialog where one can modify MIN MAX and TIC */
+    char buf[256];
+    char buf2[256];
+    locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
+    locale_t old = uselocale(safe_locale);
+
+    snprintf(buf,sizeof(buf),"Ticker\n\"%s\": MIN=%g MAX=%g TIC=%g",el->topic,el->min,el->max,el->increment);
+    int rc=property_dialog(buf);
+    if(rc) {
+      snprintf(buf2,sizeof(buf2),"%g",el->min);
+      el->min=myatof(key_value(buf,"MIN",buf2));
+      snprintf(buf2,sizeof(buf2),"%g",el->max);
+      el->max=myatof(key_value(buf,"MAX",buf2));
+      snprintf(buf2,sizeof(buf2),"%g",el->increment);
+      el->increment=myatof(key_value(buf,"TIC",buf2));
+    }
+    uselocale(old);
+    freelocale(safe_locale);
+    return(1);
+  }
+  return(0);
+}
+int c_plot(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==3) {
+    /* open a dialog where one can modify MIN MAX and TIC */
+    char buf[256];
+    char buf2[256];
+    locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
+    locale_t old = uselocale(safe_locale);
+
+    snprintf(buf,sizeof(buf),"%s\n\"%s\": MIN=%g MAX=%g",eltyps[(el->type&0xff)].name,el->topic,el->min,el->max);
+    int rc=property_dialog(buf);
+    if(rc) {
+      snprintf(buf2,sizeof(buf2),"%g",el->min);
+      el->min=myatof(key_value(buf,"MIN",buf2));
+      snprintf(buf2,sizeof(buf2),"%g",el->max);
+      el->max=myatof(key_value(buf,"MAX",buf2));
+    }
+    uselocale(old);
+    freelocale(safe_locale);
+    return(1);
   }
   return(0);
 }
 
+static void scaler_settings(ELEMENT *el) {
+    /* open a dialog where one can modify MIN MAX and TIC */
+    char buf[256];
+    char buf2[256];
+    locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
+    locale_t old = uselocale(safe_locale);
+
+    snprintf(buf,sizeof(buf),"%s\n\"%s\": MIN=%g MAX=%g TIC=%g FORMAT=\"%s\" QOS=%d",eltyps[(el->type&0xff)].name,
+             el->topic,el->min,el->max,el->increment,el->format,el->revert);
+    int rc=property_dialog(buf);
+    if(rc) {
+      snprintf(buf2,sizeof(buf2),"%g",el->min);
+      el->min=myatof(key_value(buf,"MIN",buf2));
+      snprintf(buf2,sizeof(buf2),"%g",el->max);
+      el->max=myatof(key_value(buf,"MAX",buf2));
+      snprintf(buf2,sizeof(buf2),"%g",el->increment);
+      el->increment=myatof(key_value(buf,"TIC",buf2));
+      snprintf(buf2,sizeof(buf2),"%d",el->revert);
+      el->revert=atoi(key_value(buf,"QOS",buf2));
+      if(el->format) {
+	snprintf(buf2,sizeof(buf2),"%s",el->format);
+        free(el->format);
+	el->format=strdup(key_value(buf,"FORMAT",buf2));
+      } else el->format=strdup(key_value(buf,"FORMAT","%g"));
+    }
+    uselocale(old);
+    freelocale(safe_locale);
+}
 
 int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   char *def=subscriptions[el->subscription].last_value.pointer;
@@ -1124,6 +1260,9 @@ int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     v+=el->increment;
   } else if(b==5) {    /* Scrollwheel down --> Ticker down */
     v-=el->increment;
+  } else if(b==3) {    /* Right-Click: open Setting dialog */
+    scaler_settings(el);
+    return(1);
   } else if(x>el->x+x0 && x<el->x+x0+scalerbw) {
     ELEMENT lose=*el;
     lose.revert=0;   /* Make QoS = 0 for intermediate pushes */
@@ -1174,6 +1313,9 @@ int c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     v+=el->increment;
   } else if(b==5) {    /* Scrollwheel down --> Ticker down */
     v-=el->increment;
+  } else if(b==3) {    /* Right-Click: open Setting dialog */
+    scaler_settings(el);
+    return(1);
   } else if(y>el->y+y0 && y<el->y+y0+scalerbh) { 
     ELEMENT lose=*el;
     lose.revert=0;   /* Make QoS = 0 for intermediate pushes */
@@ -1219,7 +1361,53 @@ int c_frame(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   }
   return(0);
 }
+int c_bar(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==3) {
+    /* open a dialog where one can modify MIN MAX */
+    char buf[256];
+    char buf2[256];
+    locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
+    locale_t old = uselocale(safe_locale);
 
+    snprintf(buf,sizeof(buf),"%s\n\"%s\": MIN=%g MAX=%g",eltyps[(el->type&0xff)].name,el->topic,el->min,el->max);
+    int rc=property_dialog(buf);
+    if(rc) {
+      snprintf(buf2,sizeof(buf2),"%g",el->min);
+      el->min=myatof(key_value(buf,"MIN",buf2));
+      snprintf(buf2,sizeof(buf2),"%g",el->max);
+      el->max=myatof(key_value(buf,"MAX",buf2));
+    }
+    uselocale(old);
+    freelocale(safe_locale);
+    return(1);    
+  }
+  return(0);  /* Do not consume it. There my be other action... */
+}
+int c_meter(ELEMENT *el,WINDOW *win,int x, int y, int b) {
+  if(b==3) {
+    /* open a dialog where one can modify MIN MAX */
+    char buf[256];
+    char buf2[256];
+    locale_t safe_locale = newlocale(LC_NUMERIC_MASK, "C", duplocale(LC_GLOBAL_LOCALE));
+    locale_t old = uselocale(safe_locale);
+
+    snprintf(buf,sizeof(buf),"%s\n\"%s\": MIN=%g MAX=%g TYPE=%d",eltyps[(el->type&0xff)].name,el->topic,
+       el->min,el->max,el->revert);
+    int rc=property_dialog(buf);
+    if(rc) {
+      snprintf(buf2,sizeof(buf2),"%g",el->min);
+      el->min=myatof(key_value(buf,"MIN",buf2));
+      snprintf(buf2,sizeof(buf2),"%g",el->max);
+      el->max=myatof(key_value(buf,"MAX",buf2));
+      snprintf(buf2,sizeof(buf2),"%d",el->revert);
+      el->revert=atoi(key_value(buf,"TYPE",buf2));
+    }
+    uselocale(old);
+    freelocale(safe_locale);
+    return(1);    
+  }
+  return(0);  /* Do not consume it. There my be other action... */
+}
 extern char call_options[];
 
 
@@ -1308,7 +1496,7 @@ char *s_broker(ELEMENT *el) {
 char *s_panel(ELEMENT *el) {
   snprintf(elementstring,sizeof(elementstring),"PANEL: W=%d H=%d",el->w, el->h);
   if(el->text || s_maxval) sprintf(elementstring+strlen(elementstring)," TITLE=\"%s\"",el->text);
-  if(el->font || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if((el->font && strcmp(el->font,DEFAULT_FONT)) || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
   if(el->bgc || s_maxval)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
   if(el->fgc!=0xffffffff || s_maxval)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
   return(elementstring);
@@ -1359,7 +1547,7 @@ char *s_string(ELEMENT *el) {
     eltyps[(el->type&0xff)].name,el->x, el->y, el->text);
   if(el->w>=0 || s_maxval) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
   if(el->h>=0 || s_maxval) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
-  if(el->font || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if((el->font && strcmp(el->font,DEFAULT_FONT)) || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
   if(el->fontsize!=16 || s_maxval) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
   if(el->bgc || s_maxval)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
   if(el->fgc!=0xffffffff || s_maxval)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
@@ -1370,7 +1558,7 @@ char *s_tstring(ELEMENT *el) {
     eltyps[(el->type&0xff)].name,el->x, el->y, el->topic);
   if(el->w>=0 || s_maxval) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
   if(el->h>=0 || s_maxval) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
-  if(el->font || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if((el->font && strcmp(el->font,DEFAULT_FONT)) || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
   if(el->fontsize!=16 || s_maxval) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
   if(el->bgc || s_maxval)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
   if(el->fgc!=0xffffffff || s_maxval)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
@@ -1381,7 +1569,7 @@ char *s_tnumber(ELEMENT *el) {
     eltyps[(el->type&0xff)].name,el->x, el->y, el->topic, el->format);
   if(el->w>=0 || s_maxval) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
   if(el->h>=0 || s_maxval) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
-  if(el->font || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if((el->font && strcmp(el->font,DEFAULT_FONT)) || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
   if(el->fontsize!=16 || s_maxval) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
   if(el->bgc || s_maxval)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
   if(el->fgc!=0xffffffff || s_maxval)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
@@ -1401,6 +1589,7 @@ char *s_meter(ELEMENT *el) {
   if(el->bgc!=0x000000ff || s_maxval)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
   if(el->fgc!=0x00ff00ff || s_maxval)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
   if(el->agc!=0xffffffff || s_maxval)  sprintf(elementstring+strlen(elementstring)," AGC=$%s",tohex(el->agc));
+  if(el->revert!=0 || s_maxval)  sprintf(elementstring+strlen(elementstring)," TYPE=%d",el->revert);
   return(elementstring);
 }
 char *s_textlabel(ELEMENT *el) {
@@ -1408,7 +1597,7 @@ char *s_textlabel(ELEMENT *el) {
     eltyps[(el->type&0xff)].name,el->x, el->y, el->topic);
   if(el->w>=0 || s_maxval) sprintf(elementstring+strlen(elementstring)," W=%d",el->w);
   if(el->h>=0 || s_maxval) sprintf(elementstring+strlen(elementstring)," H=%d",el->h);
-  if(el->font || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if((el->font && strcmp(el->font,DEFAULT_FONT)) || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
   if(el->fontsize!=16 || s_maxval) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
   if(el->bgc || s_maxval)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
   int i;
@@ -1527,7 +1716,7 @@ char *s_plot(ELEMENT *el) {
 char *s_textarea(ELEMENT *el) {
   snprintf(elementstring,sizeof(elementstring),"%s: X=%d Y=%d W=%d H=%d TOPIC=\"%s\" ALIGN=\"%s\"", 
     eltyps[(el->type&0xff)].name,el->x, el->y, el->w, el->h, el->topic, el->format);
-  if(el->font || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
+  if((el->font && strcmp(el->font,DEFAULT_FONT)) || s_maxval) sprintf(elementstring+strlen(elementstring)," FONT=\"%s\"",el->font);
   if(el->fontsize!=16 || s_maxval) sprintf(elementstring+strlen(elementstring)," FONTSIZE=%d",el->fontsize);
   if(el->bgc || s_maxval)  sprintf(elementstring+strlen(elementstring)," BGC=$%s",tohex(el->bgc));
   if(el->fgc!=0xffffffff || s_maxval)  sprintf(elementstring+strlen(elementstring)," FGC=$%s",tohex(el->fgc));
