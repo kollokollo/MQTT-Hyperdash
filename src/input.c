@@ -24,14 +24,10 @@
 #include "input.h"
 
 
-/*
-TODO: 
-
-SAVE and RESTORE Buttons in the dialog which can save a value on a per topic basis for
-later restore.
-
-*/
-
+/**********************************************************
+ ** Message dialog with one or two buttons               **
+ **********************************************************
+ */
 
 static int re_button=0;
 #ifndef WINDOWS
@@ -39,65 +35,50 @@ static void on_button_clicked (GtkWidget *widget, gpointer data) {
   re_button=(int)(((char *)data)[0]-'0');
 }
 
-static gboolean delete_event( GtkWidget *widget,
-                              GdkEvent  *event,
-                              gpointer   data )
-{
-    /* If you return FALSE in the "delete-event" signal handler,
-     * GTK will emit the "destroy" signal. Returning TRUE means
-     * you don't want the window to be destroyed.
-     * This is useful for popping up 'are you sure you want to quit?'
-     * type dialogs. */
-
-   // g_print ("delete event occurred\n");
-
-    /* Change TRUE to FALSE and the main window will be destroyed with
-     * a "delete-event". */
-
-//    return TRUE;
-    return FALSE;
+static gboolean delete_event(GtkWidget *widget,GdkEvent *event,gpointer data) {
+  /* If you return FALSE in the "delete-event" signal handler,
+   * GTK will emit the "destroy" signal. Returning TRUE means
+   * you don't want the window to be destroyed.
+   * This is useful for popping up 'are you sure you want to quit?'
+   * type dialogs. */
+  return FALSE;
 }
 
-static void ddestroy(GtkWidget *widget, gpointer data ) {
-    gtk_main_quit ();
+static void destroy(GtkWidget *widget, gpointer data ) {
+  gtk_main_quit ();
 }
 #endif
 int message_dialog(char *title,char *text, int anzbut) {
 #ifndef WINDOWS
-  GtkWidget *window;
+  GtkWidget *window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
   GtkWidget *button,*button2,*textarea;
   GtkWidget *box1 = gtk_hbox_new (FALSE, 0);
   GtkWidget *vbox = gtk_vbox_new (FALSE, 0);
- // gtk_init (&argc, &argv);
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW (window),title);
+
+  gtk_window_set_title(GTK_WINDOW(window),title);
   
-  g_signal_connect (window, "delete-event",G_CALLBACK (delete_event), NULL);
-  g_signal_connect (window, "destroy",     G_CALLBACK (ddestroy), NULL);
+  g_signal_connect(window,"delete-event",G_CALLBACK(delete_event), NULL);
+  g_signal_connect(window,"destroy",     G_CALLBACK(destroy), NULL);
   
   
   gtk_container_set_border_width (GTK_CONTAINER (window), 10);
-  button = gtk_button_new_with_label ("OK");
-  button2 = gtk_button_new_with_label ("CANCEL");
-  textarea = gtk_label_new(text);
-  g_signal_connect (button, "clicked", G_CALLBACK (on_button_clicked), (gpointer) "1");
-  g_signal_connect (button2, "clicked", G_CALLBACK (on_button_clicked), (gpointer) "2");
+  button =gtk_button_new_with_label ("OK");
+  button2=gtk_button_new_with_label ("CANCEL");
+  textarea=gtk_label_new(text);
+  g_signal_connect(button, "clicked", G_CALLBACK(on_button_clicked),(gpointer) "1");
+  g_signal_connect(button2,"clicked", G_CALLBACK(on_button_clicked),(gpointer) "2");
 
-  g_signal_connect_swapped (button, "clicked",
-			      G_CALLBACK (gtk_widget_destroy),
-                              window);
-  g_signal_connect_swapped (button2, "clicked",
-			      G_CALLBACK (gtk_widget_destroy),
-                              window);
+  g_signal_connect_swapped(button, "clicked",G_CALLBACK (gtk_widget_destroy),window);
+  g_signal_connect_swapped(button2,"clicked",G_CALLBACK (gtk_widget_destroy),window);
 
-  gtk_container_add (GTK_CONTAINER (window), vbox);
-  gtk_box_pack_start (GTK_BOX(vbox), textarea, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX(vbox), box1, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX(box1), button, TRUE, TRUE, 0);
-  if(anzbut>1) gtk_box_pack_start (GTK_BOX(box1), button2, TRUE, TRUE, 0);
+  gtk_container_add(GTK_CONTAINER(window),vbox);
+  gtk_box_pack_start(GTK_BOX(vbox),textarea,TRUE,TRUE,0);
+  gtk_box_pack_start(GTK_BOX(vbox),box1,TRUE,TRUE,0);
+  gtk_box_pack_start(GTK_BOX(box1),button,TRUE,TRUE,0);
+  if(anzbut>1) gtk_box_pack_start(GTK_BOX(box1),button2,TRUE,TRUE,0);
   
-  gtk_widget_show_all (window);
-  gtk_main ();
+  gtk_widget_show_all(window);
+  gtk_main();
 #endif
   return(re_button);
 }
@@ -120,9 +101,6 @@ static void file_ok_sel (GtkWidget *w, GtkFileSelection *fs) {
   gtk_main_quit();
 }
 
-void destroy (GtkWidget *w, gpointer *data) {
-  gtk_main_quit();
-}
 #endif
 
 int fileselect_dialog(char *filename, const char *path, const char *mask) {
@@ -171,6 +149,163 @@ int fileselect_dialog(char *filename, const char *path, const char *mask) {
 
 
 /**********************************************************
+ **  List picker dialog for topic list                   **
+ **********************************************************
+ */
+
+enum { COL_NAME=0, COL_USE, COL_TYPE, COL_VALUE, NUM_COLS };
+
+#define TOPIC_LIST_FILENAME "topic.list"
+
+static GtkTreeModel *create_and_fill_model() {
+  char filename[256];
+  snprintf(filename,sizeof(filename),"%s/%s",hyperdashdir,TOPIC_LIST_FILENAME);
+  GtkTreeIter  iter;
+  GtkListStore *store=gtk_list_store_new(NUM_COLS,G_TYPE_STRING,G_TYPE_UINT,G_TYPE_STRING,G_TYPE_STRING);
+
+  if(!exist(filename)) {
+    printf("ERROR: %s not found.\n",filename);
+    GTK_TREE_MODEL(store);
+  }
+  printf("<-- %s\n",filename);
+  FILE *dptr=fopen(filename,"rb"); 
+  char line[80];
+  char a[80];
+  char b[80];
+  char c[80];
+  char d[80];
+  
+  while(!myeof(dptr)) {
+    lineinput(dptr,line,sizeof(line));
+    xtrim(line,0,line);
+    if(*line && *line!='#') {
+    wort_sep(line,' ',0,a,b);
+    wort_sep(b,' ',0,b,c);
+    wort_sep(c,' ',0,c,d);
+    /* Append a row and fill in some data */
+    gtk_list_store_append(store,&iter);
+    gtk_list_store_set(store,&iter,
+        COL_NAME, a,COL_USE, atoi(b),COL_TYPE,c,COL_VALUE,d,-1);
+    }
+  }
+  fclose(dptr);
+  return GTK_TREE_MODEL(store);
+}
+static GtkWidget *create_view_and_model() {
+  GtkTreeModel *model;
+  GtkWidget *view=gtk_tree_view_new();
+
+  GtkCellRenderer *renderer=gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
+             -1,"TOPIC Name",renderer,"text",COL_NAME,NULL);
+
+  renderer=gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
+             -1,"Usage",renderer,"text",COL_USE,NULL);
+
+  renderer=gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
+             -1,"Type",renderer,"text",COL_TYPE,NULL);
+
+  renderer=gtk_cell_renderer_text_new();
+  gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(view),
+             -1,"Value",renderer,"text",COL_VALUE,NULL);
+
+  model=create_and_fill_model();
+  gtk_tree_view_set_model(GTK_TREE_VIEW(view),model);
+  g_object_unref(model);
+  return view;
+}
+
+
+int listselect_return=0;
+char listselect_result[256];
+
+
+static void on_listselOK(GtkWidget *widget, gpointer data) {
+  printf("Listselect: OK button clicked.\n");
+  GtkWidget *view=(GtkWidget *)data;
+  /* Findout what entry was selected.*/
+  GtkTreeModel *model;
+  GtkTreeIter  iter;
+  GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+  if(gtk_tree_selection_get_selected(selection, &model, &iter)) {
+    gchar *name;
+    gtk_tree_model_get(model, &iter, COL_NAME, &name, -1);
+    g_print("selected row is: %s\n", name);
+    strncpy(listselect_result,name,sizeof(listselect_result));
+    g_free(name);
+    listselect_return=1;
+    gtk_main_quit();
+  } else {
+    g_print ("no row selected.\n");
+  }
+}
+
+void view_onRowActivated(GtkTreeView *treeview,
+      GtkTreePath *path,GtkTreeViewColumn *col,gpointer userdata) {
+  GtkTreeModel *model;
+  GtkTreeIter	iter;
+
+  /* A row has been double-clicked! */
+
+  model=gtk_tree_view_get_model(treeview);
+  if(gtk_tree_model_get_iter(model, &iter, path)) {
+     gchar *name;
+     gtk_tree_model_get(model,&iter, COL_NAME, &name, -1);
+     strncpy(listselect_result,name,sizeof(listselect_result));
+     g_free(name);
+     listselect_return=1;
+     gtk_main_quit();
+  }
+}
+
+
+
+int listselect_dialog(char *topic) {
+  printf("Listselect for %s\n",topic);
+  GtkWidget *window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_widget_set_size_request(GTK_WIDGET (window), 350, 150);
+  gtk_window_set_default_size(GTK_WINDOW (window), 640, 480);
+  gtk_window_set_title(GTK_WINDOW (window),"Select Topic from list");
+  gtk_container_set_border_width (GTK_CONTAINER (window), 10);
+  
+  g_signal_connect(window, "delete_event",gtk_main_quit,NULL); /* dirty */
+  GtkWidget *view=create_view_and_model();
+  g_signal_connect(view, "row-activated", (GCallback) view_onRowActivated, NULL);
+
+  GtkWidget *scrollarea=gtk_scrolled_window_new(NULL,NULL);
+  gtk_widget_set_size_request(GTK_WIDGET (scrollarea), 440, 380);
+  GtkWidget *vbox = gtk_vbox_new (FALSE, 0);
+  GtkWidget *hbox = gtk_hbox_new (FALSE, 0);
+  GtkWidget *button = gtk_button_new_with_label ("OK");
+  GtkWidget *button2 = gtk_button_new_with_label ("CANCEL");
+  g_signal_connect (button, "clicked", G_CALLBACK (on_listselOK), (gpointer) view);
+  g_signal_connect (button2, "clicked", G_CALLBACK (on_button_clicked), (gpointer) "2");
+
+//  g_signal_connect_swapped(button, "clicked",G_CALLBACK (gtk_widget_destroy),window);
+
+  g_signal_connect_swapped(button2, "clicked",
+			      G_CALLBACK (gtk_widget_destroy),
+                              window);
+  gtk_box_pack_start (GTK_BOX(vbox), scrollarea, TRUE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX(vbox), hbox, TRUE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX(hbox), button, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX(hbox), button2, TRUE, TRUE, 0);
+
+  gtk_container_add(GTK_CONTAINER (window), vbox);
+  gtk_container_add(GTK_CONTAINER(scrollarea),view);
+  gtk_widget_show_all(window);
+  listselect_return=0;
+  gtk_main ();
+  
+  if(listselect_return) strcpy(topic,listselect_result);
+
+  gtk_widget_hide(window);
+  return(listselect_return);
+}
+
+/**********************************************************
  **  Color picker dialog                                 **
  **********************************************************
  */
@@ -196,17 +331,17 @@ int colorselect_dialog(const char *title,char *gc) {
   color.blue=(fgc&0xff00);
   color.green=(fgc&0xff0000)>>8;
 
-  gtk_color_selection_set_previous_color (colorsel, &color);
+  gtk_color_selection_set_previous_color(colorsel, &color);
   gtk_color_selection_set_current_color (colorsel, &color);
-  gtk_color_selection_set_current_alpha(colorsel,(fgc&0xff)<<8);
-  gtk_color_selection_set_has_palette (colorsel, TRUE);
+  gtk_color_selection_set_current_alpha (colorsel,(fgc&0xff)<<8);
+  gtk_color_selection_set_has_palette   (colorsel, TRUE);
   gtk_color_selection_set_has_opacity_control(colorsel, TRUE);
 /* Connect to the "color_changed" signal, set the client-data
        * to the colorsel widget */
   g_signal_connect(colorsel, "color_changed",
                         G_CALLBACK (color_changed_cb), (gpointer) colorsel);
-/* Show the dialog */
-      response = gtk_dialog_run (GTK_DIALOG(colw));
+
+  response=gtk_dialog_run(GTK_DIALOG(colw));  /* Show the dialog */
 
   if(response==GTK_RESPONSE_OK) {
     gtk_color_selection_get_current_color (colorsel, &color);
@@ -216,24 +351,35 @@ int colorselect_dialog(const char *title,char *gc) {
     sprintf(gc,"$%s",tohex(fgc));
     ret=1;
   } else {
-    // gtk_widget_modify_bg (drawingarea, GTK_STATE_NORMAL, &color);
     ret=0;
   }
   gtk_widget_hide(colw);
   return(ret);
 }
 
+/**********************************************************
+ **  Input dialog (analog values)                        **
+ **********************************************************
+ */
+
+
+/* TODO: 
+
+SAVE and RESTORE Buttons in the dialog which can save a value on a per topic basis for
+later restore.
+
+APPLY button.
+
+*/
 
 static volatile int input_return;
 static char input_value[256];
 
-#ifndef WINDOWS
 static void inputOK_clicked (GtkWidget *widget, gpointer data) {
   input_return=1;
-  strncpy(input_value,gtk_entry_get_text( GTK_ENTRY(data)),sizeof(input_value));
-  // g_print(input_value);
+  strncpy(input_value,gtk_entry_get_text(GTK_ENTRY(data)),sizeof(input_value));
 }
-#endif
+
 int input_dialog(const char *topic, char *value, char *def) {
   char buf[256];
   snprintf(buf,sizeof(buf),"Enter Value for Topic\n\n%s:\n\n",topic);
@@ -247,7 +393,7 @@ int input_dialog(const char *topic, char *value, char *def) {
   gtk_window_set_title(GTK_WINDOW (window),"Input Topic");
   
   g_signal_connect (window, "delete-event",G_CALLBACK (delete_event), NULL);
-  g_signal_connect (window, "destroy",     G_CALLBACK (ddestroy), NULL);
+  g_signal_connect (window, "destroy",     G_CALLBACK (destroy), NULL);
   
   
   gtk_container_set_border_width (GTK_CONTAINER (window), 10);
@@ -343,16 +489,15 @@ static void on_fontbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
 }
 static void on_topicbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   PVAL *val=(PVAL *)data;
-  printf("Browsebutton: \n");
-  printf("<%s>\n",gtk_entry_get_text(GTK_ENTRY(val->widget)));
-  char newdash[256];
-  strcpy(newdash,gtk_entry_get_text(GTK_ENTRY(val->widget)));
-  if(*newdash=='\"') memmove(newdash,newdash+1,strlen(newdash)-2);
-
-  /* TODO open a topic selector to select a topic to display.*/
-//    printf("Result. <%s>\n",buf);
-//    gtk_entry_set_text(GTK_ENTRY(val->widget),buf);
-  
+  char newtopic[256];
+  strncpy(newtopic,gtk_entry_get_text(GTK_ENTRY(val->widget)),sizeof(newtopic));
+  if(*newtopic=='\"') memmove(newtopic,newtopic+1,strlen(newtopic)-2);
+  int rc=listselect_dialog(newtopic);
+  if(rc && *newtopic) {
+    char buf[256];
+    snprintf(buf,sizeof(buf),"\"%s\"",newtopic);
+    gtk_entry_set_text(GTK_ENTRY(val->widget),buf);
+  }  
 }
 static void on_colorbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   PVAL *val=(PVAL *)data;
@@ -435,7 +580,7 @@ int property_dialog(char *elline) {
   gtk_window_set_title(GTK_WINDOW (window),"Edit Element Properties");
   
   g_signal_connect (window, "delete-event",G_CALLBACK (delete_event), NULL);
-  g_signal_connect (window, "destroy",     G_CALLBACK (ddestroy), NULL);
+  g_signal_connect (window, "destroy",     G_CALLBACK (destroy), NULL);
   
   
   gtk_container_set_border_width (GTK_CONTAINER (window), 10);

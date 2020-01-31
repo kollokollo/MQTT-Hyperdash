@@ -77,6 +77,7 @@ extern char icondir[];
 extern char bitmapdir[];
 extern char fontdir[];
 extern char dashboarddir[];
+extern char hyperdashdir[];
 extern int do_show_invisible;
 extern const int anzeltyp;
 extern const ELDEF eltyps[];

@@ -22,4 +22,4 @@ typedef struct {
 } STRING;
 #endif
 STRING get_file(const char *name);
-
+char *lineinput(FILE *n, char *line,int size);

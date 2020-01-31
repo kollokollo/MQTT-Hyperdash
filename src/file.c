@@ -100,3 +100,19 @@ int exist(const char *filename) {
   if(retc==-1) return(FALSE);
   return(TRUE);
 }
+/* read a whole line from an open (ASCII) file n 
+ * reads until \n or EOF 
+ * reads at maximum size bytes. */
+
+char *lineinput(FILE *n, char *line,int size) {
+  int c; int i=0;
+  while((c=fgetc(n))!=EOF) {
+    if(c==(int)'\n') {
+      line[i]=(int)'\0';
+      return line;
+    } else line[i++]=(char)c;
+    if(i>=size-1) break;
+  }
+  line[i]='\0';
+  return line;
+}

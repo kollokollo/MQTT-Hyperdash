@@ -28,11 +28,13 @@ char icondir[256]="icons";
 char bitmapdir[256]="bitmaps";
 char fontdir[256]="C:/Windows/Fonts";
 char dashboarddir[256]=".";
+char hyperdashdir[256]=".";
 #else
 char icondir[256]="/usr/share/hyperdash/icons";
 char bitmapdir[256]="/usr/share/hyperdash/bitmaps";
 char fontdir[256]="/usr/share/fonts/truetype/msttcorefonts";
 char dashboarddir[256]="/usr/share/hyperdash/dashboards";
+char hyperdashdir[256]="."; /* Must be writable */
 #endif
 DASH *global_dash;
 WINDOW *global_window;
@@ -44,6 +46,11 @@ void hyperdash_set_defaults() {
   char path[256];
   char *envptr=getenv("HOME");
   if(envptr!=NULL) {
+    snprintf(path,sizeof(path),"%s/.hyperdash",envptr);
+    if(exist(path)) { /* It does exist! */
+      strncpy(hyperdashdir,path,256);
+    } else if(verbose>=0) printf("%s does not exist.\n",path);
+    
     snprintf(path,sizeof(path),"%s/.hyperdash/dashboards",envptr);
     if(verbose>0) printf("Try dashboard path: %s\n",path);
     if(exist(path)) { /* It does exist! */

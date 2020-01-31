@@ -26,6 +26,8 @@ if [ "$#" -le 0 ]; then
  mosquitto_pub -h localhost -t MQTT_HYPERDASH/STATUS_SM -m "generating local dashboards..." -r
  echo "generating local dashboards..."
  mqtt-list-topics | sort | hddashgen
+ rm -f ~/.hyperdash/topic.list
+ mqtt-list-topics | sort > ~/.hyperdash/topic.list
 fi
 if [ "$#" -eq 1 ]; then
  BROKER=`mosquitto_sub -h localhost -t "MQTT_HYPERDASH/BROKER_SC" -C 1`

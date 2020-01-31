@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.03
 
-RELEASE=10
+RELEASE=11
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
