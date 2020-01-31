@@ -99,11 +99,18 @@ reaction, and reliability. And the realization is not very complicated. Please
 read the the [rule engine howto](doc/MQTT-rule-engine-howto.md) in
 the doc/ section.
 
+## Remarks
+
 The project is not complete. Please see the file 
 [CONTRIBUTING.md](CONTRIBUTING.md) how you can help to improve the project. 
 
 I had the impression, an application like this was still missing in 2019. 
 So I started this project. Please let me know, if I am right....
+
+Also I am thinking of a
+[MQTT payload convention](doc/MQTT-Hyperdash-payload-conventions.md)
+. This could be a field for discussions. Please feel free to join.
+
 
 ## Installation
 
