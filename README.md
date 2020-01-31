@@ -41,22 +41,22 @@ be found in the doc/ section.
 
 #### dashdesign (HyperDash Dashboard Designer)
 
-dashdesign is a graphical tool to create and edit the .dash files. 
-
-This program is still work in progress.
+Dashdesign is a graphical tool to create and edit the .dash files. 
 
 A brief explanation how to use dashdesign is in its man-page 
 [dashdesign man-page](src/dashdesign.1).
 
-The usage with the graphical interface should be self-explanatory. 
+The usage with the graphical interface should be more or less self-explanatory. 
+But maybe you want to have a look at its 
+[user manual](doc/MQTT-dashdesign-user-manual.md).
 
 
 #### hddashgen (HyperDash Dashboard-Generator)
 
-Making dashboard file by hand with a text editor can be a lot of annoying  manual
-work. To help this, have made a tool to automatically create dash files from
-topic lists, so one has a good starting point to work with. hddashgen will do
-this job in combination with mqtt-list-topics (see below).
+Making dashboard files by hand with a text editor can be a lot of annoying 
+manual work. To help this, there is the tool hddashgen to automatically create
+dash files from topic lists, so one has a good starting point to work with.
+hddashgen will do this job in combination with mqtt-list-topics (see below).
 
 The default appearance is derived from the topics names, if they follow a
 naming convention. The naming convention used is explained in 

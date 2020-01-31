@@ -10,15 +10,27 @@ dashdesign \- The MQTT dashboard graphical editor
 
 MQTT Hyperdash is a fast and efficient dashboard (GUI) for the MQTT framework. 
 
-dashdesign allows to edit those dashboards, using a mouse. The Application is 
-not yet ready to be used.
+.B dashdesign 
+is a graphical editor for these dashboards. 
 
+The graphic editor is used to select and arrange static and dynamic elements and
+their assignment to MQTT parameters in a dashboard. This editor can create
+elements, position them individually or in groups on a dashboard, move them and
+provide them with various attributes (colors, fonts, line thicknesses, etc.).
+Active elements can be "bound" to one or more MQTT parameters. Most elements are
+available in different display variants (e.g. three different types of pointer
+instruments) and can therefore be adapted to different tasks.
+
+It is also common to first let hddashgen(1) generate a generic dashboard from the
+list of toics and then edit these dashboards with dashdesign. This way all buttons
+are already there and bound to the MQTT topics and one need only rearange them so
+that the dashboard looks nicer and serves more the specific needs of the operators.
 
 .SH Filenames
 
-.B hyperdash
-optionally load one dashboard file at startup. The suffix of the input file is 
-usually .dash.
+.B dashdesign 
+optionally load one dashboard file at startup. By default it starts with a new
+(and mostly empty) dashboard. The suffix of the input file is  usually .dash.
 
 .SH OPTIONS
 .TP
@@ -36,22 +48,23 @@ print a short help and exit.
 .TP
 .BR \-\-dashpath " " \fIpath\fR
 specify a path where .dash files are to be searched. 
-Hyperdash first searches for the given filename in the current directory, if not
+Dashdesign first searches for the given filename in the current directory, if not
 fond there, it looks into this specified directory. It defaults to 
 $HOME/.hyperdash/dashboards if that exist and /usr/share/hyperdash/dashboards else.
 .TP
 .BR \-\-fontpath " " \fIpath\fR
-specify a path where the true type fonts used by hyperdash are searched for. 
+specify a path where the true type fonts used by dashdesign and hyperdash are searched for. 
 It defaults to /usr/share/fonts/truetype/msttcorefonts . 
 .TP
 .BR \-\-iconpath " " \fIpath\fR
-specify a path where the icons (png files) used by hyperdash are searched for. 
+specify a path where the icons (png files) used by dashdesign hyperdash are searched for. 
 It defaults to /usr/share/hyperdash/icons .
 .TP
 .BR \-\-bitmappath " " \fIpath\fR
-specify a path where the bitmaps (monochrome) used by hyperdash are searched for. 
+specify a path where the bitmaps (monochrome) used by dashdesign and hyperdash are searched for. 
 It defaults to /usr/share/hyperdash/bitmaps .
 .PP
+
 For detailed help and description of the MQTT principle take a 
 look at the README file coming with the package. 
 
