@@ -466,4 +466,15 @@ char *tohex(unsigned i) {
   return(p);
 }
 
+/* Remove leading and trailing "  */
+
+void declose(char *c) {
+  if(!c) return;
+  int l=strlen(c);
+  if(l<2) return;
+  if(*c=='\"' && c[l-1]=='\"') {
+    memmove(c,c+1,l-2);
+    c[l-2]=0;
+  }
+}
 

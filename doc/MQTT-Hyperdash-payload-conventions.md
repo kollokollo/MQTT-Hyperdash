@@ -1,6 +1,6 @@
 ## MQTT Payload Conventions
 
-for MQTT Hyperdash V.1.02 (c) by Markus Hoffmann
+for MQTT Hyperdash V.1.03 (c) by Markus Hoffmann
 
 MQTT-Hyperdash tries to interpret the MQTT topics payload in such a way, that 
 it can be presented to the user in a meaningful way. Either as a number or as a 
@@ -13,6 +13,7 @@ Currently there are following data types recognized:
 1. A string
 2. A number (integer or rational or floating point, decimal or as a hexadecimal number)
 3. Image data (in binary, must be the file content of a .png image file).
+4. Simple JSON expansion.
 
 ### Strings
 
@@ -95,6 +96,45 @@ a Timestamp (T1580396855.826) as the last value (see another proposal), to make
 sure the data corresponds to each other. This is not very elegant, but avoids a
 complex parser. (not all Microcontrolles have space for this). And in total it
 is not a limitation at all.
+
+### JSON expansion
+
+Simple key-value JSON container are supported. The JSON-keys will be extended 
+to the topic name as if they where another level of the topic hirarchy.
+
+Assume the main (real MQTT) topic is named "TEMPEATURE/VALUE", and the 
+payload is typically: 
+<pre>
+{
+  "reading" : 10.3, 
+  "unit" : "°C", 
+  "timestamp": 1580644118.778
+}
+</pre>
+
+Then the main topic will be expanded into four new topics:
+
+<pre>
+TEMPEATURE/VALUE
+TEMPEATURE/VALUE{reading}
+TEMPEATURE/VALUE{unit}
+TEMPEATURE/VALUE{timestamp}
+</pre>
+
+Where each of the additional three pseudo-topics contain a single value, which
+can be used as if it was a real topic. Al though not yet implemented, the logic
+would also work for complicated nested JSON data structures. e.g. leading to
+TEMPEATURE/VALUE{sensor1/comment/english}. 
+
+This works only for subscriptions and display of the values content.  For
+publication an appropiate string has to be composed by the application iself.
+
+This way most of the common smart home sensors emmiting a JSON format on their 
+topics can be read and processed by hyperdash and the rule engine framework. 
+Also mqtt-list-topics will recocnize the JSON topics and addes the pseudo-topics
+to its list of topics. If you need to publish in JSON, use the main topic to
+publish a string to, and do the JSON formatting of that string in your
+application. This is easyly done and straight forward.
 
   
 ### Further reading

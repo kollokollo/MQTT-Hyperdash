@@ -454,7 +454,7 @@ static void on_dashbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   printf("<%s>\n",gtk_entry_get_text(GTK_ENTRY(val->widget)));
   char newdash[256];
   strcpy(newdash,gtk_entry_get_text(GTK_ENTRY(val->widget)));
-  if(*newdash=='\"') memmove(newdash,newdash+1,strlen(newdash)-2);
+  declose(newdash);
   /* open a file selector to select a new dash to display.*/
   int rc=fileselect_dialog(newdash,dashboarddir,"*.dash");
   if(rc && newdash[0]) {
@@ -471,7 +471,7 @@ static void on_fontbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   printf("<%s>\n",gtk_entry_get_text(GTK_ENTRY(val->widget)));
   char newdash[256];
   strcpy(newdash,gtk_entry_get_text(GTK_ENTRY(val->widget)));
-  if(*newdash=='\"') memmove(newdash,newdash+1,strlen(newdash)-2);
+  declose(newdash);
   /* open a file selector to select a new font.*/
   int rc=fileselect_dialog(newdash,fontdir,"*.ttf");
   if(rc && *newdash) {
@@ -491,7 +491,7 @@ static void on_topicbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   PVAL *val=(PVAL *)data;
   char newtopic[256];
   strncpy(newtopic,gtk_entry_get_text(GTK_ENTRY(val->widget)),sizeof(newtopic));
-  if(*newtopic=='\"') memmove(newtopic,newtopic+1,strlen(newtopic)-2);
+  declose(newtopic);
   int rc=listselect_dialog(newtopic);
   if(rc && *newtopic) {
     char buf[256];
@@ -503,7 +503,7 @@ static void on_colorbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   PVAL *val=(PVAL *)data;
   char newdash[256];
   strcpy(newdash,gtk_entry_get_text(GTK_ENTRY(val->widget)));
-  if(*newdash=='\"') memmove(newdash,newdash+1,strlen(newdash)-2);
+  declose(newdash);
   int rc=colorselect_dialog("Select color",newdash);
   if(rc) {
     gtk_entry_set_text(GTK_ENTRY(val->widget),newdash);
@@ -521,7 +521,7 @@ static void on_iconbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   printf("<%s>\n",gtk_entry_get_text(GTK_ENTRY(val->widget)));
   char newdash[256];
   strcpy(newdash,gtk_entry_get_text(GTK_ENTRY(val->widget)));
-  if(*newdash=='\"') memmove(newdash,newdash+1,strlen(newdash)-2);
+  declose(newdash);
   /* open a file selector to select a new dash to display.*/
   int rc=fileselect_dialog(newdash,icondir,"*.png");
   if(rc && newdash[0]) {
@@ -543,7 +543,7 @@ static void on_bitmapbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   printf("<%s>\n",gtk_entry_get_text(GTK_ENTRY(val->widget)));
   char newdash[256];
   strcpy(newdash,gtk_entry_get_text(GTK_ENTRY(val->widget)));
-  if(*newdash=='\"') memmove(newdash,newdash+1,strlen(newdash)-2);
+  declose(newdash);
   /* open a file selector to select a new dash to display.*/
   int rc=fileselect_dialog(newdash,bitmapdir,"*");
   if(rc && newdash[0]) {

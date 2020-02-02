@@ -22,3 +22,4 @@ STRING double_string(const STRING *a);
 char *date_string();
 char *time_string();
 char *tohex(unsigned i);
+void declose(char *c);

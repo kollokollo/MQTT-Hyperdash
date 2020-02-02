@@ -46,7 +46,7 @@ int listen_time=1;  /* in secs */
 
 extern char clientID[];
 int verbose=0;    /* Verbosity level */
-
+int do_json=1;    /* Expand JSON properties by default */
 
 #define TIMEOUT     10000L
 typedef struct {
@@ -59,8 +59,8 @@ int anztopics;
 
 static int find_topic(const char *topic) {
   int ret=-1;
-  int i;
   if(anztopics>0) {
+    int i;
     for(i=0;i<anztopics;i++) {
       if(!strcmp(topic,topics[i].topic)) return(i); 
     }
@@ -97,7 +97,7 @@ static void clear_all_topics() {
   }
   anztopics=0;
 }
-int add_topic(const char *topic, STRING value) {
+static int add_topic(const char *topic, STRING value) {
   int i=find_topic(topic);
   if(i>=0) topics[i].anz++;
   else {
@@ -113,9 +113,6 @@ int add_topic(const char *topic, STRING value) {
   return(i);
 }
 
-void clear_all_topics();
-int add_topic(const char *topic, STRING value);
-
 /* Collect all topics arriving...
  */
 void update_topic_message(int sub,const char *topic_name,  STRING message) {
@@ -124,7 +121,7 @@ void update_topic_message(int sub,const char *topic_name,  STRING message) {
 }
 
 static void intro() {
-  puts("mqtt-list-topics V.1.02 (c) 2020 by Markus Hoffmann\n"
+  puts("mqtt-list-topics V.1.03 (c) 2020 by Markus Hoffmann\n"
          "This tool is part of MQTT-Hyperdash, the universal MQTT Dashboard for linux.");
 }
 
@@ -137,6 +134,8 @@ static void usage() {
     "  --passwd  <passwd>\t---\tdefine the password for the broker.\n"
     "  --pattern <pat>\t---\tset topic pattern [%s]\n"
     "  --wait <seconds>\t---\tlisten for [%d] seconds.\n"
+    "  --json\t\t---\texpand JSON properties. (default)\n"
+    "  --nojson\t\t---\tdo not expand JSON properties.\n"
     "  -v\t\t\t---\tbe more verbose\n"
     "  -q\t\t\t---\tbe more quiet\n"
     ,CLIENT,broker_url,topic_pattern,listen_time);
@@ -149,8 +148,7 @@ static void kommandozeile(int anzahl, char *argumente[]) {
       intro();
       usage();
       quitflag=1;
-    } 
-    else if(!strcmp(argumente[count],"--version"))  {
+    } else if(!strcmp(argumente[count],"--version"))  {
       intro();
       quitflag=1;
     } 
@@ -159,8 +157,10 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     else if(!strcmp(argumente[count],"--passwd"))   broker_passwd=argumente[++count];
     else if(!strcmp(argumente[count],"--pattern"))  topic_pattern=argumente[++count];
     else if(!strcmp(argumente[count],"--wait"))     listen_time=atoi(argumente[++count]);
-    else if(!strcmp(argumente[count],"-v"))	     verbose++;
-    else if(!strcmp(argumente[count],"-q"))	     verbose--;
+    else if(!strcmp(argumente[count],"--nojson"))   do_json=0;
+    else if(!strcmp(argumente[count],"--json"))     do_json=1;
+    else if(!strcmp(argumente[count],"-v"))	    verbose++;
+    else if(!strcmp(argumente[count],"-q"))	    verbose--;
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the rule itself */
     else {
       /* do nothing, these could be options for rule itself */
@@ -169,10 +169,18 @@ static void kommandozeile(int anzahl, char *argumente[]) {
   if(quitflag) exit(EX_OK);
 }
 
-
+static void print_value(char *v,int rc) {
+  int j;
+  for(j=0;j<rc;j++) {
+      if(isprint(v[j])) printf("%c",v[j]);
+      else printf(".");
+  }
+}
 
 int main(int argc, char* argv[]) {
   int rc,i,j;
+  int json_object;
+  int json_balance;
   double v;
   char *typ="unknown";
   kommandozeile(argc, argv);    /* process command line */
@@ -187,11 +195,12 @@ int main(int argc, char* argv[]) {
   }
   mqtt_subscribe_all();
   if(verbose>0) printf("INFO: list-topic up and listening. Client Id=<%s>\n",clientID);
-    /* This is the main loop. */
-    while(mqtt_isconnected && listen_time>0) {
-      sleep(1);
-      listen_time--;
-    }
+
+  /* This is the main loop. */
+  while(mqtt_isconnected && listen_time>0) {
+    sleep(1);
+    listen_time--;
+  }
   mqtt_unsubscribe_all();
 
   if(verbose>-1) printf("# Collected Information about %d topics in %d seconds on %s.\n",anztopics,listen_time,broker_url);
@@ -204,32 +213,68 @@ int main(int argc, char* argv[]) {
       } else {
         int nonprint=0;
 	int nonnumber=0;
+	int nonspace=0;
+	json_object=0;
+	json_balance=0;
 	char a;
         for(j=0;j<topics[i].last_value.len;j++) {
 	  a=topics[i].last_value.pointer[j];
+	  if(a=='{' && nonspace==0) json_object=1;
+	  if(a==':' && json_object==1) json_object=2;
+	  if(a=='{') json_balance++;
+	  else if(a=='}') json_balance--;
 	  if(!isprint(a)) nonprint++;
 	  if(!isdigit(a)) nonnumber++;
-	
+	  if(!isspace(a)) nonspace++;
 	}
-	// printf("nonprint=%d----",nonprint);
-        if(nonprint==0) {
-	  if(nonnumber==0) typ="number";
-	  else typ="string";
-        } else typ="binary";
+	if(json_object==2 && json_balance==0) {
+	  typ="JSON";
+	} else {
+          if(nonprint==0) {
+	    if(nonnumber==0) typ="number";
+	    else typ="string";
+          } else typ="binary";
+	}
       }
       printf("%s \t%d \t%s \t\"",topics[i].topic,topics[i].anz,typ);
       rc=topics[i].last_value.len;
       if(rc>16) rc=16;
-      char a;
-      for(j=0;j<rc;j++) {
-	  a=topics[i].last_value.pointer[j];
-	  if(isprint(a)) printf("%c",a);
-	  else printf(".");
-      }
+      print_value(topics[i].last_value.pointer,rc);
       printf("\"\n");
+      
+      if(do_json && json_object==2 && json_balance==0) {
+        char subtopic[256];
+	int level=0;
+	int flag=0;
+	int k=0;
+	char a;
+        for(j=0;j<topics[i].last_value.len;j++) {
+	  a=topics[i].last_value.pointer[j];
+          if(a=='\"') flag=!flag;
+	  else if(!flag && a=='{') level++;
+	  else if(!flag && a=='}') level--;
+	  else if(level>=1 && k<sizeof(subtopic)-1 && a!='\r' && a!='\n' && (flag || (a!='\t' && a!=' '))) subtopic[k++]=a;
+	}
+	subtopic[k]=0;
+        char aa[256];
+	char b[256];
+	char c[256];
+	int e=wort_sep(subtopic,',',2|4,aa,b);
+        while(e) {
+          wort_sep(aa,':',0,aa,c);
+	  xtrim(aa,0,aa);
+	  xtrim(c,0,c);
+	  declose(aa);
+          printf("%s{%s} \t%d \tjson_sub \t\"",topics[i].topic,aa,topics[i].anz);
+          declose(c);
+	  print_value(c,strlen(c));
+          printf("\"\n");
+	  e=wort_sep(b,',',2|4,aa,b);
+	}
+      }
     }
   }
   clear_all_topics();
-  mqtt_exit();  /* Verbindung zum Broker trennen. */ 
+  mqtt_exit();  /* close connection to broker. */ 
   return(EX_OK);
 }
