@@ -13,7 +13,7 @@
  
 #define HDDASHGEN_VERSION "1.02"
 #define DEFAULT_BROKER "tcp://localhost:1883"
-#define MAX_ANZ_TOPICS 4096
+#define MAX_ANZ_TOPICS (4096*2)
 
 #define ADVANCE_Y      30 
 #define ADVANCE_X     260

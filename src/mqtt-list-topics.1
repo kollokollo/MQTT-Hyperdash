@@ -39,6 +39,11 @@ specify a topic pattern. By default "#" is used.
 .BR \-\-wait " " \fIseconds\fR
 specify a time to wait/listen in seconds. By default, the time is 1 second. 
 .TP
+.BR \-n " " \fInumber\fR
+specify maximum number of mqtt-topics to collect. By default, the number is limited to 512 
+so that the list does not get too long. But you can specify more if needed. Expanded
+pseudo-topics from JSON values do not count here. 
+.TP
 .BR \-\-json 
 expand JSON properties. This is the default.
 .TP

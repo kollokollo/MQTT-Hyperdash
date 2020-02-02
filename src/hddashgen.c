@@ -128,7 +128,6 @@ static void free_topics() {
 }
 
 
-
 #define advance() y+=ADVANCE_Y; \
 	    if(y>MAX_Y) {y=FIELD_START_Y;x+=ADVANCE_X;} \
 	    if(h<y+ADVANCE_Y) h=y+ADVANCE_Y; \
@@ -136,17 +135,15 @@ static void free_topics() {
 
 
 int do_level(int level,char *match, char *filename) {
-  int i,offset=0;
-  int x=5,y;
+  int i,offset=0,x=5,y;
   char filenameprefix[256];
   char fullfilename[256];
   char buffer[128];
-  char old[128];
+  char old[128]="/";  /* start with something impossible */
   char *p1,*p2;
   int sublevel;
   int w=200;
   int h=100;
-  *old=0;
   /* Open/create file */
   snprintf(filenameprefix, sizeof(filenameprefix),"%s%s",dashboard_prefix,filename);
   snprintf(fullfilename, sizeof(fullfilename),"%s/%s%s",dashboarddir,dashboard_prefix,filename);
@@ -171,10 +168,9 @@ int do_level(int level,char *match, char *filename) {
     fprintf(fp,"TEXT: X=10 Y=30 FGC=$FFFF00FF h=40 TEXT=\"%s\" FONT=\"Arial_Bold\" FONTSIZE=20\n",match);
     if(w<10+strlen(match)*14) w=10+strlen(match)*14;
   } else {
-  
-  fprintf(fp,"TEXT: X=10 Y=10 FGC=$FFFFFFFF h=20 TEXT=\"%s\" FONT=\"Arial_Bold\" FONTSIZE=20\n","Root of Broker");
-  fprintf(fp,"TEXT: X=10 Y=30 FGC=$FFFFFFFF h=20 TEXT=\"%s\" FONT=\"Arial_Bold\" FONTSIZE=16\n",dashboard_prefix);
-  fprintf(fp,"\n");
+    fprintf(fp,"TEXT: X=10 Y=10 FGC=$FFFFFFFF h=20 TEXT=\"%s\" FONT=\"Arial_Bold\" FONTSIZE=20\n","Root of Broker");
+    fprintf(fp,"TEXT: X=10 Y=30 FGC=$FFFFFFFF h=20 TEXT=\"%s\" FONT=\"Arial_Bold\" FONTSIZE=16\n",dashboard_prefix);
+    fprintf(fp,"\n");
   
   
   /* Create a button for each *mainroot_hd.dash it finds. */
@@ -225,14 +221,12 @@ int do_level(int level,char *match, char *filename) {
   for(i=0;i<anztopics;i++) {
     if(match==NULL || !strncmp(topics[i].name,match,strlen(match))) {
       p1=&(topics[i].name[offset]);
-    //  printf("Match: <%s>\n",p1);
       p2=buffer;
       sublevel=0;
       while(*p1 && *p1!='/') *p2++=*p1++; 
       if(*p1=='/') sublevel=1;
       *p2=0;
-      if(strncmp(old,buffer,128)) {
-
+      if(!((*old==0 && *buffer==0) || !strncmp(old,buffer,128))) {
 	if(sublevel) {
 	  /* Make a Button to follow the tree */
 	  /* Process new branch*/
@@ -260,7 +254,7 @@ int do_level(int level,char *match, char *filename) {
 	  }
 	  if(p1>text) --p1;
 	  *p1=0;
-	  
+
 	  char buf[256];
 	  snprintf(buf,sizeof(buf),"%s%s",dashboard_prefix,nfilename);
           fprintf(fp,"# LINK to next TREE LEVEL\n");
@@ -274,6 +268,7 @@ int do_level(int level,char *match, char *filename) {
 	  do_level(level+1,newmatch,nfilename);
 
           advance();
+	  strncpy(old,buffer,128); /* Ignore all topics here which are in the Subtree. */
 	} else {
 	  if(!strcmp(buffer,"ACTIVITY_DM")) {
             fprintf(fp,"# ACTIVITY indicator\n");
@@ -334,7 +329,7 @@ int do_level(int level,char *match, char *filename) {
 	    fprintf(fp,"TEXT:    " XYHT WHITE FONT_PARNAME "\n",x+10,y,20,buffer);
 	    fprintf(fp,"TOPICNUMBER: " XYWHT BGBLUE CYAN FONT_PAR ANAFORMAT "\n",x+150,y,100,20,topics[i].name);
             advance();
-	    fprintf(fp,"PBOX:    " XYWH BGGRAY "\n",x+7,y,240,20);
+	    fprintf(fp,"PBOX:    " XYWH BGGRAY GRAY "\n",x+7,y,240,20);
 	    fprintf(fp,"FRAME:   " XYWH "\n",x+7-2,y-2,240+4,20+4);
 	    fprintf(fp,"FRAME:   " XYWHR "\n",x+7-2+20,y+2,240+4-40,20-4-1);
 	    fprintf(fp,"BITMAP:  " XY WHITE "BITMAP=\"TickLeft\"\n",x+7,y+2);
@@ -393,17 +388,32 @@ int do_level(int level,char *match, char *filename) {
 	    fprintf(fp,"TEXT:     " XYHT WHITE FONT_PARNAME "\n",x+10,y,20,buffer);
 	    if(!strcmp(topics[i].typ,"binary")) {
 	      fprintf(fp,"TEXTAREA:      " XYWHT BGBLACK MAGENTA FONT_SMALL "\n",x+150,y,100,20,topics[i].name);
+	    } else if(!strcmp(topics[i].typ,"IMAGE")) {
+	      fprintf(fp,"TOPICIMAGE:      " XYWHT "\n",x+150,y,100,90,topics[i].name);
+	      advance();
+	      advance();
+	      advance();
+	    } else if(!strcmp(topics[i].typ,"JSON")) {
+	      fprintf(fp,"TEXTAREA:      " XYWHT BGBLACK WHITE FONT_SMALL "\n",x+150,y,100,50,topics[i].name);
+	      fprintf(fp,"TOPICINSTRING: " XYWHT "\n",x+150-2,y-2,100+4,50+4,topics[i].name);
+ 	      fprintf(fp,"FRAME:    " XYWHR "\n",x+150-2,y-2,100+4,50+4);
+	      advance();
 	    } else {
 	      fprintf(fp,"TEXTAREA:      " XYWHT BGBLACK WHITE FONT_SMALL "\n",x+150,y,100,20,topics[i].name);
-	      fprintf(fp,"TOPICINSTRING: " XYWHT "\n",x+150-2,y-2,100+4,20+4,topics[i].name);
+              if(topics[i].name[strlen(topics[i].name)-1]!='}') {
+	        fprintf(fp,"TOPICINSTRING: " XYWHT "\n",x+150-2,y-2,100+4,20+4,topics[i].name);
+ 	        fprintf(fp,"FRAME:    " XYWHR "\n",x+150-2,y-2,100+4,20+4);
+              }
 	    }
-	    fprintf(fp,"FRAME:    " XYWHR "\n",x+150-2,y-2,100+4,20+4);
             fprintf(fp,"\n");
   	    advance();
 	  }
 	}
       }
-      strncpy(old,buffer,128);
+    } else {
+      /* doesnt match */
+      old[0]='/';
+      old[1]=0;
     }
   }
   fprintf(fp,"# FOOTER\n");
@@ -415,8 +425,9 @@ int do_level(int level,char *match, char *filename) {
    */
   rewind(fp);
   fprintf(fp,"PANEL: TITLE=\"%s\" W=%d H=%d" WHITE BGBLUE "\n",filename,w,h);
-  /* close file */
-  fclose(fp);
+
+  fclose(fp);  /* close file */
+  // printf("} leave level <%s>\n",match);
   return(1);
 }
 
@@ -438,7 +449,7 @@ int main(int argc, char* argv[]) {
 
   /* Read from stdin */
 
-  while(getline(&line, &size, stdin) != -1) {
+  while(getline(&line,&size,stdin)!=-1) {
     p1=line;
     if(*p1==0) continue;
     while(*p1 && isspace(*p1)) p1++;
@@ -459,10 +470,8 @@ int main(int argc, char* argv[]) {
     }
   }
   free(line);
-    
   printf("hddashgen: Have %d topics from list.\n",anztopics);
   do_level(0,NULL,"mainroot_hd.dash");
-
   free_topics();
   return(EX_OK);
 }

@@ -32,7 +32,6 @@
 #include "mqtt.h"
 #include "util.h"
 
-
 #define CLIENT "mqtt-list-topics"
 
 /* Configuration variables */
@@ -48,13 +47,15 @@ extern char clientID[];
 int verbose=0;    /* Verbosity level */
 int do_json=1;    /* Expand JSON properties by default */
 
+int max_num_topics=512;
+
 #define TIMEOUT     10000L
 typedef struct {
   char *topic;
   int anz;
   STRING last_value;
 } TOPIC;
-TOPIC topics[512];
+TOPIC *topics;
 int anztopics;
 
 static int find_topic(const char *topic) {
@@ -98,14 +99,23 @@ static void clear_all_topics() {
   anztopics=0;
 }
 static int add_topic(const char *topic, STRING value) {
+  static int toldyou=0;
   int i=find_topic(topic);
   if(i>=0) topics[i].anz++;
   else {
     i=anztopics;
-    anztopics++;
-    topics[i].anz=1;
-    topics[i].last_value.pointer=NULL; 
-    topics[i].topic=strdup(topic);
+    if(anztopics<max_num_topics-1) {
+      anztopics++;
+      topics[i].anz=1;
+      topics[i].last_value.pointer=NULL; 
+      topics[i].topic=strdup(topic);
+    } else {
+      if(!toldyou) {
+        printf("# ERROR: too many topics (%d)\n",anztopics);
+        printf("# The maximum is set to %d.\n",max_num_topics);
+        toldyou=1;
+      }
+    }
   }
   topics[i].last_value.pointer=realloc(topics[i].last_value.pointer,value.len);
   topics[i].last_value.len=value.len;
@@ -134,11 +144,12 @@ static void usage() {
     "  --passwd  <passwd>\t---\tdefine the password for the broker.\n"
     "  --pattern <pat>\t---\tset topic pattern [%s]\n"
     "  --wait <seconds>\t---\tlisten for [%d] seconds.\n"
+    "  -n <number>\t\t---\tmaximum number of topics to collect [%d]\n"
     "  --json\t\t---\texpand JSON properties. (default)\n"
     "  --nojson\t\t---\tdo not expand JSON properties.\n"
     "  -v\t\t\t---\tbe more verbose\n"
     "  -q\t\t\t---\tbe more quiet\n"
-    ,CLIENT,broker_url,topic_pattern,listen_time);
+    ,CLIENT,broker_url,topic_pattern,listen_time,max_num_topics);
 }
 static void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
@@ -157,6 +168,7 @@ static void kommandozeile(int anzahl, char *argumente[]) {
     else if(!strcmp(argumente[count],"--passwd"))   broker_passwd=argumente[++count];
     else if(!strcmp(argumente[count],"--pattern"))  topic_pattern=argumente[++count];
     else if(!strcmp(argumente[count],"--wait"))     listen_time=atoi(argumente[++count]);
+    else if(!strcmp(argumente[count],"-n"))         max_num_topics=atoi(argumente[++count]);
     else if(!strcmp(argumente[count],"--nojson"))   do_json=0;
     else if(!strcmp(argumente[count],"--json"))     do_json=1;
     else if(!strcmp(argumente[count],"-v"))	    verbose++;
@@ -176,16 +188,56 @@ static void print_value(char *v,int rc) {
       else printf(".");
   }
 }
+const char pngheader[]={0x89,'P','N','G',0x0d,0x0a,0x1a,0x0a};
+const char jpgheader[]={0xff,0xd8,0xff};
+static char *get_type(char *pl, int l) {
+  if(!pl || l<=0) return("empty");
+  int json_object;
+  int json_balance;
+  int j;
+  double v=myatof(pl);
+  if(v!=0) {
+    if(v==(double)((int)v)) return("integer");
+    else return("number");
+  } else {
+    int nonprint=0;
+    int nonnumber=0;
+    int nonspace=0;
+    json_object=0;
+    json_balance=0;
+    char a;
+    for(j=0;j<l;j++) {
+      a=pl[j];
+      if(a=='{' && nonspace==0) json_object=1;
+      if(a==':' && json_object==1) json_object=2;
+      if(a=='{') json_balance++;
+      else if(a=='}') json_balance--;
+      if(!isprint(a)) nonprint++;
+      if(!isdigit(a)) nonnumber++;
+      if(!isspace(a)) nonspace++;
+    }
+    if(json_object==2 && json_balance==0) {
+      return("JSON");
+    } else {
+      if(nonprint==0) {
+        if(nonnumber==0) return("number");
+	else return("string");
+      } else {
+        if(l>40 && (!memcmp(pl,pngheader,sizeof(pngheader)) || !memcmp(pl,jpgheader,sizeof(jpgheader)))) return("IMAGE");
+        return("binary");
+      }
+    }
+  }
+  return("unknown");
+}
+
 
 int main(int argc, char* argv[]) {
   int rc,i,j;
-  int json_object;
-  int json_balance;
-  double v;
   char *typ="unknown";
   kommandozeile(argc, argv);    /* process command line */
   add_subscription(topic_pattern,0);
-  
+  topics=calloc(max_num_topics,sizeof(TOPIC));
   
   rc=mqtt_broker(broker_url,broker_user,broker_passwd,CLIENT);  /* connect to mqtt broker */
   if(rc==-1) {
@@ -206,43 +258,15 @@ int main(int argc, char* argv[]) {
   if(verbose>-1) printf("# Collected Information about %d topics in %d seconds on %s.\n",anztopics,listen_time,broker_url);
   if(anztopics>0) {
     for(i=0;i<anztopics;i++) {
-      v=myatof(topics[i].last_value.pointer);
-      if(v!=0) {
-        if(v==(double)((int)v)) typ="integer";
-        else typ="number";
-      } else {
-        int nonprint=0;
-	int nonnumber=0;
-	int nonspace=0;
-	json_object=0;
-	json_balance=0;
-	char a;
-        for(j=0;j<topics[i].last_value.len;j++) {
-	  a=topics[i].last_value.pointer[j];
-	  if(a=='{' && nonspace==0) json_object=1;
-	  if(a==':' && json_object==1) json_object=2;
-	  if(a=='{') json_balance++;
-	  else if(a=='}') json_balance--;
-	  if(!isprint(a)) nonprint++;
-	  if(!isdigit(a)) nonnumber++;
-	  if(!isspace(a)) nonspace++;
-	}
-	if(json_object==2 && json_balance==0) {
-	  typ="JSON";
-	} else {
-          if(nonprint==0) {
-	    if(nonnumber==0) typ="number";
-	    else typ="string";
-          } else typ="binary";
-	}
-      }
+      typ=get_type(topics[i].last_value.pointer,topics[i].last_value.len);
       printf("%s \t%d \t%s \t\"",topics[i].topic,topics[i].anz,typ);
       rc=topics[i].last_value.len;
-      if(rc>16) rc=16;
+      if(rc>24) rc=24;
       print_value(topics[i].last_value.pointer,rc);
+      if(rc<topics[i].last_value.len) printf("(%d)",topics[i].last_value.len);
       printf("\"\n");
       
-      if(do_json && json_object==2 && json_balance==0) {
+      if(do_json && !strcmp(typ,"JSON")) {
         char subtopic[256];
 	int level=0;
 	int flag=0;
@@ -265,16 +289,21 @@ int main(int argc, char* argv[]) {
 	  xtrim(aa,0,aa);
 	  xtrim(c,0,c);
 	  declose(aa);
-          printf("%s{%s} \t%d \tjson_sub \t\"",topics[i].topic,aa,topics[i].anz);
+	  char *t=get_type(c,strlen(c));
+          printf("%s{%s} \t%d \t%s \t\"",topics[i].topic,aa,topics[i].anz,t);
           declose(c);
-	  print_value(c,strlen(c));
+	  rc=strlen(c);
+	  if(rc>24) rc=24;
+	  print_value(c,rc);
+	  if(rc<strlen(c)) printf("(%d)",(int)strlen(c));
           printf("\"\n");
 	  e=wort_sep(b,',',2|4,aa,b);
 	}
       }
     }
   }
-  clear_all_topics();
   mqtt_exit();  /* close connection to broker. */ 
+  clear_all_topics();
+  free(topics);
   return(EX_OK);
 }

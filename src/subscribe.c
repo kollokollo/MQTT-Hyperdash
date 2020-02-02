@@ -13,7 +13,7 @@
 #include "basics.h"
 #include "subscribe.h"
 
-SUBSCRIPTION subscriptions[256];
+SUBSCRIPTION subscriptions[256*2];
 int anzsubscriptions;
 int find_subscription(const char *topic) {
   int ret=-1;
@@ -60,9 +60,13 @@ int add_subscription(const char *topic, int qos) {
   if(i>=0) subscriptions[i].anz++;
   else {
     i=anzsubscriptions;
-    anzsubscriptions++;
-    subscriptions[i].anz=1;
-    subscriptions[i].topic=strdup(topic);
+    if(anzsubscriptions<sizeof(subscriptions)/sizeof(SUBSCRIPTION)-1) {
+      anzsubscriptions++;
+      subscriptions[i].anz=1;
+      subscriptions[i].topic=strdup(topic);
+    } else {
+      printf("Error: cannot subscribe to more than %ld topics.\n",sizeof(subscriptions)/sizeof(SUBSCRIPTION));
+    }
   }
   /* If new quality of service is higher, take this.*/
   if(qos>subscriptions[i].qos) subscriptions[i].qos=qos;
