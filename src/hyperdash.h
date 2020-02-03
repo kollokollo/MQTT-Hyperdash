@@ -36,11 +36,12 @@ typedef struct {
   short linewidth;
   short revert;
   unsigned long agc;
-  unsigned long bgc;
-  unsigned long fgc;
+  unsigned long bgc;   /* Background color */
+  unsigned long fgc;   /* Foreground color */
   char *font;
   int fontsize;
   char *topic;
+  char *subtopic;
   char *text;
   char *line;
   char *filename;

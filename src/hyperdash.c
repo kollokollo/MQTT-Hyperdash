@@ -188,11 +188,11 @@ void init_dash(DASH *dash) {
    Alle element typen aus Zeilen bestimen. 
    Broker finden und verbinden (client-id = panel name)
    x,y,w,h Parameter rausfinden.
-   Alle topics subscribieren.
+   subscribe to all topics.
    
   */
   int i;
-  global_dash=dash;
+  global_dash=dash;  /* TODO */
 
   for(i=0;i<dash->anzelement;i++) {
     if(dash->tree[i].line[0]!='#') xtrim(dash->tree[i].line,1,dash->tree[i].line);
@@ -358,6 +358,8 @@ ELEMENT duplicate_element(ELEMENT *el) {
 void free_element(ELEMENT *el) {
   free(el->topic);
   el->topic=NULL;
+  free(el->subtopic);
+  el->subtopic=NULL;
   free(el->font);
   el->font=NULL;
   free(el->text);
@@ -431,8 +433,6 @@ void add_element(DASH *dash, ELEMENT *el) {
   dash->tree[i]=*el;
 }
 
-
-
 void draw_dash(DASH *dash, WINDOW *win) {
   int i;
   open_all_fonts();
@@ -445,15 +445,31 @@ void draw_dash(DASH *dash, WINDOW *win) {
   SDL_Flip(win->display); 
   mqtt_subscribe_all();
 }
+
+
+
 void update_topic_message(int sub,const char *topic_name, STRING message) {
   if(sub<0) return;  /* Ignore it. */
   DASH *dash=global_dash;
   WINDOW *win=global_window;
   int i;
- // printf("update_dash: <%s>...\n",topic);
   for(i=0;i<dash->anzelement;i++) {
     if((dash->tree[i].type&EL_DYNAMIC)==EL_DYNAMIC) {
-      if(dash->tree[i].subscription==sub) update_element(&(dash->tree[i]),win,message);
+      if(dash->tree[i].subscription==sub) {
+        if(!dash->tree[i].subtopic) update_element(&(dash->tree[i]),win,message);
+        else {
+	/*
+	  printf("Update Element w subtopic:\n");
+	  printf("mtopic =<%s>\n",topic_name);
+	  printf("message=<%s>\n",message.pointer);
+	  printf("etopic =<%s>\n",dash->tree[i].topic);
+	  printf("esubtopic=<%s>\n",dash->tree[i].subtopic);
+	  */
+	  STRING submessage=json_get_value(dash->tree[i].subtopic,message);
+          update_element(&(dash->tree[i]),win,submessage);
+          free(submessage.pointer);
+	}
+      }
     } 
   }
   SDL_Flip(win->display);

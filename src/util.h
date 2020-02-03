@@ -23,3 +23,4 @@ char *date_string();
 char *time_string();
 char *tohex(unsigned i);
 void declose(char *c);
+STRING json_get_value(char *key, STRING pl);

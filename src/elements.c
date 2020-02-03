@@ -97,6 +97,8 @@ void i_panel(ELEMENT *el,char *pars) {
 
 extern char *topic_prefix;
 
+/* Add the topic prefix and remove the subtopic part. */
+
 static char *make_topic(const char *n) {
   static char buf[256];
   if(topic_prefix && *topic_prefix) {
@@ -104,12 +106,27 @@ static char *make_topic(const char *n) {
     strncat(buf,"/",sizeof(buf)-strlen(buf)-1);
   } else *buf=0;
   strncat(buf,n,sizeof(buf)-strlen(buf)-1);
+  char *p=buf;
+  while(*p && *p!='{') p++;
+  if(*p=='{') *p=0;
   return(buf);
+}
+static char *get_subtopic(const char *n) {
+  while(*n && *n!='{') n++;
+  if(*n=='{') {
+    char *buf=malloc(strlen(n)+1);
+    char *p2=buf;
+    n++;
+    while(*n && *n!='}') *p2++=*n++;
+    *p2=0;
+    return(buf);
+  }
+  return(NULL);
 }
 
 /* Initialize Static drawing elements */
 #define ELEMENT_FONT() el->fontnr=add_font(el->font,el->fontsize)
-#define ELEMENT_SUBSCRIBE() el->subscription=add_subscription(make_topic(el->topic),0)
+#define ELEMENT_SUBSCRIBE() {el->subscription=add_subscription(make_topic(el->topic),0); el->subtopic=get_subtopic(el->topic); }
 
 
 void i_line(ELEMENT *el,char *pars) {
@@ -1123,7 +1140,8 @@ void element_publish(ELEMENT *el, double v,double old_v) {
     format.pointer=el->format;
     format.len=strlen(format.pointer);
     STRING a=do_using(v,format);
-    mqtt_publish(el->topic,a,el->revert,1);
+    if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
+    else printf("ERROR: Publishing to subtopics is currently not supported!\n");
     free(a.pointer);
   }
 }
@@ -1416,7 +1434,6 @@ int c_subdash(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
     snprintf(filename,sizeof(filename),"%s.dash",el->text);
     call_a_dash(filename);
-    return(1);
   }
   return(0);
 }
@@ -1434,10 +1451,10 @@ int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     STRING a;
     a.pointer=el->text;
     a.len=strlen(a.pointer);
-    mqtt_publish(el->topic,a,el->revert,1);
-   // return(1); Do not consume it. There my be other action.... 
+    if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
+    else printf("ERROR: Publishing to subtopics is currently not supported!\n");
   }
-  return(0);
+  return(0); /* Do not consume it. There my be other action.... */
 }
 int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
@@ -1454,7 +1471,8 @@ int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
       format.pointer=el->format;
       format.len=strlen(format.pointer);
       a=do_using(v,format);
-      mqtt_publish(el->topic,a,el->revert,1);
+      if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
+      else printf("ERROR: Publishing to subtopics is currently not supported!\n");
       free(a.pointer);
     }
     return(1);
@@ -1471,7 +1489,8 @@ int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     if(rc>0) {
       a.pointer=buf;
       a.len=strlen(a.pointer);
-      mqtt_publish(el->topic,a,el->revert,1);
+      if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
+      else printf("ERROR: Publishing to subtopics is currently not supported!\n");
     }
     return(1);
   }

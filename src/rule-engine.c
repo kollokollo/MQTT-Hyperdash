@@ -89,13 +89,18 @@ int do_persist=0; /* Shall the engine persist to connect ad infinitum? */
 
 char *topic_prefix=""; /* Can be configured */
 
+/* Add the topic prefix and remove the subtopic part. */
+
 static char *make_topic(char *n) {
   char *buf=malloc(256);
   if(topic_prefix && *topic_prefix) {
     strncpy(buf,topic_prefix,256);
     strncat(buf,"/",256);
   } else *buf=0;
-  strncat(buf,n,256);
+  strncat(buf,n,256-strlen(buf)-1);
+  char *p=buf;
+  while(*p && *p!='{') p++;
+  if(*p=='{') *p=0;
   return(buf);
 }
 

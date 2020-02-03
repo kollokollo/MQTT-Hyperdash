@@ -204,8 +204,8 @@ int do_level(int level,char *match, char *filename) {
               fprintf(fp,"# LINK TO MAINROOT DASHBOARD\n");
 	      fprintf(fp,"PBOX:        " XYWH BGGRAY2 GRAY "\n",     x+5, y,180,20);
 	      fprintf(fp,"TEXT:        " XYHT WHITE FONT_BUTTON "\n",x+10,y, 20,buf2);
-	      fprintf(fp,"FRAMETOGGLE: " XYWH "\n",                  x+5, y,180,20);
 	      fprintf(fp,"DASH:        " XYWH "DASH=\"%s\"\n",       x+5, y,180,20,buf);
+	      fprintf(fp,"FRAMETOGGLE: " XYWH "\n",                  x+5, y,180,20);
               fprintf(fp,"\n");
               advance();
 	    }
@@ -260,8 +260,8 @@ int do_level(int level,char *match, char *filename) {
           fprintf(fp,"# LINK to next TREE LEVEL\n");
 	  fprintf(fp,"PBOX:        " XYWH GRAY BGGRAY "\n",x+5,y,180,20);
 	  fprintf(fp,"TEXT:        " XYHT WHITE FONT_BUTTON "\n",x+10,y,20,text);
-	  fprintf(fp,"FRAMETOGGLE: " XYWH "\n",x+5,y,180,20);
 	  fprintf(fp,"DASH:        " XYWH "DASH=\"%s\"\n",x+5,y,180,20,buf);
+	  fprintf(fp,"FRAMETOGGLE: " XYWH "\n",x+5,y,180,20);
           fprintf(fp,"\n");
 
 	  strcat(nfilename,".dash");

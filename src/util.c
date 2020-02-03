@@ -478,3 +478,51 @@ void declose(char *c) {
   }
 }
 
+
+/* Simple JSON parser to get the value of a first-level key */
+
+STRING json_get_value(char *key, STRING pl) {
+  STRING ret;
+  ret.pointer=NULL;
+  ret.len=0;
+  if(!key || !pl.pointer || pl.len<=0) return(ret);
+  int j;
+  char a;
+  int level=0;
+  int flag=0;
+  int k=0;
+  char buffer[pl.len+1];
+  // printf("Simple JSON parser: find <%s>\n",key);
+
+  /* better format the payload */
+  for(j=0;j<pl.len;j++) {
+    a=pl.pointer[j];
+    if(a=='\"') flag=!flag;
+    else if(!flag && a=='{') level++;
+    else if(!flag && a=='}') level--;
+    else if(level>=1 && k<pl.len && a!='\r' && a!='\n' && (flag || (a!='\t' && a!=' '))) buffer[k++]=a;
+  }
+  buffer[k]=0;
+
+  /* Now evaluate key-value pairs */
+  
+  char aa[k+1];
+  char b[k+1];
+  char c[k+1];
+  int e=wort_sep(buffer,',',2|4,aa,b);
+  while(e) {
+    wort_sep(aa,':',0,aa,c);
+    xtrim(aa,0,aa);
+    xtrim(c,0,c);
+    declose(aa);
+    declose(c);
+//    printf("key=<%s> value=<%s>\n",aa,c);
+    if(!strcmp(key,aa)) {
+      ret.pointer=strdup(c);
+      ret.len=strlen(c);
+      return(ret);
+    }
+    e=wort_sep(b,',',2|4,aa,b);
+  }
+  return(ret);
+}
