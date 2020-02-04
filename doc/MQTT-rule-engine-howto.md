@@ -222,4 +222,7 @@ However this slows the rules down quite a lot.
 If you have questions or problems using this framework, please feel free to 
 discuss this in the Issues forum of this repository.
 
+-----
 
+Further reading: 
+[The MQTT-Hyperdash automation concept](MQTT-Hyperdash-automation-concept.md)
