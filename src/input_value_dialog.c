@@ -30,6 +30,11 @@ static int gtk_usage=0;
 typedef struct {
   ELEMENT *el;
   GtkWidget *wg;
+  GtkWidget *sv;
+  GtkWidget *rb1;
+  GtkWidget *rb2;
+  GtkWidget *rb3;
+  
 } COMMON_BLOCK;
 
 static void on_APPLY_number_clicked (GtkWidget *widget, gpointer data) {
@@ -38,6 +43,7 @@ static void on_APPLY_number_clicked (GtkWidget *widget, gpointer data) {
   strncpy(input_value,gtk_entry_get_text(GTK_ENTRY(cb->wg)),sizeof(input_value));
   STRING a;
   ELEMENT *el=cb->el;
+  int qos=el->revert;
   double v=myatof(input_value);
   if(v>el->max) v=el->max;
   if(v<el->min) v=el->min;
@@ -45,8 +51,10 @@ static void on_APPLY_number_clicked (GtkWidget *widget, gpointer data) {
   format.pointer=el->format;
   format.len=strlen(format.pointer);
   a=do_using(v,format);
-  
-  if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
+  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb1))==TRUE) qos=0;
+  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb2))==TRUE) qos=1;
+  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb3))==TRUE) qos=2;
+  if(!el->subtopic) mqtt_publish(el->topic,a,qos,1);
   else printf("ERROR: Publishing to subtopics is currently not supported!\n");
 
   free(a.pointer);
@@ -55,7 +63,17 @@ static void on_OK_number_clicked (GtkWidget *widget, gpointer data) {
   on_APPLY_number_clicked(widget,data);
   gtk_widget_hide(widget);
 }
+static void on_SAVE_clicked (GtkWidget *widget, gpointer data) {
+  COMMON_BLOCK *cb=(COMMON_BLOCK *)data;
+  gtk_label_set_text(GTK_LABEL(cb->sv),gtk_entry_get_text(GTK_ENTRY(cb->wg)));
+}
 
+static void on_RESTORE_clicked (GtkWidget *widget, gpointer data) {
+  COMMON_BLOCK *cb=(COMMON_BLOCK *)data;
+  char buf[128];
+  strncpy(buf,gtk_label_get_text(GTK_LABEL(cb->sv)),128);
+  gtk_entry_set_text(GTK_ENTRY(cb->wg),buf);
+}
 
 
 static void on_APPLY_string_clicked (GtkWidget *widget, gpointer data) {
@@ -64,9 +82,13 @@ static void on_APPLY_string_clicked (GtkWidget *widget, gpointer data) {
   strncpy(input_value,gtk_entry_get_text(GTK_ENTRY(cb->wg)),sizeof(input_value));
   STRING a;
   ELEMENT *el=cb->el;
+  int qos=el->revert;
   a.pointer=input_value;
   a.len=strlen(input_value);
-  if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
+  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb1))==TRUE) qos=0;
+  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb2))==TRUE) qos=1;
+  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb3))==TRUE) qos=2;
+  if(!el->subtopic) mqtt_publish(el->topic,a,qos,1);
   else printf("ERROR: Publishing to subtopics is currently not supported!\n");
 }
 static void on_OK_string_clicked (GtkWidget *widget, gpointer data) {
@@ -94,9 +116,11 @@ static void on_cancel_clicked (GtkWidget *widget, gpointer data) {
 
 static GtkWidget *create_input_dialog(char *info, char *def, int isnum,ELEMENT *el) {
   GtkWidget *window;
-  GtkWidget *textarea,*inputarea;
   GtkWidget *box1 = gtk_hbox_new (FALSE, 0);
+  GtkWidget *box2 = gtk_hbox_new (FALSE, 0);
   GtkWidget *vbox = gtk_vbox_new (FALSE, 0);
+  GtkWidget *vbox2 = gtk_vbox_new (FALSE, 0);
+  GtkWidget *vbox3 = gtk_vbox_new (FALSE, 0);
   
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW (window),"Input Topic");
@@ -104,31 +128,67 @@ static GtkWidget *create_input_dialog(char *info, char *def, int isnum,ELEMENT *
   GtkWidget *button =gtk_button_new_with_label ("OK");
   GtkWidget *button2=gtk_button_new_with_label ("APPLY");
   GtkWidget *button3=gtk_button_new_with_label ("CANCEL");
-  textarea = gtk_label_new(info);
-  inputarea=gtk_entry_new();
+  GtkWidget *button4=gtk_button_new_with_label ("SAVE");
+  GtkWidget *button5=gtk_button_new_with_label ("RESTORE");
+  GtkWidget *textarea=gtk_label_new(info);
+  GtkWidget *storevalue=gtk_label_new(def);
+  GtkWidget *frame=gtk_frame_new("Stored value:");
+  GtkWidget *frame2=gtk_frame_new("Quality of Service:");
+  GtkWidget *radio1=gtk_radio_button_new_with_label(NULL,"0: at most once");
+  GtkWidget *radio2=gtk_radio_button_new_with_label(gtk_radio_button_get_group(GTK_RADIO_BUTTON(radio1)),"1: at least once");
+  GtkWidget *radio3=gtk_radio_button_new_with_label(gtk_radio_button_get_group(GTK_RADIO_BUTTON(radio2)),"2: exactly once");
+  GtkWidget *inputarea=gtk_entry_new();
+  GtkWidget *separator = gtk_hseparator_new ();
+  
+  
+  if(el->revert==0) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(radio1),TRUE);
+  else if(el->revert==1) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(radio2),TRUE);
+  else if(el->revert==2) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(radio3),TRUE);
+  
+  
   if(def) gtk_entry_set_text( GTK_ENTRY(inputarea),def);
   COMMON_BLOCK *cb=malloc(sizeof(COMMON_BLOCK));
   cb->el=el;
   cb->wg=inputarea;
+  cb->sv=storevalue;
+  cb->rb1=radio1;
+  cb->rb2=radio2;
+  cb->rb3=radio3;
   g_signal_connect (window, "delete-event",G_CALLBACK (delete_event),(gpointer) cb);
   g_signal_connect (window, "destroy",     G_CALLBACK (destroy),(gpointer) cb);
 
-  if(isnum) g_signal_connect(button, "clicked", G_CALLBACK (on_OK_number_clicked), (gpointer) cb);
-  else      g_signal_connect(button, "clicked", G_CALLBACK (on_OK_string_clicked), (gpointer) cb);
-  if(isnum) g_signal_connect(button2,"clicked", G_CALLBACK (on_APPLY_number_clicked), (gpointer) cb);
-  else      g_signal_connect(button2,"clicked", G_CALLBACK (on_APPLY_string_clicked), (gpointer) cb);
+  if(isnum) g_signal_connect(button, "clicked", G_CALLBACK (on_OK_number_clicked),   (gpointer)cb);
+  else      g_signal_connect(button, "clicked", G_CALLBACK (on_OK_string_clicked),   (gpointer)cb);
+  if(isnum) g_signal_connect(button2,"clicked", G_CALLBACK (on_APPLY_number_clicked),(gpointer)cb);
+  else      g_signal_connect(button2,"clicked", G_CALLBACK (on_APPLY_string_clicked),(gpointer)cb);
 
   g_signal_connect (button3, "clicked", G_CALLBACK (on_cancel_clicked), (gpointer) cb);
+  g_signal_connect (button4, "clicked", G_CALLBACK (on_SAVE_clicked), (gpointer) cb);
+  g_signal_connect (button5, "clicked", G_CALLBACK (on_RESTORE_clicked), (gpointer) cb);
 
   g_signal_connect_swapped(button, "clicked",G_CALLBACK(gtk_widget_destroy),window);
   g_signal_connect_swapped(button3,"clicked",G_CALLBACK(gtk_widget_destroy),window);
   gtk_container_add (GTK_CONTAINER (window), vbox);
   gtk_box_pack_start(GTK_BOX(vbox), textarea, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(vbox), inputarea, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox2), storevalue, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox2), box2, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), frame2, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), separator, TRUE, TRUE, 0);
+
   gtk_box_pack_start(GTK_BOX(vbox), box1, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(box1), button2, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(box1), button3, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(box2), button4, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(box2), button5, TRUE, TRUE, 0);
+
+  gtk_container_add(GTK_CONTAINER(frame),vbox2);
+  gtk_box_pack_start(GTK_BOX(vbox3), radio1, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox3), radio2, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox3), radio3, TRUE, TRUE, 0);
+  gtk_container_add(GTK_CONTAINER(frame2),vbox3);
 
   return(window);
 }
