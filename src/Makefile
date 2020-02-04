@@ -55,7 +55,7 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS) `pkg-config --cflags gtk+-2.0`
 
 
 LIBOBJS=  hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
-          bitmap.o input.o elements.o subscribe.o
+          bitmap.o input.o input_value_dialog.o elements.o subscribe.o
 
 MAINOBJS= main.o $(LIBOBJS)
 
@@ -71,7 +71,7 @@ DEPSRC=  $(CSRC)  mqtt-list-topics.c hddashgen.c dashdesign.c menu.c
 # Headerfiles which should be added to the distribution
 
 HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
-       input.h elements.h subscribe.h basics.h config.h hddashgen.h \
+       input.h input_value_dialog.h elements.h subscribe.h basics.h config.h hddashgen.h \
        dashdesign.h menu.h
 
 # example dash files 
@@ -137,7 +137,7 @@ DIR33=$(DIR)-bin
 LINKFLAGS = 
 WINLINKFLAGS = -L./WINDOWS/lib 
 
-LIBS = -lm -lpaho-mqtt3c -lSDL -lSDL_gfx -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
+LIBS = -lm -lpthread -lpaho-mqtt3c -lSDL -lSDL_gfx -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
 
 MYWINLIBS = WINDOWS/lib/libgfx.lib 
 

@@ -50,6 +50,7 @@ static void destroy(GtkWidget *widget, gpointer data ) {
 #endif
 int message_dialog(char *title,char *text, int anzbut) {
 #ifndef WINDOWS
+  gdk_threads_enter();
   GtkWidget *window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
   GtkWidget *button,*button2,*textarea;
   GtkWidget *box1 = gtk_hbox_new (FALSE, 0);
@@ -79,6 +80,7 @@ int message_dialog(char *title,char *text, int anzbut) {
   
   gtk_widget_show_all(window);
   gtk_main();
+  gdk_threads_leave();
 #endif
   return(re_button);
 }
@@ -111,6 +113,7 @@ int fileselect_dialog(char *filename, const char *path, const char *mask) {
 #ifndef WINDOWS
 
 /* Create a new file selection widget */
+  gdk_threads_enter();
     GtkWidget *filew = gtk_file_selection_new("Dashboard file selection");
     
     gtk_signal_connect(GTK_OBJECT(filew),"destroy",
@@ -140,6 +143,7 @@ int fileselect_dialog(char *filename, const char *path, const char *mask) {
     gtk_widget_show_all (filew);
     fileselect_return=0;
     gtk_main ();
+    gdk_threads_leave();
 #endif
     if(fileselect_return>0) {
       strcpy(filename,fileselect_name);
@@ -264,6 +268,7 @@ void view_onRowActivated(GtkTreeView *treeview,
 
 int listselect_dialog(char *topic) {
   printf("Listselect for %s\n",topic);
+  gdk_threads_enter();
   GtkWidget *window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_widget_set_size_request(GTK_WIDGET (window), 350, 150);
   gtk_window_set_default_size(GTK_WINDOW (window), 640, 480);
@@ -297,8 +302,8 @@ int listselect_dialog(char *topic) {
   gtk_container_add(GTK_CONTAINER(scrollarea),view);
   gtk_widget_show_all(window);
   listselect_return=0;
-  gtk_main ();
-  
+  gtk_main();
+  gdk_threads_leave();
   if(listselect_return) strcpy(topic,listselect_result);
 
   gtk_widget_hide(window);
@@ -373,63 +378,6 @@ APPLY button.
 */
 
 static volatile int input_return;
-static char input_value[256];
-
-static void inputOK_clicked (GtkWidget *widget, gpointer data) {
-  input_return=1;
-  strncpy(input_value,gtk_entry_get_text(GTK_ENTRY(data)),sizeof(input_value));
-}
-
-int input_dialog(const char *topic, char *value, char *def) {
-  char buf[256];
-  snprintf(buf,sizeof(buf),"Enter Value for Topic\n\n%s:\n\n",topic);
-
-#ifndef WINDOWS
-  GtkWidget *window;
-  GtkWidget *button,*button2,*textarea,*inputarea;
-  GtkWidget *box1 = gtk_hbox_new (FALSE, 0);
-  GtkWidget *vbox = gtk_vbox_new (FALSE, 0);
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW (window),"Input Topic");
-  
-  g_signal_connect (window, "delete-event",G_CALLBACK (delete_event), NULL);
-  g_signal_connect (window, "destroy",     G_CALLBACK (destroy), NULL);
-  
-  
-  gtk_container_set_border_width (GTK_CONTAINER (window), 10);
-  button = gtk_button_new_with_label ("OK");
-  button2 = gtk_button_new_with_label ("CANCEL");
-  textarea = gtk_label_new(buf);
-  inputarea=gtk_entry_new();
-  if(def) gtk_entry_set_text( GTK_ENTRY(inputarea),def);
-
-  g_signal_connect (button, "clicked", G_CALLBACK (inputOK_clicked), (gpointer) inputarea);
-  g_signal_connect (button2, "clicked", G_CALLBACK (on_button_clicked), (gpointer) "2");
-
-  g_signal_connect_swapped (button, "clicked",
-			      G_CALLBACK (gtk_widget_destroy),
-                              window);
-  g_signal_connect_swapped (button2, "clicked",
-			      G_CALLBACK (gtk_widget_destroy),
-                              window);
-
-  gtk_container_add (GTK_CONTAINER (window), vbox);
-  gtk_box_pack_start (GTK_BOX(vbox), textarea, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX(vbox), inputarea, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX(vbox), box1, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX(box1), button, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX(box1), button2, TRUE, TRUE, 0);
-  input_return=0;
-  gtk_widget_show_all (window);
-  gtk_main ();
-#endif
-  if(input_return>0) {
-    strcpy(value,input_value);
-    return(1);
-  }
-  return(0);
-}
-
 
 typedef struct {
   char name[32];
@@ -570,6 +518,7 @@ int property_dialog(char *elline) {
   char b[256*4];
   anzpval=0;
 #ifndef WINDOWS
+  gdk_threads_enter();
   GtkWidget *window;
   GtkWidget *button,*button2;
   GtkWidget *box1 = gtk_hbox_new (FALSE, 0);
@@ -657,7 +606,7 @@ int property_dialog(char *elline) {
   input_return=0;
   gtk_widget_show_all(window);
   gtk_main();
-
+  gdk_threads_leave();
   if(input_return>0) {
     sprintf(elline,"%s:",aa);
     int i;

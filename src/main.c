@@ -120,6 +120,7 @@ int main(int anzahl, char *argumente[]) {
   DASH *maindash;
   WINDOW *mainwindow;
 #ifndef WINDOWS
+  gdk_threads_init();
   gtk_init (&anzahl, &argumente);
 #endif
   hyperdash_set_defaults();

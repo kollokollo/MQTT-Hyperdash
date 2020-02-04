@@ -37,6 +37,7 @@
 #include "util.h"
 #include "mqtt.h"
 #include "input.h"
+#include "input_value_dialog.h"
 #include "elements.h"
 
 /* Initialize the broker and try to connect... */
@@ -1458,6 +1459,8 @@ int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 }
 int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
+    topic_in_number_input(el);
+    #if 0
     if(verbose>0) printf("input number for topic <%s> with format <%s>\n",el->topic,el->format);
     STRING a;
     char buf[256];
@@ -1475,23 +1478,14 @@ int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
       else printf("ERROR: Publishing to subtopics is currently not supported!\n");
       free(a.pointer);
     }
+    #endif
     return(1);
   }
   return(0);
 }
 int c_tinstring(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
-    if(verbose>0) printf("input string for topic <%s>\n",el->topic);
-    STRING a;
-    char buf[256];
-    char *def=subscriptions[el->subscription].last_value.pointer;
-    int rc=input_dialog(el->topic,buf,def);
-    if(rc>0) {
-      a.pointer=buf;
-      a.len=strlen(a.pointer);
-      if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
-      else printf("ERROR: Publishing to subtopics is currently not supported!\n");
-    }
+    topic_in_string_input(el);
     return(1);
   }
   return(0);
