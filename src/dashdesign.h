@@ -16,11 +16,13 @@ enum ACTIONS {
   A_RESIZE,
   A_MTB,
   A_ADD,
+  A_ADDGROUP,
   A_DELETE,
   A_EDIT,
   A_SFGC,
   A_SBGC,
-  A_SFONT
+  A_SFONT,
+  A_STOPIC
 
 };
 
@@ -39,10 +41,12 @@ void redraw_panel(GtkWidget *widget);
 extern char ifilename[];
 extern int verbose;
 extern int current_element;
+extern int current_group;
 extern int current_action;
 unsigned long int current_fgc;
 unsigned long int current_bgc;
 extern char current_font[];
+extern char current_topic[];
 extern int is_modified;
 extern int do_grid;
 

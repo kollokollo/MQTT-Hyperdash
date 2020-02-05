@@ -33,6 +33,7 @@
 
 #include "file.h"
 #include "hddashgen.h"
+#include "element_groups.h"
 
 
 /* Global variables and defaults */

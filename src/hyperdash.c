@@ -91,7 +91,7 @@ const ELDEF eltyps[]= {
  {EL_VISIBLE,                    "CIRCLE",       i_box,        d_circle,   NULL,     NULL,   s_box},
  {EL_VISIBLE,                    "PCIRCLE",      i_pbox,       d_pcircle,  NULL,     NULL,   s_pbox},
  {EL_VISIBLE,                    "FRAME",        i_frame,      d_frame,    NULL,     NULL,   s_frame},
- {EL_VISIBLE|EL_DYNAMIC|EL_INPUT,"FRAMETOGGLE",  i_frame,      d_frame,    NULL,     c_frame,s_frame},
+ {EL_VISIBLE|EL_INPUT,           "FRAMETOGGLE",  i_frame,      d_frame,    NULL,     c_frame,s_frame},
  {EL_VISIBLE,                    "TEXT",         i_string,     d_string,   NULL,     NULL,   s_string},
  {EL_VISIBLE,                    "BITMAP",       i_bitmap,     d_bitmap,   NULL,     NULL,   s_bitmap},
  {EL_VISIBLE,                    "ICON",         i_icon,       d_icon,     NULL,     NULL,   s_icon},

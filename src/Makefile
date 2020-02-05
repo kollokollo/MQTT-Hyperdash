@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.03
 
-RELEASE=11
+RELEASE=12
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -61,18 +61,20 @@ MAINOBJS= main.o $(LIBOBJS)
 
 CSRC=    $(MAINOBJS:.o=.c)
 
-CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c dashdesign.c menu.c
+CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c dashdesign.c \
+            element_groups.c menu.c
 
 RULESRC=  commander.rule  demo.rule  syslogger.rule  sysmeasure.rule
 
 
-DEPSRC=  $(CSRC)  mqtt-list-topics.c hddashgen.c dashdesign.c menu.c
+DEPSRC=  $(CSRC) mqtt-list-topics.c hddashgen.c dashdesign.c menu.c \
+                 element_groups.c 
 
 # Headerfiles which should be added to the distribution
 
 HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
        input.h input_value_dialog.h elements.h subscribe.h basics.h config.h hddashgen.h \
-       dashdesign.h menu.h
+       dashdesign.h menu.h element_groups.h
 
 # example dash files 
 
@@ -113,6 +115,9 @@ DIST= ../README.md ../CONTRIBUTING.md ../doc/MQTT-Hyperdash.txt ../COPYING \
 	../doc/MQTT-rule-engine-howto.md \
 	../doc/MQTT-Hyperdash-file-format.md \
 	../doc/MQTT-dashgen-naming-conventions.md \
+	../doc/MQTT-dashdesign-user-manual.md \
+	../doc/MQTT-Hyperdash-payload-conventions.md \
+	../doc/MQTT-Hyperdash.txt \
       $(HSRC) $(CSRC) $(CSRC_EXTRA) $(RULESRC) MQTT-Hyperdash.iss \
         Makefile create_tree.sh \
         hyperdash.desktop  \
@@ -166,8 +171,9 @@ hyperdash.exe: $(CSRC) $(MYWINLIBS)
 	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
 
 
-dashdesign :  dashdesign.o menu.o $(LIBOBJS)
-	$(CC) -L. $(LINKFLAGS) -o $@ dashdesign.o menu.o $(LIBOBJS) $(LIBS)
+dashdesign :  dashdesign.o menu.o element_groups.o $(LIBOBJS)
+	$(CC) -L. $(LINKFLAGS) -o $@ dashdesign.o menu.o element_groups.o \
+	$(LIBOBJS) $(LIBS)
 
 
 hddashgen : hddashgen.c file.o hddashgen.h file.h
@@ -271,8 +277,11 @@ rpm :	$(DIR).tar.gz hyperdash.spec
 DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS \
 	 ../README.md \
 	 ../doc/MQTT-Hyperdash-file-format.md \
+	 ../doc/MQTT-Hyperdash-payload-conventions.md \
 	 ../doc/MQTT-rule-engine-howto.md \
-	 ../doc/MQTT-dashgen-naming-conventions.md
+	 ../doc/MQTT-Hyperdash.txt \
+	 ../doc/MQTT-dashgen-naming-conventions.md \
+	 ../doc/MQTT-dashdesign-user-manual.md
 
 doc-pak: $(DEBDOC)
 	mkdir -p $@

@@ -17,9 +17,11 @@ typedef struct {
 #define MENU_ENTRY 0
 
 #define DEFAULT_ELEMENT 3   /* COMPOUND */
+#define DEFAULT_GROUP 0   /* ACTIVITY */
 
 extern GdkCursor *cursor;
 
 
 GtkWidget *init_menu();
 void menu_set_default();
+int add_element_group(char *text);

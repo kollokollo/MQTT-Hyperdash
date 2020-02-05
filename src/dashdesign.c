@@ -22,6 +22,7 @@
 #include "input.h"
 #include "dashdesign.h"
 #include "menu.h"
+#include "element_groups.h"
 
 #if defined WINDOWS 
   #define EX_OK 0
@@ -44,11 +45,13 @@ char *topic_prefix=NULL;
 char call_options[SIZEOF_CALL_OPTIONS]="";
 
 int current_element=DEFAULT_ELEMENT;
+int current_group=DEFAULT_GROUP;
 int current_action=A_NONE;
 
 unsigned long int current_fgc=0xffffffff;
 unsigned long int current_bgc=0x40ff;
 char current_font[256]=DEFAULT_FONT;
+char current_topic[256]=DEFAULT_TOPIC;
 
 int is_modified=0;
 int do_grid=0;
@@ -72,11 +75,13 @@ const char *action_names[]={
 "Resize",
 "Move to Bkg",
 "Add",
+"Add group",
 "Delete",
 "Edit",
 "Set foreground color",
 "Set background color",
-"Set font"
+"Set font",
+"Set topic"
 };
 
 
@@ -217,12 +222,17 @@ void update_statusline() {
   if(current_action==A_ADD) snprintf(buf,sizeof(buf),"%s %s, FGC=$%s, BGC=$%s, Font=%s",
     action_names[current_action],eltyps[current_element].name,tohex(current_fgc), 
     tohex(current_bgc),current_font);
+  else if(current_action==A_ADDGROUP) snprintf(buf,sizeof(buf),"%s %s, FGC=$%s, BGC=$%s, Font=%s",
+    action_names[current_action],groups[current_group].name,tohex(current_fgc), 
+    tohex(current_bgc),current_font);
   else if(current_action==A_SFGC) snprintf(buf,sizeof(buf),"%s $%s",
     action_names[current_action],tohex(current_fgc));
   else if(current_action==A_SBGC) snprintf(buf,sizeof(buf),"%s $%s",
     action_names[current_action],tohex(current_bgc));
   else if(current_action==A_SFONT) snprintf(buf,sizeof(buf),"%s %s",
     action_names[current_action],current_font);
+  else if(current_action==A_STOPIC) snprintf(buf,sizeof(buf),"%s %s",
+    action_names[current_action],current_topic);
   else snprintf(buf,sizeof(buf),"%s",action_names[current_action]);
 
   snprintf(status_text,sizeof(status_text),"%d elements, (%dx%d), X=%d, Y=%d, Action: %s",
@@ -283,6 +293,7 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
       }
       break;
     case A_ADD:
+    case A_ADDGROUP:
       selected_element=maindash->anzelement;
       mouse_rel_x=current_mouse_x;
       mouse_rel_y=current_mouse_y;
@@ -364,6 +375,19 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
           is_modified=1;
 	  redraw_panel(widget);
 	}
+      }
+      break;
+    case A_STOPIC:
+      while(idx>=0) {
+        if((maindash->tree[idx].type&EL_DYNAMIC)==EL_DYNAMIC) {
+          printf("Set topic for element: #%d\n",idx);
+	  free(maindash->tree[idx].topic);
+	  maindash->tree[idx].topic=strdup(current_topic);
+	  is_modified=1;
+	  redraw_panel(widget);
+	}
+	if(idx==0) break;
+        idx=find_element(maindash,idx-1,current_mouse_x,current_mouse_y,0,0);      
       }
       break;
     case A_MTB:
@@ -545,6 +569,35 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	redraw_panel(widget);
       }
       break;
+     case A_ADDGROUP:
+       if(selected_element>=0) {
+        int idx=selected_element;
+	int new_w=current_mouse_x-maindash->tree[idx].x;
+	int new_h=current_mouse_y-maindash->tree[idx].y;
+	int new_x=maindash->tree[idx].x;
+	int new_y=maindash->tree[idx].y;
+	
+	delete_element(maindash,idx);
+
+	if(new_w<5) new_w=5;  /* Always have a minimum size. */
+	if(new_h<5) new_h=5;
+	// if(new_w>mainwindow->w) new_w=mainwindow->w; /* Maybe allow bigger ?*/
+	// if(new_h>mainwindow->h) new_h=mainwindow->h;
+	if(do_grid) {
+	  new_w-=(new_w%5);
+	  new_h-=(new_h%5);
+	}
+        printf("Add Element Group (%d,%d) (%dx%d)\n",new_x,new_y,new_w,new_h);
+
+        char *text=(groups[current_group].function)(new_x,new_y,new_w,new_h);
+        if(add_element_group(text)) {
+	  is_modified=1;
+	  selected_element=-1;
+	  redraw_panel(widget);
+	}
+	free(text);
+      }
+      break;
     }
     update_statusline();
   }
@@ -590,6 +643,7 @@ static gboolean motion_notify_event(GtkWidget *widget,GdkEventMotion *event) {
       break;
     case A_RESIZE:
     case A_ADD:
+    case A_ADDGROUP:
       if(selected_element>=0) {
         int mx=maindash->tree[selected_element].x;
 	int my=maindash->tree[selected_element].y;

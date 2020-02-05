@@ -20,6 +20,7 @@
 #include "dashdesign.h"
 #include "util.h"
 #include "menu.h"
+#include "element_groups.h"
 
 static MENUENTRY menuentries[];
 
@@ -78,6 +79,22 @@ GtkWidget *init_menu() {
 	    }
 	  }
 	}
+        else if(*menuentries[i].text=='%') {
+	  menuentries[i].widget=gtk_separator_menu_item_new();
+	  int k;
+	  GtkWidget *gw;
+	  GSList *group = NULL;
+	  for(k=0;k<anzgroups;k++) {
+	      gw=gtk_radio_menu_item_new_with_label(group,groups[k].name);
+	      group=gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM (gw));
+	      if(k==DEFAULT_GROUP) gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(gw),TRUE);
+              gtk_menu_shell_append(GTK_MENU_SHELL (menu),gw);
+	      g_signal_connect_swapped(gw, "activate",
+	    			  G_CALLBACK (menuentries[i].function), 
+        			  (void *) groups[k].name); 
+	      gtk_widget_show (gw);
+	  }
+	}
          else menuentries[i].widget=gtk_menu_item_new_with_label(menuentries[i].text);
          /* ...and add it to the menu. */
          gtk_menu_shell_append (GTK_MENU_SHELL (menu),menuentries[i].widget);
@@ -113,11 +130,13 @@ static void menu_identify(MENUENTRY *me) {current_action=A_NONE;   set_cursor("?
 static void menu_resize(MENUENTRY *me)   {current_action=A_RESIZE; set_cursor("size");    update_statusline();}
 static void menu_mtb(MENUENTRY *me)      {current_action=A_MTB;    set_cursor("pointer"); update_statusline();}
 static void menu_add(MENUENTRY *me)      {current_action=A_ADD;    set_cursor("add");     update_statusline();}
+static void menu_add_group(MENUENTRY *me){current_action=A_ADDGROUP;set_cursor("add");     update_statusline();}
 static void menu_delete(MENUENTRY *me)   {current_action=A_DELETE; set_cursor("delete");  update_statusline();}
 static void menu_edit_prop(MENUENTRY *me){current_action=A_EDIT;   set_cursor("edit");    update_statusline();}
 static void menu_set_foreground(MENUENTRY *me){current_action=A_SFGC;  set_cursor("color");   update_statusline();}
 static void menu_set_background(MENUENTRY *me){current_action=A_SBGC;  set_cursor("color");   update_statusline();}
 static void menu_set_font(MENUENTRY *me) {current_action=A_SFONT;  set_cursor("pointer"); update_statusline();}
+static void menu_set_topic(MENUENTRY *me) {current_action=A_STOPIC;  set_cursor("pointer"); update_statusline();}
 
 static void menu_undodelete(MENUENTRY *me) {
   if(undo_element) {
@@ -128,25 +147,34 @@ static void menu_undodelete(MENUENTRY *me) {
     redraw_panel(drawing_area);
   }
 }
+
+int add_element_group(char *text) {
+  if(!text || !*text) return(0);
+  if(verbose>0) printf("add_element_group: <%s>\n",text);
+  ELEMENT elc;
+  char *p1,*p2;
+  int done=0;
+  p2=p1=text;
+  while(!done) {
+    while(*p2 && *p2!='\n') p2++;
+    if(*p2==0) done=1;
+    else *p2=0;
+    bzero(&elc,sizeof(ELEMENT));
+    if(p1!=p2) {
+      init_element(&elc,p1);
+      if(verbose>=0) printf("Add Element: <%s>\n",p1);
+      add_element(maindash,&elc);
+    }
+    p1=++p2;
+  }
+  return(1);
+}
+
 static void menu_paste(MENUENTRY *me) {
   GtkClipboard *clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
   gchar *text = gtk_clipboard_wait_for_text(clip);
   printf("Clipboard: <%s>\n",text);
-  if(text && *text) {
-    ELEMENT elc;
-    char *p1,*p2;
-    int done=0;
-    p2=p1=text;
-    while(!done) {
-      while(*p2 && *p2!='\n') p2++;
-      if(*p2==0) {done=1;break;}
-      else *p2=0;
-      bzero(&elc,sizeof(ELEMENT));
-      init_element(&elc,p1);
-      printf("Add Element: <%s>\n",p1);
-      add_element(maindash,&elc);
-      p1=++p2;
-    }
+  if(add_element_group(text)) {
     is_modified=1;
     redraw_panel(drawing_area);
   }
@@ -158,6 +186,13 @@ static void menu_elements(char *typ) {
     if(!strcmp(typ,eltyps[i].name)) current_element=i;
   }
   if(current_element>=0) menu_add(NULL);
+}
+static void menu_groups(char *typ) {
+  int i;
+  for(i=0;i<anzgroups;i++) {
+    if(!strcmp(typ,groups[i].name)) current_group=i;
+  }
+  if(current_group>=0) menu_add_group(NULL);
 }
 
 static void about_dialog(MENUENTRY *me) {
@@ -282,6 +317,15 @@ static void menu_select_font(MENUENTRY *me) {
     else sprintf(current_font,"%s",buf);
   }
 }
+/* open a file selector to select a new font.*/
+static void menu_select_topic(MENUENTRY *me) {
+  char buf[256];
+  sprintf(buf,"%s",current_topic);
+  int rc=listselect_dialog(buf);
+  if(rc && *buf) {
+    sprintf(current_topic,"%s",buf);
+  }
+}
 
 static void menu_edit_broker(MENUENTRY *me) {
   int k=0;
@@ -340,8 +384,9 @@ static MENUENTRY menuentries[]={
 //{0,"Analog value display",  menu_,NULL},
 //{0,"Digital value display",  menu_,NULL},
 //{0,"Analog Meter with value display",  menu_,NULL},
-{MENU_TITLE,"Groups",NULL,NULL},
 #endif
+{0,"% groups",  menu_groups,NULL},
+{MENU_TITLE,"Groups",NULL,NULL},
 {0,"Identify Elements",  menu_identify,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Move Element",      menu_move,NULL},
@@ -354,18 +399,19 @@ static MENUENTRY menuentries[]={
 //{0,"Rotate right", menuitem_response,NULL},
 {0,"-------------",NULL,NULL},
 //{0,"Change Text",  menuitem_response,NULL},
-//{0,"Change Topic", menuitem_response,NULL},
 //{0,"Change Format",menuitem_response,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Set foreground color",menu_set_foreground,NULL},
 {0,"Set background color",menu_set_background,NULL},
 {0,"Set font",            menu_set_font,NULL},
+{0,"Set topic",           menu_set_topic,NULL},
 {0,"-------------",NULL,NULL},
 //{0,"Select Layout",menuitem_response,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Edit Element",menu_edit_prop,NULL},
 {0,"-------------",NULL,NULL},
 {0,"Add Element",  menu_add,NULL},
+{0,"Add Element Group",  menu_add_group,NULL},
 
 {MENU_TITLE,"Action",NULL,NULL},
 
@@ -374,6 +420,7 @@ static MENUENTRY menuentries[]={
 {0,"Select foreground color ...",menu_select_fgc,NULL},
 {0,"Select background color ...",menu_select_bgc,NULL},
 {0,"Select text font ...",       menu_select_font,NULL},
+{0,"Select topic ...",           menu_select_topic,NULL},
 
 {MENU_TITLE,"Settings",NULL,NULL},
 {0,"About " PACKAGE_NAME " DashDesign ...",about_dialog,NULL},

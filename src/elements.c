@@ -24,8 +24,6 @@
    (full, medium (30%), fine (10%)) and where one can set the value 
    explicitly. Also the arrow keys should be active for tics.
 
-   3. SOUNDLABEL element --> trigger different sounds
-
    4. Regular Expressions for MATCH
 
   */
