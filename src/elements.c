@@ -1132,6 +1132,10 @@ if(el->revert&1) {
 /* User Input (click) functions for all elements....*/
 /****************************************************/
 
+
+/* Publish a numeric value, clip it to min/max but publish
+   only if the value is different from the current value.
+ */
 void element_publish(ELEMENT *el, double v,double old_v) {
   if(v>el->max) v=el->max;
   if(v<el->min) v=el->min;
@@ -1141,8 +1145,7 @@ void element_publish(ELEMENT *el, double v,double old_v) {
     format.pointer=el->format;
     format.len=strlen(format.pointer);
     STRING a=do_using(v,format);
-    if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
-    else printf("ERROR: Publishing to subtopics is currently not supported!\n");
+    publish_element(el,a,el->revert);
     free(a.pointer);
   }
 }
@@ -1179,10 +1182,8 @@ int c_panel(ELEMENT *el,WINDOW *win,int x, int y, int b) {
 
 int c_tticker(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1 || (b==4 && el->increment>0) || (b==5 && el->increment<0)) {
-    char *def=subscriptions[el->subscription].last_value.pointer;
-    double v=myatof(def);
+    double v=myatof(element_get_current_value(el));
     double old_v=v;
-//    printf("last value is: <%s> : %g\n",def,v);
     v+=el->increment;
     element_publish(el,v,old_v);  /* Final publish */
     return(0); /* Do not consume it. There may be other action.... */
@@ -1262,8 +1263,7 @@ static void scaler_settings(ELEMENT *el) {
 }
 
 int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
-  char *def=subscriptions[el->subscription].last_value.pointer;
-  double v=myatof(def);
+  double v=myatof(element_get_current_value(el));
   double old_v=v;
   double old2_v;
   int d=0;
@@ -1314,8 +1314,7 @@ int c_hscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   return(0);
 }
 int c_vscaler(ELEMENT *el,WINDOW *win,int x, int y, int b) {
-  char *def=subscriptions[el->subscription].last_value.pointer;
-  double v=myatof(def);
+  double v=myatof(element_get_current_value(el));
   double old_v=v;
   double old2_v;
   int d=0;
@@ -1452,33 +1451,13 @@ int c_tinarea(ELEMENT *el,WINDOW *win,int x, int y, int b) {
     STRING a;
     a.pointer=el->text;
     a.len=strlen(a.pointer);
-    if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
-    else printf("ERROR: Publishing to subtopics is currently not supported!\n");
+    publish_element(el,a,el->revert);
   }
   return(0); /* Do not consume it. There my be other action.... */
 }
 int c_tinnumber(ELEMENT *el,WINDOW *win,int x, int y, int b) {
   if(b==1) {
     topic_in_number_input(el);
-    #if 0
-    if(verbose>0) printf("input number for topic <%s> with format <%s>\n",el->topic,el->format);
-    STRING a;
-    char buf[256];
-    char *def=subscriptions[el->subscription].last_value.pointer;
-    int rc=input_dialog(el->topic,buf,def);
-    if(rc>0) {
-      double v=myatof(buf);
-      if(v>el->max) v=el->max;
-      if(v<el->min) v=el->min;
-      STRING format;
-      format.pointer=el->format;
-      format.len=strlen(format.pointer);
-      a=do_using(v,format);
-      if(!el->subtopic) mqtt_publish(el->topic,a,el->revert,1);
-      else printf("ERROR: Publishing to subtopics is currently not supported!\n");
-      free(a.pointer);
-    }
-    #endif
     return(1);
   }
   return(0);

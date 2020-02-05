@@ -22,5 +22,6 @@ STRING double_string(const STRING *a);
 char *date_string();
 char *time_string();
 char *tohex(unsigned i);
-void declose(char *c);
+int declose(char *c);
 STRING json_get_value(char *key, STRING pl);
+STRING json_replace_value(char *key, STRING pl, char *nv);

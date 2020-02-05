@@ -31,6 +31,14 @@ STRING create_string(const char *n) {
   }
   return(ergeb);
 }
+STRING double_string(const STRING *a) {
+  STRING b;
+  b.len=a->len;
+  b.pointer=malloc(b.len+1);
+  memcpy(b.pointer,a->pointer,b.len);
+  (b.pointer)[b.len]=0;
+  return(b);
+}
 
 
 
@@ -121,14 +129,6 @@ double myatof(char *n) {
 }
 
 
-STRING double_string(const STRING *a) {
-  STRING b;
-  b.len=a->len;
-  b.pointer=malloc(b.len+1);
-  memcpy(b.pointer,a->pointer,b.len);
-  (b.pointer)[b.len]=0;
-  return(b);
-}
 /* Fuer den Teil nach dem Komma und fuer Exponenten*/
 static void xfill(char *p,const char *q,char c, int n) {
   while(*p && n--) {
@@ -468,14 +468,16 @@ char *tohex(unsigned i) {
 
 /* Remove leading and trailing "  */
 
-void declose(char *c) {
-  if(!c) return;
+int declose(char *c) {
+  if(!c) return(0);
   int l=strlen(c);
-  if(l<2) return;
+  if(l<2) return(0);
   if(*c=='\"' && c[l-1]=='\"') {
     memmove(c,c+1,l-2);
     c[l-2]=0;
+    return(1);
   }
+  return(0);
 }
 
 
@@ -492,14 +494,13 @@ STRING json_get_value(char *key, STRING pl) {
   int flag=0;
   int k=0;
   char buffer[pl.len+1];
-  // printf("Simple JSON parser: find <%s>\n",key);
 
   /* better format the payload */
   for(j=0;j<pl.len;j++) {
     a=pl.pointer[j];
-    if(a=='\"') flag=!flag;
-    else if(!flag && a=='{') level++;
-    else if(!flag && a=='}') level--;
+    if(a=='\"') {flag=!flag;buffer[k++]=a;}
+    else if(!flag && a=='{') {level++;if(level>1) buffer[k++]=a;}
+    else if(!flag && a=='}') {level--;if(level>0) buffer[k++]=a;}
     else if(level>=1 && k<pl.len && a!='\r' && a!='\n' && (flag || (a!='\t' && a!=' '))) buffer[k++]=a;
   }
   buffer[k]=0;
@@ -516,7 +517,6 @@ STRING json_get_value(char *key, STRING pl) {
     xtrim(c,0,c);
     declose(aa);
     declose(c);
-//    printf("key=<%s> value=<%s>\n",aa,c);
     if(!strcmp(key,aa)) {
       ret.pointer=strdup(c);
       ret.len=strlen(c);
@@ -524,5 +524,58 @@ STRING json_get_value(char *key, STRING pl) {
     }
     e=wort_sep(b,',',2|4,aa,b);
   }
+  return(ret);
+}
+/* Simple JSON parser to replace the value of a first-level key with another 
+   the new value nv must be enclosed if necessary
+ */
+
+STRING json_replace_value(char *key, STRING pl, char *nv) {
+  STRING ret;
+  ret.pointer=NULL;
+  ret.len=0;
+  if(!pl.pointer || pl.len<=0) return(ret);
+  if(!key || !*key || !nv) return(double_string(&pl));
+  ret.pointer=malloc(pl.len+strlen(nv)+1);
+  int j;
+  char a;
+  int level=0;
+  int flag=0;
+  int k=0;
+  char buffer[pl.len+1];
+  /* better format the payload */
+  for(j=0;j<pl.len;j++) {
+    a=pl.pointer[j];
+    if(a=='\"') {flag=!flag;buffer[k++]=a;}
+    else if(!flag && a=='{') {level++;if(level>1) buffer[k++]=a;}
+    else if(!flag && a=='}') {level--;if(level>0) buffer[k++]=a;}
+    else if(level>=1 && k<pl.len && a!='\r' && a!='\n' && (flag || (a!='\t' && a!=' '))) buffer[k++]=a;
+  }
+  buffer[k]=0;
+
+  /* Now evaluate key-value pairs */
+  sprintf(ret.pointer,"{");
+  char aa[k+1];
+  char b[k+1];
+  char c[k+1];
+  int e=wort_sep(buffer,',',2|4,aa,b);
+  while(e) {
+    wort_sep(aa,':',0,aa,c);
+    xtrim(aa,0,aa);
+    declose(aa);
+    if(!strcmp(key,aa)) {
+      /* Find out if the value need to be enclosed (stupid hack!)*/
+      xtrim(c,0,c);
+      int do_enclose=declose(c);
+      if(do_enclose) sprintf(ret.pointer+strlen(ret.pointer),"\"%s\":\"%s\"",key,nv);
+      else sprintf(ret.pointer+strlen(ret.pointer),"\"%s\":%s",key,nv);
+    } else {
+      sprintf(ret.pointer+strlen(ret.pointer),"\"%s\":%s",aa,c);
+    }
+    if(e==2) sprintf(ret.pointer+strlen(ret.pointer),", ");
+    e=wort_sep(b,',',2|4,aa,b);
+  }
+  sprintf(ret.pointer+strlen(ret.pointer),"}");
+  ret.len=strlen(ret.pointer);
   return(ret);
 }

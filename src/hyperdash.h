@@ -111,5 +111,7 @@ void scale_element(ELEMENT *el,int w,int h);
 
 int edit_element(ELEMENT *el);
 void init_element(ELEMENT *el,const char *line);
+void publish_element(ELEMENT *el,STRING a, int qos);
+char *element_get_current_value(ELEMENT *el);
 
 #endif

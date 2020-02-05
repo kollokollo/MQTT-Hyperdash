@@ -400,10 +400,8 @@ int do_level(int level,char *match, char *filename) {
 	      advance();
 	    } else {
 	      fprintf(fp,"TEXTAREA:      " XYWHT BGBLACK WHITE FONT_SMALL "\n",x+150,y,100,20,topics[i].name);
-              if(topics[i].name[strlen(topics[i].name)-1]!='}') {
-	        fprintf(fp,"TOPICINSTRING: " XYWHT "\n",x+150-2,y-2,100+4,20+4,topics[i].name);
- 	        fprintf(fp,"FRAME:    " XYWHR "\n",x+150-2,y-2,100+4,20+4);
-              }
+	      fprintf(fp,"TOPICINSTRING: " XYWHT "\n",x+150-2,y-2,100+4,20+4,topics[i].name);
+ 	      fprintf(fp,"FRAME:    " XYWHR "\n",x+150-2,y-2,100+4,20+4);
 	    }
             fprintf(fp,"\n");
   	    advance();

@@ -121,21 +121,28 @@ TEMPEATURE/VALUE{unit}
 TEMPEATURE/VALUE{timestamp}
 </pre>
 
-Where each of the additional three pseudo-topics contain a single value, which
+Where each of the additional three pseudo-subtopics contain a single value, which
 can be used as if it was a real topic. Al though not yet implemented, the logic
 would also work for complicated nested JSON data structures. e.g. leading to
 TEMPEATURE/VALUE{sensor1/comment/english}. 
 
-This works only for subscriptions and display of the values content.  For
-publication an appropiate string has to be composed by the application iself.
+This way, most of the common smart home sensors emmiting or expecting a JSON
+format on their topics can be read and processed by hyperdash and the rule
+engine framework.
 
-This way most of the common smart home sensors emmiting a JSON format on their 
-topics can be read and processed by hyperdash and the rule engine framework. 
-Also mqtt-list-topics will recocnize the JSON topics and addes the pseudo-topics
-to its list of topics. If you need to publish in JSON, use the main topic to
-publish a string to, and do the JSON formatting of that string in your
-application. This is easyly done and straight forward.
+Also mqtt-list-topics does recognize the JSON subtopics and adds them
+to its list of topics. 
 
+Notes:
+
+* JSON expansion currently only works on the first level. So nested objects
+  will not further expand.
+
+* If published to individual subtopics, always the whole real topic containing
+  the JSON structure is published. This means that all the other values get 
+  republished, even though they have not changed. 
+
+* Implementation of subtopics in the rule engine framework is not yet done.
   
 ### Further reading
 

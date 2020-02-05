@@ -22,7 +22,6 @@
 #include "hyperdash.h"
 #include "file.h"
 #include "util.h"
-#include "mqtt.h"
 #include "input_value_dialog.h"
 
 static int gtk_usage=0;
@@ -54,9 +53,7 @@ static void on_APPLY_number_clicked (GtkWidget *widget, gpointer data) {
   if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb1))==TRUE) qos=0;
   if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb2))==TRUE) qos=1;
   if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb3))==TRUE) qos=2;
-  if(!el->subtopic) mqtt_publish(el->topic,a,qos,1);
-  else printf("ERROR: Publishing to subtopics is currently not supported!\n");
-
+  publish_element(el,a,qos);
   free(a.pointer);
 }
 static void on_OK_number_clicked (GtkWidget *widget, gpointer data) {
@@ -88,8 +85,7 @@ static void on_APPLY_string_clicked (GtkWidget *widget, gpointer data) {
   if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb1))==TRUE) qos=0;
   if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb2))==TRUE) qos=1;
   if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cb->rb3))==TRUE) qos=2;
-  if(!el->subtopic) mqtt_publish(el->topic,a,qos,1);
-  else printf("ERROR: Publishing to subtopics is currently not supported!\n");
+  publish_element(el,a,qos);
 }
 static void on_OK_string_clicked (GtkWidget *widget, gpointer data) {
   on_APPLY_string_clicked(widget,data);
@@ -213,10 +209,9 @@ void *mainloop(void *dummy) {
 
 void topic_in_number_input(ELEMENT *el) {
   char buf[256];
-  char *def=subscriptions[el->subscription].last_value.pointer;
   snprintf(buf,sizeof(buf),"Enter numeric value for topic\n\n%s:\n\nFormat=\"%s\"\n\n",el->topic,el->format);
   gdk_threads_enter();
-  GtkWidget *window=create_input_dialog(buf,def,1,el);
+  GtkWidget *window=create_input_dialog(buf,element_get_current_value(el),1,el);
   gtk_widget_show_all(window);
   gdk_threads_leave();
   gtk_usage++;
@@ -230,10 +225,9 @@ void topic_in_number_input(ELEMENT *el) {
 
 void topic_in_string_input(ELEMENT *el) {
   char buf[256];
-  char *def=subscriptions[el->subscription].last_value.pointer;
   snprintf(buf,sizeof(buf),"Enter string value for topic\n\n%s:\n\n",el->topic);
   gdk_threads_enter();
-  GtkWidget *window=create_input_dialog(buf,def,0,el);
+  GtkWidget *window=create_input_dialog(buf,element_get_current_value(el),0,el);
   gtk_widget_show_all(window);
   gdk_threads_leave();
   gtk_usage++;

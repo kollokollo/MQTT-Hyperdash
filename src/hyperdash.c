@@ -121,6 +121,28 @@ const ELDEF eltyps[]= {
 };
 const int anzeltyp=sizeof(eltyps)/sizeof(ELDEF);
 
+char *element_get_current_value(ELEMENT *el) {
+  static char buf[256];
+  if(!el->subtopic) return(subscriptions[el->subscription].last_value.pointer);
+  else {
+    STRING a=json_get_value(el->subtopic,subscriptions[el->subscription].last_value);
+    if(a.pointer) strncpy(buf,a.pointer,sizeof(buf));
+    else *buf=0;
+    free(a.pointer);
+    return(buf);
+  }
+}
+
+
+void publish_element(ELEMENT *el,STRING a, int qos) {
+  if(!el->subtopic) mqtt_publish(el->topic,a,qos,1);
+  else { /* Publish to subtopic */
+    STRING b=json_replace_value(el->subtopic,subscriptions[el->subscription].last_value,a.pointer);
+    mqtt_publish(subscriptions[el->subscription].topic,b,qos,1);
+    free(b.pointer);
+  }
+}
+
 
 static int click_element(ELEMENT *el, WINDOW *win, int x, int y,int b) {
   int j=(el->type&0xff);
