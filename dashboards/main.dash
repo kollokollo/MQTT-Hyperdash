@@ -15,7 +15,7 @@ PANEL:  TITLE="MQTT-Hyperdash main.dash" W=420 H=540 FGC=$ffffffff BGC=$000040ff
 #
 # Static drawing
 #
-TEXT:   X=64 Y=30 FGC=$ffff00FF h=40 TEXT="MQTT-Hyperdash   V.1.02" FONT="Arial_Bold" FONTSIZE=20
+TEXT:   X=64 Y=30 FGC=$ffff00FF h=40 TEXT="MQTT-Hyperdash   V.1.03" FONT="Arial_Bold" FONTSIZE=20
 TEXT:   X=170 Y=65 FGC=$00ffffFF TEXT="(c) Markus Hoffmann et al." FONT="Arial" FONTSIZE=10
 FRAME:  X=50 Y=30 W=260 H=50 
 #TEXTLABEL: x=10 y=30 TOPIC=ACTIVITY \
@@ -84,3 +84,8 @@ PBOX:         x=20  y=380 w=380 h=25 FGC=$0ff BGC=$0ff
 FRAME:        x=18  y=378 w=384 h=29 REVERT=1
 TOPICSTRING:  x=25  y=380 w=375 h=25 TOPIC="MQTT_HYPERDASH/STATUS_SM" FGC=$ffffffff \
               FONT="Courier_New_Bold" FONTSIZE=16 BGC=$ff
+
+DASH:         x=20  y=460 w=190 h=25 DASH="mosquitto"
+PBOX:         x=20  y=460 w=190 h=25 BGC=$444444ff 
+TEXT:         x=30  y=460 w=180 h=25 TEXT="local broker statistics $SYS/" FGC=$ffffffff FONT="Arial_Bold" FONTSIZE=13
+FRAMETOGGLE:  x=20  y=460 w=190 h=25

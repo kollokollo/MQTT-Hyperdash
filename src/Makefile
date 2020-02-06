@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.03
 
-RELEASE=12
+RELEASE=13
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -81,7 +81,29 @@ HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
 EXAMPLES= ../dashboards/demo.dash ../dashboards/sonnenschein.dash \
           ../dashboards/sysmeasure.dash ../dashboards/imagetest.dash  \
 	  ../dashboards/main.dash ../dashboards/test.dash \
-	  ../dashboards/metertest.dash ../dashboards/remote_tree.dash
+	  ../dashboards/metertest.dash ../dashboards/remote_tree.dash \
+	  ../dashboards/mosquitto.dash \
+	  ../dashboards/_sys_broker_clients_hd.dash \
+	  ../dashboards/_sys_broker_messages_hd.dash \
+	  ../dashboards/_sys_broker_subscriptions_hd.dash \
+	  ../dashboards/_sys_broker_heap_hd.dash \
+	  ../dashboards/_sys_broker_publish_hd.dash \
+	  ../dashboards/_sys_broker_bytes_hd.dash \
+	  ../dashboards/_sys_broker_load_hd.dash \
+	  ../dashboards/_sys_broker_publish_messages_hd.dash \
+	  ../dashboards/_sys_broker_publish_bytes_hd.dash \
+	  ../dashboards/_sys_broker_load_messages_hd.dash \
+	  ../dashboards/_sys_broker_load_bytes_hd.dash \
+	  ../dashboards/_sys_broker_load_sockets_hd.dash \
+	  ../dashboards/_sys_broker_load_connections_hd.dash \
+	  ../dashboards/_sys_broker_load_publish_hd.dash \
+	  ../dashboards/_sys_broker_load_publish_received_hd.dash \
+	  ../dashboards/_sys_broker_load_publish_sent_hd.dash \
+	  ../dashboards/_sys_broker_load_bytes_received_hd.dash \
+	  ../dashboards/_sys_broker_load_bytes_sent_hd.dash \
+	  ../dashboards/_sys_broker_load_messages_received_hd.dash \
+	  ../dashboards/_sys_broker_load_messages_sent_hd.dash
+	  
 
 # bitmap files
 

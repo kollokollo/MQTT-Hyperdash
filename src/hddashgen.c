@@ -239,6 +239,7 @@ int do_level(int level,char *match, char *filename) {
 	  p2=newmatch;
 	  while(*p2) {
 	    if(*p2=='/') *p1='_';
+	    else if(*p2=='$') *p1='_';
 	    else *p1=tolower(*p2);
 	    p1++;
 	    p2++;
