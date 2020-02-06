@@ -26,6 +26,9 @@ enum ACTIONS {
 
 };
 
+#define GRID_SIZE  5
+
+
 extern const char *action_names[];
 
 WINDOW *open_pixmap(const char *title, const char* info,int x,int y,unsigned int w,unsigned int h, int fullscreen);

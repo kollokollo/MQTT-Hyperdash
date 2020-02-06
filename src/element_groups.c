@@ -23,13 +23,76 @@
 
 
 const GROUPDEF groups[]= {
+ {0,"Dashboard Hyperlink Button",groups_dashbutton}, 
  {0,"Activity Indicator",groups_activity}, 
  {0,"Status Indicator",groups_statusbitmap},
+ {0,"Gauge",groups_gauge},
  {0,"ON/OFF Button Group",groups_onoff},
+ {0,"Topic I/O Field",groups_topicio},
  {0,"Potentiometer with tickers",groups_potentiometer},
 
 };
 const int anzgroups=sizeof(groups)/sizeof(GROUPDEF);
+
+char *groups_gauge(int x, int y, int w, int h) {
+  char buffer[256*2];
+  if(h<50) h=50;
+  if(w<50) w=50;
+  *buffer=0;
+  sprintf(buffer+strlen(buffer),
+    "METER:    " XYWHT BGBLUE RED " AGC=$A0A0A0FF MIN=0 MAX=100 AMIN=225 AMAX=-45 TYPE=3\n",
+    x,y,w,h,DEFAULT_TOPIC);
+  sprintf(buffer+strlen(buffer),
+    "TOPICNUMBER: " XYWHT YELLOW BGBLUE " FORMAT=\"###.#\" FONT=\"comicbd\" FONTSIZE=11\n",
+    x+w/2-18,y+h/2-5,40,11,DEFAULT_TOPIC);
+  sprintf(buffer+strlen(buffer),
+    "TEXT:      " XYHT WHITE FONT_TINY "\n",x+w/5,y+4*h/5,13,"0");
+  sprintf(buffer+strlen(buffer),
+    "TEXT:      " XYHT WHITE FONT_TINY "\n",x+3*w/5,y+4*h/5,13,"100%");
+  sprintf(buffer+strlen(buffer),
+    "TEXT:      " XYHT WHITE FONT_TINY "\n",x+w/2-15,y+7*h/10,13,"Unit");
+#if 0
+METER: X=10 Y=100 W=100 H=100 TOPIC="LOCALHOST/SYSMEASURE/SYSMEMUSAGE_AM" MIN=0 MAX=100 AMIN=225 AMAX=-45 BGC=$40FF FGC=$FF0000FF AGC=$A0A0A0FF TYPE=3
+TOPICNUMBER: X=43 Y=145 TOPIC="LOCALHOST/SYSMEASURE/SYSMEMUSAGE_AM" FORMAT="###.#" W=40 H=11 FONT="comicbd" FONTSIZE=11 BGC=$40FF FGC=$FFFF00FF
+TEXT: X=30 Y=180 TEXT="0" W=13 H=13 FONT="Arial" FONTSIZE=10 FGC=$FFFFFFFF
+TEXT: X=45 Y=170 TEXT="Mem" W=39 H=13 FONT="Arial" FONTSIZE=10 FGC=$FFFFFFFF
+TEXT: X=70 Y=180 TEXT="100%" W=52 H=13 FONT="Arial" FONTSIZE=10 FGC=$FFFFFFFF
+#endif
+  return(strdup(buffer));
+}
+
+
+char *groups_topicio(int x, int y, int w, int h) {
+  char buffer[256];
+  if(h<20) h=20;
+  if(w<50) w=50;
+  *buffer=0;
+  sprintf(buffer+strlen(buffer),
+    "FRAME:    " XYWHR "\n",x-2,y-2,w+4,h+4);
+  sprintf(buffer+strlen(buffer),
+    "TOPICINSTRING: " XYWHT "\n",x-2,y-2,w+4,h+4,DEFAULT_TOPIC);
+  sprintf(buffer+strlen(buffer),
+    "TEXTAREA:      " XYWHT BGBLACK WHITE FONT_SMALL "\n",x,y,w,h,DEFAULT_TOPIC);
+  return(strdup(buffer));
+}
+
+ 
+char *groups_dashbutton(int x, int y, int w, int h) {
+  char buffer[256];
+  if(h<20) h=20;
+  if(w<50) w=50;
+  *buffer=0;
+  sprintf(buffer+strlen(buffer),
+    "PBOX:        " XYWH BGDARKGRAY GRAY "\n",     x,  y,w,h);
+  sprintf(buffer+strlen(buffer),
+    "DASH:        " XYWH "DASH=\"%s\"\n",       x,  y,w,h,"main");
+  sprintf(buffer+strlen(buffer),
+    "FRAMETOGGLE: " XYWH "\n",                  x,  y,w,h);
+  sprintf(buffer+strlen(buffer),
+    "TEXT:        " XYHT WHITE FONT_BUTTON "\n",x+5,y+5, h-10,"Dashboard");
+  return(strdup(buffer));
+}
+ 
  
 char *groups_activity(int x, int y, int w, int h) {
   char buffer[256];

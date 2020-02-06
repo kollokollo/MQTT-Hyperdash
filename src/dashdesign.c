@@ -58,6 +58,8 @@ int do_grid=0;
 
 int current_mouse_x=0;
 int current_mouse_y=0;
+int selected_element=-1;
+int mouse_rel_x,mouse_rel_y;
 
 SDL_Surface *surface;
 GtkWidget *textarea;
@@ -185,7 +187,7 @@ void fix_pixmap(GtkWidget *widget) {
     int i;
     for(i=0;i<surface->w*surface->h;i++) {
       buf[4*i+0]=((char *)(surface->pixels))[4*i+2];
-      if(do_grid && (i%5)==0 && ((i/surface->w)%5)==0) buf[4*i+1]=((char *)(surface->pixels))[4*i+1]+0x7f;
+      if(do_grid && (i%GRID_SIZE)==0 && ((i/surface->w)%GRID_SIZE)==0) buf[4*i+1]=((char *)(surface->pixels))[4*i+1]+0x7f;
       else buf[4*i+1]=((char *)(surface->pixels))[4*i+1];
       buf[4*i+2]=((char *)(surface->pixels))[4*i+0];
       buf[4*i+3]=((char *)(surface->pixels))[4*i+3];
@@ -218,30 +220,51 @@ static gboolean expose_event(GtkWidget *widget, GdkEventExpose *event) {
 
 void update_statusline() {
   char status_text[256];
-  char buf[128];
-  if(current_action==A_ADD) snprintf(buf,sizeof(buf),"%s %s, FGC=$%s, BGC=$%s, Font=%s",
-    action_names[current_action],eltyps[current_element].name,tohex(current_fgc), 
-    tohex(current_bgc),current_font);
-  else if(current_action==A_ADDGROUP) snprintf(buf,sizeof(buf),"%s %s, FGC=$%s, BGC=$%s, Font=%s",
-    action_names[current_action],groups[current_group].name,tohex(current_fgc), 
-    tohex(current_bgc),current_font);
-  else if(current_action==A_SFGC) snprintf(buf,sizeof(buf),"%s $%s",
-    action_names[current_action],tohex(current_fgc));
-  else if(current_action==A_SBGC) snprintf(buf,sizeof(buf),"%s $%s",
-    action_names[current_action],tohex(current_bgc));
-  else if(current_action==A_SFONT) snprintf(buf,sizeof(buf),"%s %s",
-    action_names[current_action],current_font);
-  else if(current_action==A_STOPIC) snprintf(buf,sizeof(buf),"%s %s",
-    action_names[current_action],current_topic);
-  else snprintf(buf,sizeof(buf),"%s",action_names[current_action]);
-
+  int dx=0,dy=0;
   snprintf(status_text,sizeof(status_text),"%d elements, (%dx%d), X=%d, Y=%d, Action: %s",
-    maindash->anzelement,mainwindow->w,mainwindow->h,current_mouse_x,current_mouse_y,buf);
+    maindash->anzelement,mainwindow->w,mainwindow->h,current_mouse_x,current_mouse_y,action_names[current_action]);
+  if((current_action==A_ADDGROUP ||current_action==A_RESIZE) && selected_element>=0) {
+    dx=current_mouse_x-maindash->tree[selected_element].x;
+    dy=current_mouse_y-maindash->tree[selected_element].y;
+    if(dx<0) dx=0;
+    if(dy<0) dy=0;
+    if(do_grid) {
+      dx-=(dx%GRID_SIZE);
+      dy-=(dy%GRID_SIZE);
+    }
+  }
+  int l=strlen(status_text);
+  switch(current_action) {
+  case A_ADD: 
+    snprintf(status_text+l,sizeof(status_text)-l-1,
+      " %s, FGC=$%s, BGC=$%s, Font=%s",eltyps[current_element].name,tohex(current_fgc), 
+      tohex(current_bgc),current_font);
+      break;
+  case A_ADDGROUP: 
+    snprintf(status_text+l,sizeof(status_text)-l-1,
+      " %s, dx=%d,dy=%d",groups[current_group].name,dx,dy);
+      break;
+  case A_SFGC: 
+    snprintf(status_text+l,sizeof(status_text)-l-1," $%s",tohex(current_fgc));
+    break;
+  case A_SBGC: 
+    snprintf(status_text+l,sizeof(status_text)-l-1," $%s",tohex(current_bgc));
+    break;
+  case A_SFONT:
+    snprintf(status_text+l,sizeof(status_text)-l-1," %s",current_font);
+    break;
+  case A_STOPIC:
+    snprintf(status_text+l,sizeof(status_text)-l-1," %s",current_topic);
+    break;
+  case A_RESIZE:
+    snprintf(status_text+l,sizeof(status_text)-l-1," dx=%d,dy=%d",dx,dy);
+    break;
+  default: 
+    break;
+  }
   gtk_label_set_text(GTK_LABEL(textarea),status_text);
 }
 
-int selected_element=-1;
-int mouse_rel_x,mouse_rel_y;
 
 void redraw_panel(GtkWidget *widget) {
   draw_dash(maindash,mainwindow);
@@ -301,14 +324,14 @@ static gboolean button_press_event(GtkWidget *widget,GdkEventButton *event) {
       el.x=current_mouse_x;
       el.y=current_mouse_y;
       if(do_grid) {
-        el.x-=el.x%5;
-        el.y-=el.y%5;
+        el.x-=el.x%GRID_SIZE;
+        el.y-=el.y%GRID_SIZE;
       }
       add_element(maindash,&el);
       
       gdk_draw_rectangle(pixmap,widget->style->white_gc,FALSE,
-        current_mouse_x, current_mouse_y,5,5);
-      gtk_widget_queue_draw_area(widget,current_mouse_x, current_mouse_y,5+1, 5+1);
+        current_mouse_x, current_mouse_y,GRID_SIZE,GRID_SIZE);
+      gtk_widget_queue_draw_area(widget,current_mouse_x, current_mouse_y,GRID_SIZE+1,GRID_SIZE+1);
       break;
     case A_DELETE:
       if(event->button==1) {
@@ -472,11 +495,10 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	if(new_x>mainwindow->w) new_x=mainwindow->w-1;
 	if(new_y>mainwindow->h) new_y=mainwindow->h-1;
 	if(do_grid) {
-	  new_x-=(new_x%5);
-	  new_y-=(new_y%5);
+	  new_x-=(new_x%GRID_SIZE);
+	  new_y-=(new_y%GRID_SIZE);
 	}
 	if((maindash->tree[idx].type&EL_COMPOUND)==EL_COMPOUND) {
-          printf("move compound.\n");
 	  int i;
 	  ELEMENT *el;
 	  for(i=0;i<idx;i++) {
@@ -512,8 +534,8 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	if(new_x>mainwindow->w) new_x=mainwindow->w-1;
 	if(new_y>mainwindow->h) new_y=mainwindow->h-1;
 	if(do_grid) {
-	  new_x-=(new_x%5);
-	  new_y-=(new_y%5);
+	  new_x-=(new_x%GRID_SIZE);
+	  new_y-=(new_y%GRID_SIZE);
 	}
 	if((maindash->tree[idx].type&EL_COMPOUND)==EL_COMPOUND) {
           printf("copy compound.\n");
@@ -552,21 +574,20 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
         int idx=selected_element;
 	int new_w=current_mouse_x-maindash->tree[idx].x;
 	int new_h=current_mouse_y-maindash->tree[idx].y;
-	if(new_w<5) new_w=5;  /* Always have a minimum size. */
-	if(new_h<5) new_h=5;
-	// if(new_w>mainwindow->w) new_w=mainwindow->w; /* Maybe allow bigger ?*/
-	// if(new_h>mainwindow->h) new_h=mainwindow->h;
 	if(do_grid) {
-	  new_w-=(new_w%5);
-	  new_h-=(new_h%5);
+	  new_w-=(new_w%GRID_SIZE);
+	  new_h-=(new_h%GRID_SIZE);
 	}
         printf("Resize Element #%d from (%d,%d) to (%d,%d)\n",selected_element,maindash->tree[idx].w,maindash->tree[idx].h, 
 	  new_w,new_h);
-	scale_element(&(maindash->tree[idx]),new_w,new_h);
-
-	is_modified=1;
-	selected_element=-1;
-	redraw_panel(widget);
+	if(new_w>0 && new_h>0) {
+  	  if(new_w<GRID_SIZE) new_w=GRID_SIZE;  /* Always have a minimum size. */
+	  if(new_h<GRID_SIZE) new_h=GRID_SIZE;
+  	  scale_element(&(maindash->tree[idx]),new_w,new_h);
+	  is_modified=1;
+	  redraw_panel(widget);
+        }
+        selected_element=-1;
       }
       break;
      case A_ADDGROUP:
@@ -579,23 +600,22 @@ static gboolean button_release_event(GtkWidget *widget,GdkEventButton *event) {
 	
 	delete_element(maindash,idx);
 
-	if(new_w<5) new_w=5;  /* Always have a minimum size. */
-	if(new_h<5) new_h=5;
-	// if(new_w>mainwindow->w) new_w=mainwindow->w; /* Maybe allow bigger ?*/
-	// if(new_h>mainwindow->h) new_h=mainwindow->h;
 	if(do_grid) {
-	  new_w-=(new_w%5);
-	  new_h-=(new_h%5);
+	  new_w-=(new_w%GRID_SIZE);
+	  new_h-=(new_h%GRID_SIZE);
 	}
-        printf("Add Element Group (%d,%d) (%dx%d)\n",new_x,new_y,new_w,new_h);
-
-        char *text=(groups[current_group].function)(new_x,new_y,new_w,new_h);
-        if(add_element_group(text)) {
-	  is_modified=1;
-	  selected_element=-1;
-	  redraw_panel(widget);
+        if(new_w>0 && new_h>0) {
+          printf("Add Element Group (%d,%d) (%dx%d)\n",new_x,new_y,new_w,new_h);
+	  if(new_w<GRID_SIZE) new_w=GRID_SIZE;  /* Always have a minimum size. */
+	  if(new_h<GRID_SIZE) new_h=GRID_SIZE;
+          char *text=(groups[current_group].function)(new_x,new_y,new_w,new_h);
+          if(add_element_group(text)) {
+	    is_modified=1;
+	    redraw_panel(widget);
+	  }
+	  free(text);
 	}
-	free(text);
+	selected_element=-1;
       }
       break;
     }
@@ -649,8 +669,8 @@ static gboolean motion_notify_event(GtkWidget *widget,GdkEventMotion *event) {
 	int my=maindash->tree[selected_element].y;
 	int mw=current_mouse_x-maindash->tree[selected_element].x;
 	int mh=current_mouse_y-maindash->tree[selected_element].y;
-	if(mw<5) mw=5;
-	if(mh<5) my=5;
+	if(mw<GRID_SIZE) mw=GRID_SIZE;
+	if(mh<GRID_SIZE) my=GRID_SIZE;
 	static int omw,omh;
         if(converted_pixels) gdk_draw_rgb_32_image(pixmap,widget->style->white_gc,0,0,surface->w,surface->h,0,(const guchar *)converted_pixels,4*surface->w);
         gdk_draw_rectangle(pixmap,widget->style->white_gc,FALSE,mx, my,mw, mh);

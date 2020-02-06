@@ -56,3 +56,7 @@ char *groups_activity(int x, int y, int w, int h);
 char *groups_statusbitmap(int x, int y, int w, int h);
 char *groups_onoff(int x, int y, int w, int h);
 char *groups_potentiometer(int x, int y, int w, int h);
+char *groups_dashbutton(int x, int y, int w, int h);
+char *groups_topicio(int x, int y, int w, int h);
+char *groups_gauge(int x, int y, int w, int h);
+
