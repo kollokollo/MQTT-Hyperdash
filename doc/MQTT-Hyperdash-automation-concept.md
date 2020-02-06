@@ -227,17 +227,83 @@ particular difficulty in automation.
 
 #### Implementing Intentions
 
+Following belongs to an "intention":
+
+1. two corresponding parameters:
+   a) the detected state (actual state) and corresponding
+   b) the desired state (target state),
+2. a representation of the transition matrix with entries about internal actions, combinations of intentions and prohibited transitions,
+3. a table with heuristic evaluation factors ("lengths"),
+4. optionally one or more rules and
+5. optionally one or more internal promotions with associated ratings.
 
 <img src="images/intention.png">
-
 Figure: How an intention works in the automation framework.
 
+A rule that contains the two parameters as trigger parameters in its input
+quantity (and optionally any number of others) is triggered whenever either the
+current detected state changes or the target state changes. The rule selects a
+transition from the set of the maximum n*(n-1) possible transitions which are
+arranged in a transition matrix. This is based on another rule for evaluating
+the cheapest or shortest of all possible paths. These paths consist of a chain of
+transitions that should lead to the target state via any detour states. The
+first of these actions is then triggered and should now bring the system into a
+state that is closer to the target. Then the rule is triggered again and the
+next step is carried out until the goal is reached, in which case nothing is
+done. If the target cannot be reached by this way, something is fundamentally
+wrong and need to be (manually) ficed. This can be easily detected by a 
+permanent discrepancy between the actual and current state parameters which 
+could flag a warning.
 
+An action can either be carried out within the system, e.g. if the system is
+directly connected to the hardware, or it is defined by a number of other
+intentions that affect other (subordinate) systems. In the first case, the
+action excecutes a procedure that does something locally (i.e. on
+the computer where it runs, interfacing the connected hardware).
 
-with rule engines using pairs of parameters (setpoint and ismeasured values)
-
+In the latter case, it is sufficient to trigger certain other intentions
+(whereby the order should not matter, since the intentions are expressed almost
+simultaneously). (Sequences have to be implemented in a different way, see
+a chapter below.) 
 
 #### Internal Actions
+
+Every action, or each path of actions, which is followed by intentions, can be
+broken down into more and more finer actions, which at the bottom end always
+result in internal actions. These are then ultimately carried out by the servers
+of the hardware devices. The individual actions take place autonomously and, if
+necessary, simultaneously on each server/device.  In order to find favorable
+ways out of the considerable amount of the different possible paths of a
+transition, a criterion has to be used,
+which takes into account which of the routes is the shortest and is accordingly 
+preferred if it is not blocked.
+
+Suppose a system that is in the "ON" state is to change to the "OFF" state.
+Assume there are two ways to do this. First, it can change directly to the off
+state, and secondly it can go to the standby state and then to the off state.
+The last route is obviously longer and therefore the direct route should be
+followed. 
+
+Or another example: Should several systems intentionally go to other
+states, the evaluation of this transition depends on how many systems are
+already in the desired state.
+Thus, for the transition of an exemplary system from the "not ready" state to 
+the "all ready" state, all 300 subsystems must be in the "ready" state. 
+However, the "length" of this route is certainly dependent on the number of 
+subsystems that are already in the desired state.
+
+Rules must therefore be found to evaluate these actions. The following approach
+is suggested here:
+
+
+
+
+
+
+
+
+
+
 
 #### Mixed Actions
 
