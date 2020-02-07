@@ -296,22 +296,82 @@ Rules must therefore be found to evaluate these actions. The following approach
 is suggested here:
 
 
+1. Internal actions get a heuristically found evaluation factor ("length"),
+whereby a length of 0 means that the action does not need to be carried out 
+because the state has already been reached.
+
+A length of 1 means a normal step, e.g. a switching process with a duration of
+100 ms, or an action that leads to resource consumption (wear and tear due to
+switching or similar), in the sense of, switching may occur approx. 1 time per
+minute, without reducing the life of the part to less than the total life of the
+overall system.
+
+A length less than 1 means the step is shorter or faster than a "normal step".
+
+A length greater than 1 means that the action is more expensive, takes longer or
+cannot be carried out as often because it consumes more resources.
+
+An infinite length means that the action is prohibited and may not or must not
+be carried out. In practice, a high maximum value is used instead of infinity,
+e.g. 65000. Lengths greater than or equal to this value are then considered to
+be infinite. Length calculations that reach or exceed this value are canceled.
+
+2. The length of actions to be carried out in parallel is calculated according to:
 
 
+l = w * \sum_i l_i
 
+where l_i are the lengths of the individual actions and w is a positive weight 
+factor w>0, which takes into account the fact that the lengths of an overall 
+action need not necessarily be the sum of the lengths of the individual 
+actions, e.g. setting multiple bits of the same hardware cannot consume 
+additional resources because it happens simultaneously or because the entire 
+register is always set anyway. In this case w = 1 / n.
 
+Individual intentions that do not lead to any action because the state has
+already been reached do not make any contribution, in this case the length
+calculation for the individual system will deliver l_i = 0. If a prohibited
+action is involved, the overall action is also prohibited, namely if w>=1.
 
+In this way, "lengths" (recursive) can be calculated for all transitions.
 
-
-
+The path with the smallest overall length is then the cheapest. So the intention
+triggers a transition, which represents a step in this direction.
 
 #### Mixed Actions
 
+Not all intentions have exclusively internal actions or only external actions.
+The possible actions can also be mixed. For example, the Magnetic
+field of a magnet can only reach the "normal" state if 
+a) the power supply is in the "On" state and additionally 
+b) the setpoint is set to a certain value. 
+The action which is to establish this state will therefore send an external
+intention "on" to the power supply unit and in addition set the e.g. current
+parameter "current setpoint" (in relation to the intention "on") to a certain
+value, which counts as internal Action (of the intention "normal"). Note
+that the order of the two individual actions is not important.
+
+The length of this action is then calculated from the length of the intention
+"On" plus one internal length for setting the setpoint.
+
+Caution: Changing non-free parameters can trigger uncontrolled changes in status
+within other intentions. In this case, this action is not really internal.
+
+Therefore, this must be avoided (through careful planning) so that there are no
+contradictions in the rules and the automation becomes unstable.
+
+Definition: "Elementary intentions" are those that are only defined through
+internal actions. Here the distance matrix is fixed and does not need to be
+calculated dynamically.
+
+Definition: "Sufficient intentions" are those that are only defined through
+external actions.
+
+Here the whole set of rules can be generated automatically. This includes:
+condition detection, distance matrix calculation and automatic path 
+finding of the intention.
 
 
-### Intentions with autonomous path length calculations
-
-(Why it is better not to use sequences).
 
 
 <img src="images/intention2.png">
@@ -325,12 +385,161 @@ the target state and in the actual state and if necessary, apply a step from the
 shortest path heading the target state.
 
 
+
+
+
+### Intentions with autonomous path length calculations
+
+(Why it is better not to use sequences).
+
+
+The implementation of procedures in so-called sequences, i.e. chronologically
+ordered instructions, which are processed sequentially (i.e. one after the
+other), seems to be more suitable and easier to implement at least for some
+tasks than the definition of many extra states with corresponding dependencies.
+
+A well designed implementation of a sequence must always take into account the 
+risk that certain instructions from the sequence are not executed correctly. 
+After each step in the
+sequence, you should actually first carefully check whether the desired action
+was carried out without errors. If not, the sequence is usually not allowed to
+continue and would either have to be terminated or to run in one of a number of
+branches that take account of the error that occurred and, if possible, return
+to the actual sequence. It is hardly possible to catch all possible errors in
+this way, so the sequence will very likely miss an error, and the machine will
+not end up in the achieved state, but instead in an uncontrolled other state
+(because, for example, the sequence simply continued even though an error
+occurred in a substep that was overlooked). In order to find out in which one, a
+complex error analysis procedure is required.
+
+In short: For small and reliable steps, a sequence can make sense in terms of 
+simplicity, clarity and quick implementation.
+
+For example, in the way they can appear in the definition
+of rules and intentions. In the case of the rules,
+however, they should mainly be used to implement
+algorithms, i.e. pure computing processes, where only one
+step should be calculated in iterative processes.
+Sequences in rule definitions should therefore not be used
+to query and set parameters outside those agreed in the
+set of input and output parameters, although this is not
+explicitly prohibited, and in some cases can make sense.
+For intentions, the consideration only applies to the
+"internal" actions anyway, since by definition all others
+cannot be sequences, but may trigger additional rules and
+intentions. In the case of the internal actions, it must
+therefore also be ensured that a possible success or
+failure of the sequence can later be detected on the basis
+of suitable measured states. In this case the internal
+actions can be seen as "fire and forget" sequences.
+
+
+Relatively quickly, however, a sequence becomes susceptible to incomplete
+implementation and the resulting uncontrolled changes in state, which, after a
+certain level of complexity (which is reached quite quickly), becomes uncontrollable
+and therefore unreliable. This is contrary to the desired robustness.
+
+This concept is therefore intended to limit the use of sequences to an absolutely
+necessary extent and only allow them where the instructions can be safely executed
+or where there is (yet) no diagnosis for the detection of errors anyway.
+
+In all other cases, the use of sequences (i.e. actions that cannot be triggered at
+the same time where the order is important) should therefore be avoided.
+
+A consistent implementation using the intentions and rules automatically checks the
+statuses achieved and finds its way independently. The sequence of actions to be
+processed one after the other is realized by the dependencies of the states, which
+ensures that an action is only triggered when the target state of the preceding
+action has actually been reached. Otherwise, another action is automatically
+triggered, which tries to correct the previous error and then continues normally in
+the chain of actions. The sequence then arises from the continuous path of the
+states.
+
 ### Distinguishing: free and non-free states and parameters
+
+Definition: Free parameters are those that are not in any rule for determining a
+state that is part of an intention.
+
+Rules whose inputs only consist of free parameters produce free parameters as
+outputs. User inputs can also be free parameters, e.g. a temperature setpoint.
+
+Definition: Free states are those that are not part of an intention. A free state is
+represented by a free (integer) parameter. You cannot get to a free state in a
+targeted manner. It is only suitable for diagnosis.
 
 ### Avoiding contradictions in the rule machinery
 
+An interesting feature of the automation concept presented here is that
+contradictions automatically prohibit themselves. That is, states that are involved
+in such contradictions cannot be reached automatically.
+
+However, this does not mean that no contradictions can be constructed. For example,
+two rules can form a cycle that causes the parameters involved to oscillate and thus
+show unstable behavior. Great care must therefore always be taken when cycles are
+used in the regulations.
+
+Contradictions in intentions can also be expressed in another form: e.g. an action
+of another intention can demand a state, which in turn leads to the former intention
+changing, because in turn a different state is required by the former.
+
+This can also form cycles. Cycles of this type, however, are already noticeable in
+the autonomous length calculation and lead to the lengths of the paths concerned
+becoming longer and longer and diverging in an iterative step. Eventually a maximum
+length is reached where the process stops. However, maximum length means that this
+path becomes a forbidden path. In this way, it is possible that all paths that lead
+to conflicting states are prohibited. These problems are then exposed through a
+permanent discrepancy between target and actual states of some intentions, where the
+problem can then be easily localized and hopefully remedied.
+
 ### Consequences
+
+From the described automation concept there are some (quite desirable) implications
+which should be considered:
+
+1. Non-converging (unstable) cycles in the set of rules eliminate themselves since
+their length adds up to infinity, and these paths are then prohibited.
+
+2. Distance computing will consume a great deal of computing power, since every 
+   change in the state of the subordinate systems, if it leads to a change in 
+   length there, triggers the recalculation of the distance matrices of all 
+   superordinate systems.
+   But since everything happens in parallel, the load for a single computer is low.
+
 
 ### A path finder
 
+The shortest path is to be found from a series of possible paths from an initial
+state A to a final state B.
 
+Given a transition matrix with weights (or lengths), standard algorithms from
+graph theory can be used. For example, Dijkstra's algorithm. Our problem presents
+itself as an edge-weighted graph, in which the edge weights have to be calculated
+according to the actual state and possibly recursively from the states and actions
+of the external intentions involved or through the autonomous path length
+calculation.
+
+Dijkstra's algorithm (after its inventor Edsger W. Dijkstra) is used to calculate a
+shortest path between a start node and any node in an edge-weighted graph. The
+weights must not be negative.
+
+For non-contiguous, undirected graphs, the distance to certain nodes can also be
+infinite if a path between the start node and this node does not exist.
+
+The same applies to directed, not strongly connected graphs. These requirements
+apply to our problem.
+
+The algorithm works as follows: The next best node with the shortest path is
+successively included in a result set and removed from the set of nodes still to be
+processed.
+
+Route planners are a prominent example where this algorithm can be used. The graph 
+here represents the road network that connects different points. We are looking 
+for the shortest route between two points. Dijkstra's algorithm is
+also used on the Internet as a routing algorithm in OSPF (Open Shortest Path First, 
+is a term used in computer network technology).
+
+An alternative algorithm for finding the shortest paths, which is based on 
+Bellman's principle of optimality, is the Floyd Warshall algorithm. 
+The principle of optimality states that if the shortest path leads from A to C 
+via B, the partial path A B must also be the shortest path from A to B.
+   
