@@ -1,7 +1,7 @@
 ## Automation 
 
 for MQTT Hyperdash V.1.02 (c) by Markus Hoffmann 
-(concept studie from 2010)
+(concept study from 2010)
 
 
 Based on [rule engines](MQTT-rule-engine-howto.md) an automation concept can
@@ -10,8 +10,8 @@ all connected to each other via the MQTT framework.
 
 The rule engines allow to crate any level of 
 abstraction on the raw data and thus reduce the complexity of the individual
-signals as well as maintainig actual/measured states the subsystems are to 
-be in. A strong distinction between setpoint- and actual-measured values is 
+signals as well as maintaining actual/measured states the subsystems are to 
+be in. A strong distinction between set-point- and actual-measured values is 
 essential here (actual value vs. target value).
  Both are supported by the 
 [MQTT-Hyperdash naming convention](MQTT-dashgen-naming-conventions.md).
@@ -39,9 +39,9 @@ state of a system in a targeted manner (e.g. switching on a previously switched
 off power supply or switching on an entire subsystem including its
 conditioning).
 
-So, directed rule engines allone cannot map the processes and algorithms to
+So, directed rule engines alone cannot map the processes and algorithms to
 really automate the  system. Therefor we have to introduce another extended
-class of rules, called "Intentions". Intentions can be iplemented as rule
+class of rules, called "Intentions". Intentions can be implemented as rule
 engines with some additional special state parameters. However we want to look
 at them from a different perspective at first.
 
@@ -147,7 +147,7 @@ with a procedure that should lead to that target state from theoretical
 understanding (and hopefully also practically, if the system works as intended).
 However, whether the condition is reached is not guaranteed (however, this
 should be the case if the system functions normally). This can be verified or
-falsified by observing the detected actual state, which correspond to the intendet state.
+falsified by observing the detected actual state, which correspond to the intended state.
 If they are different, action need to be taken.
 
 
@@ -181,7 +181,7 @@ remedy the fault. This procedure would then have to be retrofitted.
 No other case can occur in a system for which all relevant observables have been
 provided. So it should not happen that operating the system (manually, but with
 the functionality provided) only continues if external information (e.g.
-evaluating an oscillograph image) is used to make a decision. If the latter is
+evaluating an oscilloscope image) is used to make a decision. If the latter is
 the case with a system, the design of the system in question has to be rethought
 and a new measurement signal may have to be installed so that automatic operation
 (only then) becomes possible.
@@ -251,14 +251,14 @@ first of these actions is then triggered and should now bring the system into a
 state that is closer to the target. Then the rule is triggered again and the
 next step is carried out until the goal is reached, in which case nothing is
 done. If the target cannot be reached by this way, something is fundamentally
-wrong and need to be (manually) ficed. This can be easily detected by a 
+wrong and need to be (manually) fixed. This can be easily detected by a 
 permanent discrepancy between the actual and current state parameters which 
 could flag a warning.
 
 An action can either be carried out within the system, e.g. if the system is
 directly connected to the hardware, or it is defined by a number of other
 intentions that affect other (subordinate) systems. In the first case, the
-action excecutes a procedure that does something locally (i.e. on
+action executes a procedure that does something locally (i.e. on
 the computer where it runs, interfacing the connected hardware).
 
 In the latter case, it is sufficient to trigger certain other intentions
@@ -344,15 +344,15 @@ Not all intentions have exclusively internal actions or only external actions.
 The possible actions can also be mixed. For example, the Magnetic
 field of a magnet can only reach the "normal" state if 
 a) the power supply is in the "On" state and additionally 
-b) the setpoint is set to a certain value. 
+b) the set-point is set to a certain value. 
 The action which is to establish this state will therefore send an external
 intention "on" to the power supply unit and in addition set the e.g. current
-parameter "current setpoint" (in relation to the intention "on") to a certain
+parameter "current set-point" (in relation to the intention "on") to a certain
 value, which counts as internal Action (of the intention "normal"). Note
 that the order of the two individual actions is not important.
 
 The length of this action is then calculated from the length of the intention
-"On" plus one internal length for setting the setpoint.
+"On" plus one internal length for setting the set-point.
 
 Caution: Changing non-free parameters can trigger uncontrolled changes in status
 within other intentions. In this case, this action is not really internal.
@@ -409,7 +409,7 @@ to the actual sequence. It is hardly possible to catch all possible errors in
 this way, so the sequence will very likely miss an error, and the machine will
 not end up in the achieved state, but instead in an uncontrolled other state
 (because, for example, the sequence simply continued even though an error
-occurred in a substep that was overlooked). In order to find out in which one, a
+occurred in a sub-step that was overlooked). In order to find out in which one, a
 complex error analysis procedure is required.
 
 In short: For small and reliable steps, a sequence can make sense in terms of 
@@ -461,7 +461,7 @@ Definition: Free parameters are those that are not in any rule for determining a
 state that is part of an intention.
 
 Rules whose inputs only consist of free parameters produce free parameters as
-outputs. User inputs can also be free parameters, e.g. a temperature setpoint.
+outputs. User inputs can also be free parameters, e.g. a temperature set-point.
 
 Definition: Free states are those that are not part of an intention. A free state is
 represented by a free (integer) parameter. You cannot get to a free state in a
