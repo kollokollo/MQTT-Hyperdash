@@ -49,10 +49,10 @@ void i_broker(ELEMENT *el,char *pars) {
   int rc;
   if(broker_override) el->filename=strdup(broker_override);
   else                el->filename=strdup(key_value(pars,"URL",DEFAULT_BROKER));
-  if(broker_user) el->text=strdup(broker_user);
-  else            el->text=strdup(key_value(pars,"USER",""));
-  if(broker_passwd) el->format=strdup(broker_passwd);
-  else              el->format=strdup(key_value(pars,"PASSWD",""));
+  if(broker_user)     el->text=strdup(broker_user);
+  else                el->text=strdup(key_value(pars,"USER",""));
+  if(broker_passwd)   el->format=strdup(broker_passwd);
+  else                el->format=strdup(key_value(pars,"PASSWD",""));
   if(!el->text[0]) {
     free(el->text);
     el->text=NULL;
@@ -784,7 +784,7 @@ void u_plot(ELEMENT *el,WINDOW *win, char *message, int len) {
     char *p2;
     int i=0;
     double v;
-    int x,y=el->y+el->h,ox=0,oy=el->y+el->h;
+    int x,y=el->y+el->h,ox=-1,oy=el->y+el->h;
 //    int data[el->x2];
 //    printf("Message: <%s>\n",message);
     while(*p1) {
@@ -806,10 +806,12 @@ void u_plot(ELEMENT *el,WINDOW *win, char *message, int len) {
 	  if((el->revert&0xf)==1) {
             lineColor(win->display,el->x+x,el->y+el->h,el->x+x,y,el->fgc);
 	  } else if((el->revert&0xf)==2) {
-	    lineColor(win->display,el->x+ox,oy,el->x+ox,y,el->fgc);
-	    lineColor(win->display,el->x+ox,y,el->x+x,y,el->fgc);
+	    if(ox>=0) {
+	      lineColor(win->display,el->x+ox,oy,el->x+ox,y,el->fgc);
+	      if(x!=ox) lineColor(win->display,el->x+ox, y,el->x+x, y,el->fgc);
+            }
           } else if((el->revert&0xf)==3){
-	    lineColor(win->display,el->x+ox,oy,el->x+x,y,el->fgc);
+	    if(ox>=0) lineColor(win->display,el->x+ox,oy,el->x+x,y,el->fgc);
 	  }
 	  if((el->revert&0x70)==0x40) circleColor(win->display,el->x+x,y,2,el->fgc);
           else if((el->revert&0x70)==0x0) lineColor(win->display,el->x+x,y,el->x+x,y,el->fgc);
