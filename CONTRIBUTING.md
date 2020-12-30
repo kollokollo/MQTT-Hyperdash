@@ -71,14 +71,18 @@ and original license, by including a comment above your contribution.
 
 ## Contributing with a Pull Request
 
-The best way to contribute to this project is by making a pull request:
+The best way to contribute to this project is by making a merge or pull request:
 
-1. Login with your Github account or create one now
-2. [Fork](https://github.com/kollokollo/MQTT-Hyperdash#fork-destination-box) the MQTT-Hyperdash repository. Work on your fork.
+1. Login with your codeberg account or create one now.
+2. [Fork](https://codeberg.org/kollo/MQTT-Hyperdash#fork-destination-box) 
+   the MQTT-Hyperdash repository. Work on your fork.
 3. Create a new branch on which to make your change, e.g.
-`git checkout -b my_code_contribution`, or make the change on the `new` branch.
-4. Edit the file where you want to make a change or create a new file in the `contrib` directory if you're not sure where your contribution might fit.
-5. Edit `doc/ACKNOWLEGEMENTS` and add your own name to the list of contributors under the section with the current year. Use your name, or a github ID, or a pseudonym.
+   `git checkout -b my_code_contribution`, or make the change on the `new` branch.
+4. Edit the file where you want to make a change or create a new file in the 
+   `contrib` directory if you're not sure where your contribution might fit.
+5. Edit `doc/ACKNOWLEGEMENTS` and add your own name to the list of contributors 
+   under the section with the current year. Use your name, or a codeberg ID, or 
+   a pseudonym.
 6. Commit your change. Include a commit message describing the correction.
 7. Submit a pull request against the MQTT-Hyperdash repository.
 
@@ -90,7 +94,7 @@ If you find a mistake and you're not sure how to fix it, or you don't know how
 to do a pull request, then you can file an Issue. Filing an Issue will help us
 see the problem and fix it.
 
-Create a [new Issue](https://github.com/kollokollo/MQTT-Hyperdash/issues/new) now!
+Create a [new Issue](https://codeberg.org/kollo/MQTT-Hyperdash/issues/new) now!
 
 
 
@@ -98,6 +102,3 @@ Create a [new Issue](https://github.com/kollokollo/MQTT-Hyperdash/issues/new) no
 
 We are very grateful for your support. With your help, this implementation
 will be a great project. 
-
-
-So you are welcome to help.

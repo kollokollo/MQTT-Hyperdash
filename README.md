@@ -1,29 +1,29 @@
+<img alt="MQTT-Hyperdash" src="icons/MQTT-Hyperdash-logo.png" width="120" />
+
 ## MQTT-Hyperdash
+
+(C) 2019-2021 by Markus Hoffmann
+
+A universal MQTT dashboard and rule engine framework.
+
 <pre>
-VERSION 1.02
-
-(C) 2019-2020 by Markus Hoffmann
-(kollo@users.sourceforge.net)
-
-Name        : MQTT-Hyperdash
-Version     : 1.02                              Author: Markus Hoffmann
-Group       : Development/Languages             License: GPLv2
-Packager    : Markus Hoffmann <kollo@users.sourceforge.net>
-Summary     : A universal MQTT Dashboard.
+Version     : 1.03
+License     : GPLv2
 Description :
+</pre>
 
-This is a fast and efficient dashboard (GUI) for the MQTT framework. It uses
-the SDL library for graphics rendering, the paho.mqtt.c library for communication and
-the gtk2 framework for user input. The dashboard runs on Linux, 
-but a port to other operating systems is possible. 
+MQTT-Hyperdash is a fast and efficient dashboard (GUI) for the MQTT framework. 
+It uses the SDL library for graphics rendering, the paho.mqtt.c library for 
+communication and the gtk2 framework for user input. 
+The dashboard runs on Linux, but a port to other operating systems is possible. 
 
+<pre>
 Special features:
 
 * Very simple and basic set of base elements. 
 * animated analog input elements, potentiometers.
 * Fast update rates of 20 Hz are possible.
 * Easy to use: Each panel/dashboard is configured in a single .dash file.
-
 </pre>
 
 This repository contains following set of applications: 
@@ -31,8 +31,8 @@ This repository contains following set of applications:
 #### hyperdash 
 
 hyperdash runs a panel/dashboard, which has been defined in a dash file. It
-opens a window, draws all elements updates with each new topic message and takes
-user input with the mouse to manipulate topics contents. 
+opens a window, draws all elements, updates with each new topic message and 
+takes user input with the mouse to manipulate topics contents. 
 
 ![Smart Home Dashboard](screenshots/Haussteuerung.png)
 
@@ -68,7 +68,8 @@ A brief explanation how to use hddashgen is in its man-page
 
 #### mqtt-list-topics
 
-A tool to connect to a mqtt broker and list all topics available there to stdout. 
+A tool to connect to a mqtt broker and list all topics available there to 
+stdout. 
 
 mqtt-list-topics also performs a brief analysis on the topics content to 
 classify the topic into binary, string, number, and integer. This 
@@ -169,3 +170,56 @@ hyperdash main.dash &
 </pre>
 
 have fun....
+
+
+### Download
+
+There is an (inofficial) binary distribution of MQTT-Hyperdash and the 
+paho c library (.deb files) on sourceforge. But it is highly recommended 
+to compile the most recent version from sources (see above). 
+
+
+### Screenshots
+
+<div style="display:flex;">
+<img alt="App image" src="screenshots/sysmeasure.png" width="30%">
+<img alt="App image" src="screenshots/plottest.png" width="30%">
+<img alt="App image" src="screenshots/metertest.png" width="30%">
+</div>
+<div style="display:flex;">
+<img alt="App image" src="screenshots/main.png" width="30%">
+<img alt="App image" src="screenshots/input.png" width="30%">
+<img alt="App image" src="screenshots/hddashgen.png" width="30%">
+</div>
+<div style="display:flex;">
+<img alt="App image" src="screenshots/feinstaub.png" width="30%">
+<img alt="App image" src="screenshots/dashdesign.png" width="30%">
+<img alt="App image" src="screenshots/buttontest.png" width="30%">
+</div>
+<div style="display:flex;">
+<img alt="App image" src="screenshots/Solar.png" width="30%">
+<img alt="App image" src="screenshots/Haussteuerung.png" width="30%">
+</div>
+
+### Important Note:
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+
+Acknowledgements
+================
+
+Thanks to all people, who helped me to realize this package.
