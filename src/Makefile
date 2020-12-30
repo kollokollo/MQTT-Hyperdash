@@ -171,7 +171,7 @@ MYWINLIBS = WINDOWS/lib/libgfx.lib
 
 
 
-all :    hyperdash mqtt-list-topics sysmeasure hddashgen dashdesign
+all :    hyperdash mqtt-list-topics sysmeasure hddashgen dashdesign mqtt2serial
 
 configure : configure.in
 	autoconf
@@ -204,6 +204,10 @@ hddashgen : hddashgen.c file.o hddashgen.h file.h
 hddashgen.exe: hddashgen.c file.c  hddashgen.h file.h WINDOWS/fnmatch.c WINDOWS/getline.c
 	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  \
 	-o $@ hddashgen.c file.c WINDOWS/fnmatch.c WINDOWS/getline.c -lm -lpaho-mqtt3c
+
+mqtt2serial :  mqtt2serial.c mqtt.o subscribe.o util.o file.o
+	$(CC)  mqtt2serial.c mqtt.o subscribe.o util.o file.o \
+	-o $@ -lm -lpaho-mqtt3c 
 
 mqtt-list-topics :  mqtt-list-topics.c mqtt.o subscribe.o util.o
 	$(CC)  mqtt-list-topics.c mqtt.o subscribe.o util.o \
