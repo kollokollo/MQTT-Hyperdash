@@ -62,7 +62,7 @@ MAINOBJS= main.o $(LIBOBJS)
 CSRC=    $(MAINOBJS:.o=.c)
 
 CSRC_EXTRA= mqtt-list-topics.c rule-engine.c hddashgen.c dashdesign.c \
-            element_groups.c menu.c
+            element_groups.c menu.c mqtt2serial.c serial.c
 
 RULESRC=  commander.rule  demo.rule  syslogger.rule  sysmeasure.rule
 
@@ -74,7 +74,7 @@ DEPSRC=  $(CSRC) mqtt-list-topics.c hddashgen.c dashdesign.c menu.c \
 
 HSRC=  hyperdash.h lodepng.h mqtt.h file.h util.h graphics.h bitmap.h \
        input.h input_value_dialog.h elements.h subscribe.h basics.h config.h hddashgen.h \
-       dashdesign.h menu.h element_groups.h
+       dashdesign.h menu.h element_groups.h serial.h
 
 # example dash files 
 
@@ -168,8 +168,7 @@ LIBS = -lm -lpthread -lpaho-mqtt3c -lSDL -lSDL_gfx -lSDL_ttf -lX11 `pkg-config -
 
 MYWINLIBS = WINDOWS/lib/libgfx.lib 
 
-
-
+BINDIST = hyperdash mqtt-list-topics sysmeasure hddashgen dashdesign mqtt2serial
 
 all :    hyperdash mqtt-list-topics sysmeasure hddashgen dashdesign mqtt2serial
 
@@ -205,8 +204,8 @@ hddashgen.exe: hddashgen.c file.c  hddashgen.h file.h WINDOWS/fnmatch.c WINDOWS/
 	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  \
 	-o $@ hddashgen.c file.c WINDOWS/fnmatch.c WINDOWS/getline.c -lm -lpaho-mqtt3c
 
-mqtt2serial :  mqtt2serial.c mqtt.o subscribe.o util.o file.o
-	$(CC)  mqtt2serial.c mqtt.o subscribe.o util.o file.o \
+mqtt2serial :  mqtt2serial.c mqtt.o subscribe.o util.o file.o serial.o
+	$(CC)  mqtt2serial.c mqtt.o subscribe.o util.o file.o serial.o \
 	-o $@ -lm -lpaho-mqtt3c 
 
 mqtt-list-topics :  mqtt-list-topics.c mqtt.o subscribe.o util.o
@@ -238,18 +237,20 @@ rules:	demo sysmeasure syslogger commander
 #
 
 
-install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics $(MANPAGES) create_tree.sh
+install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics hddashgen dashdesign mqtt2serial $(MANPAGES) create_tree.sh
 	install -m 644 hyperdash.desktop $(DESKTOPDIR)/
 	install -s -m 755 hyperdash $(BINDIR)/
 	install -s -m 755 mqtt-list-topics $(BINDIR)/
 	install -s -m 755 hddashgen $(BINDIR)/
 	install -s -m 755 dashdesign $(BINDIR)/
 	install -s -m 755 sysmeasure $(BINDIR)/
+	install -s -m 755 mqtt2serial $(BINDIR)/
 	install -d $(MANDIR)
 	install -d $(MANDIR)/man1
 	install -m 644 hyperdash.1 $(MANDIR)/man1/
 	install -m 644 hddashgen.1 $(MANDIR)/man1/
 	install -m 644 dashdesign.1 $(MANDIR)/man1/
+	install -m 644 mqtt2serial.1 $(MANDIR)/man1/
 	install -m 644 mqtt-list-topics.1 $(MANDIR)/man1/
 	install -d $(DATADIR)/hyperdash
 	install -m 644 create_tree.sh $(DATADIR)/hyperdash/
@@ -267,9 +268,11 @@ uninstall :
 	rm -f $(BINDIR)/hddashgen
 	rm -f $(BINDIR)/dashdesign
 	rm -f $(BINDIR)/sysmeasure
+	rm -f $(BINDIR)/mqtt2serial
 	rm -f $(MANDIR)/man1/hyperdash.1
 	rm -f $(MANDIR)/man1/hddashgen.1
 	rm -f $(MANDIR)/man1/dashdesign.1
+	rm -f $(MANDIR)/man1/mqtt2serial.1
 	rm -f $(MANDIR)/man1/mqtt-list-topics.1
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons

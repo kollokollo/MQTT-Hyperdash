@@ -100,6 +100,19 @@ reaction, and reliability. And the realization is not very complicated. Please
 read the the [rule engine howto](doc/MQTT-rule-engine-howto.md) in
 the doc/ section.
 
+#### mqtt2serial
+
+mqtt2serial connects to a mqtt broker and a serial (tty) device. This is
+a generic application (similar to the rule engine framework) to asynchronoulsy 
+pass mqtt content to a serial line, and also accept asynchronously content from 
+that line.
+
+This way, an arduino could be easily hooked to the serial line and pass its
+values and accept commands from it.
+
+A good starting point for the usage of mqtt2serial is its man-page 
+[mqtt2serial man-page](src/mqtt2serial.1).
+
 ## Remarks
 
 The project is not complete. Please see the file 
