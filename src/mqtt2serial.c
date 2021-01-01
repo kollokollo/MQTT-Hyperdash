@@ -277,8 +277,9 @@ int main(int argc, char* argv[]) {
       if(device_fd==-1) {
         if(device_setup(device,baudrate)) {
           device_init_success=0;
-	  perror("Device Setup failed.");
+	  perror("Device Setup failed. retry in 1 minute.");
 	  mqtt_publish_status(EX_UNAVAILABLE,"Serial Device Setup failed.");
+	  sleep(RECONNECTION_TIME);
         } else {
           device_init_success=1;
 	  if(verbose>=0) printf("Device Setup complete.\n");
