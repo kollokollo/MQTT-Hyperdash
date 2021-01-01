@@ -27,8 +27,6 @@
 #define O_SYNC 0
 #define B115200 0
 #endif
-#include <sys/time.h>
-#include <time.h>
 #include <errno.h>
 
 #include "serial.h"
@@ -36,18 +34,10 @@
 
 int device_fd=-1;   /* serial device file descriptor (or -1 if not yet opened) */
 int device_init_success=0;
-unsigned int today;
 
 extern int verbose;
 extern int processinput(char *line);
 
-/* return a 64 bit UNIX timestamp (in double)*/
-double v_timer() {
-  struct timeval t;
-  struct timezone tz;
-  gettimeofday(&t,&tz);
-  return((double)t.tv_sec+(double)t.tv_usec/1000000);
-}
 
 /* Set up the (usb) serial device */
 
@@ -110,9 +100,6 @@ int open_device(char *device, int baud) {
 }
 
 
-
-
-
 /* Check the state of the device. Is it still connected ?
    TODO: doesnt work yet.
  */
@@ -131,10 +118,13 @@ int checkstate(int fd) {
 
 
 
-/* Handling the COM Port in WINDOWS needs to be implemented here....*/
 #ifdef WINDOWS
+
+/* Handling the COM Port in WINDOWS needs to be implemented here....*/
+
 int set_interface_attribs(int fd, int speed, int parity) {return(0);}
 void set_blocking (int fd, int should_block) {}
+
 #else
 int set_interface_attribs(int fd, int speed, int parity) {
   struct termios tty;
@@ -175,31 +165,17 @@ void set_blocking(int fd, int should_block) {
 #endif
 
 
-
-
 /* The data taking loop. 
    This function is called inside an (endless) loop. 
    This could be outsourced to an independant thread.
    if the return value is <0, a read error occured.
  */
 
-
-/* This is the main routine for handling device input. 
-   It sould be called inside a loop. The procedure returns
-   latest at the end of the day or when an error occurs.
-   */
-
 int device_loop() {   
   static char buf[512];
   static int anzbytes=0;
   int ret=0;
-
-    /* Calculate the day number out of UNIX Timestamp. */
-  today=(unsigned int)(v_timer()/24/3600);
-      
-  unsigned int t=today;
   int n,j;
-  while(t==today) {
     
     /* Here we want to monitor the state of the input device, 
      * if it is disconnected or so....
@@ -209,11 +185,11 @@ int device_loop() {
       perror("ERROR: Connection to device lost.");
       ret=-1;
       sleep(1);
-      break;
+      return(ret);
     }
     
     n=read(device_fd,&buf[anzbytes],sizeof buf-anzbytes); /* blocking read */
-    /*Check for error*/
+    /* Check for error */
     if(n<0) {
       perror("reading from device."); 
       if(errno==EIO) {
@@ -225,7 +201,7 @@ int device_loop() {
 	ret=-1;
       }
       sleep(1);
-      break;
+      return(ret);
     } else if(n==0) {
       /* This should mean:
       If no process has the pipe open for writing, read() shall return 0 to 
@@ -235,7 +211,7 @@ int device_loop() {
       perror("ERROR: reading nothing from device. Connection lost.");
       ret=-1;
       sleep(1);
-      break;
+      return(ret);
     }
     anzbytes+=n;
     buf[anzbytes]=0;
@@ -252,19 +228,13 @@ int device_loop() {
 	j=0;
       } else j++;
     }
-    t=(int)(v_timer()/24/3600);
-  }
   return(ret);
 }
-
-
-
-
-
 
 
 /* Close the device connection and do cleanup. */
 
 void device_close() {
   if(device_fd!=-1) close(device_fd);
+  device_fd=-1;
 }

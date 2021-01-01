@@ -65,6 +65,8 @@ mosquitto_sub -h localhost -t "ARDUINO/#" -v
 #else
   #include <sysexits.h>
 #endif
+#include <sys/time.h>
+#include <time.h>
 
 #include <MQTTClient.h>
 #include "file.h"
@@ -89,7 +91,6 @@ char *topic_pattern="#";
 int baudrate=9600;
 
 char device[128]="/dev/ttyUSB0";
-
 
 extern char clientID[];
 int verbose=0;    /* Verbosity level */
@@ -197,6 +198,13 @@ static int mqtt_publish_status(int status, char *status_s) {
   return(0);
 }
 
+/* return a 64 bit UNIX timestamp (in double)*/
+static double v_timer() {
+  struct timeval t;
+  struct timezone tz;
+  gettimeofday(&t,&tz);
+  return((double)t.tv_sec+(double)t.tv_usec/1000000);
+}
 
 
 /* This procedure is called whenever a complete line has been received from 
@@ -256,7 +264,7 @@ int main(int argc, char* argv[]) {
         printf("Quit.\n");
         exit(EX_UNAVAILABLE);
       } else {
-        printf("Try to reconnect in 1 Minute.\n");
+        printf("Try to reconnect in %d minute(s).\n",RECONNECTION_TIME/60);
         sleep(RECONNECTION_TIME);
 	goto again;
       }
@@ -266,22 +274,31 @@ int main(int argc, char* argv[]) {
     if(verbose>0) printf("INFO: MQTT engine up and running. Client Id=<%s>\n",clientID);
     /* This is the main loop. */
     while(mqtt_isconnected) {
-      if(device_setup(device,baudrate)) {
-        device_init_success=0;
-	perror("Device Setup failed.");
-	mqtt_publish_status(EX_UNAVAILABLE,"Serial Device Setup failed.");
-      } else {
-        device_init_success=1;
-	if(verbose>=0) printf("Device Setup complete.\n");
-	mqtt_publish_status(0,"Serial Device up and running.");
-	while((err=device_loop())==0) ;  /* Endless loop until error occurs ....*/
-        mqtt_publish_status(1,"Device stopped.");
-        if(verbose>=0) printf("Device abort. Closing...\n");
-        device_close();
+      if(device_fd==-1) {
+        if(device_setup(device,baudrate)) {
+          device_init_success=0;
+	  perror("Device Setup failed.");
+	  mqtt_publish_status(EX_UNAVAILABLE,"Serial Device Setup failed.");
+        } else {
+          device_init_success=1;
+	  if(verbose>=0) printf("Device Setup complete.\n");
+  	  mqtt_publish_status(0,"Serial Device up and running.");
+        }
       }
-      if(!do_persist) break;
-      if(verbose>=0) printf("Device waiting 15min to reconnect...\n");
-      sleep(1000);  /* wait 15 min before try again to reconnect to the device. */
+      if(device_init_success && device_fd!=-1) {
+	while(mqtt_isconnected && (err=device_loop())==0) {  /* Endless loop until error occurs ....*/
+          if(verbose>2) printf("++++++ LOOP\n");
+        }
+	if(err) {  /* Erial device error */
+          mqtt_publish_status(1,"Device stopped.");
+          if(verbose>=0) printf("Device abort. Closing...\n");
+          device_close();
+	  device_init_success=0;
+          if(!do_persist) break;
+          if(verbose>=0) printf("Device waiting 5min to reconnect...\n");
+          sleep(300);  /* wait 5 min before try again to reconnect to the device. */
+	}
+      }
     }
     mqtt_unsubscribe_all();
     printf("INFO: try to reconnect in %d secs...\n",RECONNECTION_PAUSE);

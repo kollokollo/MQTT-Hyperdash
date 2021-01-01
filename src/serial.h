@@ -17,7 +17,6 @@ int checkstate(int fd);
 void device_close();
 int set_interface_attribs(int fd, int speed, int parity);
 void set_blocking(int fd, int should_block);
-double v_timer();
 
 
 extern int device_fd;   /* serial device file descriptor (or -1 if not yet opened) */
