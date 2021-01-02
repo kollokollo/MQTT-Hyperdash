@@ -131,6 +131,8 @@ int set_interface_attribs(int fd, int speed, int parity) {
   memset(&tty, 0, sizeof tty);
   if(tcgetattr(fd, &tty) != 0) {perror("error from tcgetattr");return -1;}
 
+  if(speed==115200) speed=B115200;
+
   cfsetospeed (&tty, speed);
   cfsetispeed (&tty, speed);
 

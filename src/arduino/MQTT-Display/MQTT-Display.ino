@@ -2,6 +2,10 @@
  * (c) Markus Hoffmann 2020
  */
 
+#include <DHT.h>
+#define DHTPIN            7         // Pin which is connected to the DHT sensor.
+#define DHTTYPE           DHT22     // DHT 22 (AM2302)
+
 #define HAVE_OLED 1   /* If an OLED Display is connected */
 #include "Arduino.h"
 #ifdef HAVE_OLED
@@ -16,11 +20,13 @@
 signed char verbose;
 unsigned int mem_valid __attribute__ ((section (".noinit")));
 long int lastmeasurement;
+long int lastactivity;
 void push_mqtt_topic(const char *topic,char *payload);
 void push_mqtt_topic_number(const char *topic,int n);
 
+DHT dht(DHTPIN, DHTTYPE);
 
-#define CMD_BUF_LEN 128
+#define CMD_BUF_LEN 256
 char cmd[CMD_BUF_LEN];
 char cmd_i=0;
 
@@ -54,7 +60,8 @@ void intro() {
 void setup(void) {
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, 1);
-  Serial.begin(9600);
+  Serial.begin(115200);
+  dht.begin();
 
 #ifdef HAVE_OLED
   OLED_setup();
@@ -70,23 +77,32 @@ void setup(void) {
   if(verbose>=0) delay(1000); /* das noch, damit intro() länger stehen bleibt */
 
   bat_status(59);
-  lastmeasurement=millis();
+  lastactivity=lastmeasurement=millis();
 }
 
 void do_mqtt(char *topic,char *p) {
-#ifdef HAVE_OLED
-  oled.setCursor(0,1);
-  oled.print(topic);
-  oled.print(F("="));
-  oled.println(p);
-#endif
   if(!strcmp(topic,"VERBOSE_DC")) verbose=atoi(p);
   else if(!strcmp(topic,"ACTIVITY_DM")) ; /* silently ignore the topic, sent back*/
   else if(!strcmp(topic,"BOOT")) ; /* silently ignore the topic, sent back*/
   else if(!strcmp(topic,"FIRMWARE")) ; /* silently ignore the topic, sent back*/
-  else if(!strcmp(topic,"STATUS_DM")) {
+  else if(!strcmp(topic,"TEMP_AM")) {
+    oled.set2X();
+    oled.setCursor(0,0);
+    oled.print(p);
+    oled.print(F(" "));
+    oled.set1X();
+  }
+  else if(!strcmp(topic,"HUMI_AM")) {
+    oled.set2X();
     oled.setCursor(0,2);
-    oled.print(F("Status: "));
+    oled.print(p);
+    oled.print(F(" "));
+    oled.set1X();
+  }
+  else if(!strcmp(topic,"TP_AM")) ; /* silently ignore the topic, sent back*/
+  else if(!strcmp(topic,"STATUS_DM")) {
+    oled.setCursor(80,0);
+    oled.print(F("S: "));
     oled.println(p);
   } 
   else if(!strcmp(topic,"STATUS_SM")) {
@@ -98,11 +114,8 @@ void do_mqtt(char *topic,char *p) {
     if(cmd==99) reset();  
   }
   else {
-    Serial.println(F("I: unrecognized topic:"));
-    Serial.print  (F("I: TOPIC:"));
+    Serial.print  (F("I: unrecognized TOPIC: "));
     Serial.println(topic);
-    Serial.print  (F("I: payload:"));
-    Serial.println(p);
   }
 }
 
@@ -181,13 +194,22 @@ void push_mqtt_topic_number(const char *topic,int n) {
   Serial.print("=");
   Serial.println(n);
 }
+void push_mqtt_topic_numberf(const char *topic,float n,const char *unit) {
+  Serial.print(F("MQTT:"));
+  Serial.print(topic);
+  Serial.print(F("="));
+  Serial.print(n);
+  Serial.print(F(" "));
+  Serial.println(unit);
+}
 
 
 int activity_dm=0;
 
 
 void loop(void) {
-  long int a=millis()-lastmeasurement;
+  long int a=millis()-lastactivity;
+  long int b=millis()-lastmeasurement;
 /*  Do the activity beat...
  */
   if(a>1000) { 
@@ -195,7 +217,7 @@ void loop(void) {
     Serial.print(F("ACTIVITY_DM="));
     Serial.println(activity_dm);
 
-    oled.setCursor(64,0);
+    oled.setCursor(96,0);
     if(activity_dm==0) oled.print("|");
     else if(activity_dm==1) oled.print("/");
     else if(activity_dm==2) oled.print("-");
@@ -203,9 +225,20 @@ void loop(void) {
     
     activity_dm++;
     if(activity_dm>=4) activity_dm=0;
-    lastmeasurement=millis();
+    lastactivity=millis(); 
   }
-
+  /* Do the measurement */
+  if(b>5000) { 
+    float h = dht.readHumidity();
+    // Read temperature as Celsius (the default)
+    float t = dht.readTemperature();
+  // Compute heat index in Celsius (isFahreheit = false)
+  float hic = dht.computeHeatIndex(t, h, false);  
+    push_mqtt_topic_numberf("TEMP_AM",t,"C");
+    push_mqtt_topic_numberf("HUMI_AM",h,"%");
+    push_mqtt_topic_numberf("TP_AM",hic,"C");
+    lastmeasurement=millis(); 
+  }
  /*  Collect bytes from the console to perform commands... 
  *  The serial library uses a 128 bytes input buffer....
  */
@@ -219,5 +252,5 @@ void loop(void) {
       }
     } else if(cmd_i<CMD_BUF_LEN) cmd_i++;
   }
-  delay(50); /* let serial stuff finish */
+  delay(10); /* let serial stuff finish */
 }

@@ -47,7 +47,7 @@ a list with individual topics.
 
 Run this e.g. with: 
 
-./mqtt2serial --broker tcp://localhost:1883 --prefix "ARDUINO" --device /dev/ttyUSB0 --baudrate 9600 
+./mqtt2serial --broker tcp://localhost:1883 --prefix "ARDUINO" --device /dev/ttyUSB0 --baudrate 115200 
 
 and watch the topics with 
 
