@@ -1,0 +1,2 @@
+# For Arduino Nano (blue)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct} == "7523", MODE="666", GROUP="dialout", SYMLINK+="ttyarduino%n"
