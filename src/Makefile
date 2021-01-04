@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.03
 
-RELEASE=13
+RELEASE=14
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -325,7 +325,7 @@ deb :	$(BINDIST) doc-pak
 	sudo checkinstall -D --pkgname $(DEBNAME) --pkgversion $(LIBNO) \
 	--pkgrelease $(RELEASE)  \
 	--maintainer "kollo@users.sourceforge.net" \
-        --requires libc6,libsdl1.2debian,libsdl-gfx1.2-5,libsdl-ttf2.0-0,paho.mqtt.c \
+        --requires libsdl1.2debian,libsdl-gfx1.2-5,libsdl-ttf2.0-0 \
 	--backup  \
 	--pkggroup interpreters   \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
