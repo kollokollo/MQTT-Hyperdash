@@ -156,7 +156,7 @@ int mqtt_broker(char *url,char *user, char *passwd, char *cid) {
   if((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
     printf("MQTT Client: <%s> ",clientID);
     printf("Failed to connect, return code %d\n", rc);
-    mqtt_isconnected=1;
+    mqtt_isconnected=0;
     return(-1);
   }
   mqtt_isconnected=1;
