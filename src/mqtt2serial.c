@@ -239,16 +239,17 @@ int processinput(char *line) {
 
 
 int main(int argc, char* argv[]) {
-  int has_been_connected=0;
+  int has_been_connected=0;  /* MQTT */
   int err=0;
 
   kommandozeile(argc, argv);    /* process command line */
   if(do_persist) has_been_connected++;
-   if(verbose>0) {
+  if(verbose>0) {
     printf("Persistence mode=%d\n",do_persist);
     printf("Topic Prefix:    <%s>\n",topic_prefix);
     printf("Device : <%s>\n",device);
   }
+  mqtt_init();
   char buf[256];
   if(*topic_prefix) sprintf(buf,"%s/%s",topic_prefix,topic_pattern);
   else sprintf(buf,"%s",topic_pattern); 
@@ -277,8 +278,9 @@ int main(int argc, char* argv[]) {
       if(device_fd==-1) {
         if(device_setup(device,baudrate)) {
           device_init_success=0;
-	  perror("Device Setup failed. retry in 1 minute.");
+	  perror("Device Setup failed.");
 	  mqtt_publish_status(EX_UNAVAILABLE,"Serial Device Setup failed.");
+          printf("retry in %d minutes.\n",RECONNECTION_TIME/60);
 	  sleep(RECONNECTION_TIME);
         } else {
           device_init_success=1;
@@ -290,7 +292,7 @@ int main(int argc, char* argv[]) {
 	while(mqtt_isconnected && (err=device_loop())==0) {  /* Endless loop until error occurs ....*/
           if(verbose>2) printf("++++++ LOOP\n");
         }
-	if(err) {  /* Erial device error */
+	if(err) {  /* Serial device error */
           mqtt_publish_status(1,"Device stopped.");
           if(verbose>=0) printf("Device abort. Closing...\n");
           device_close();
@@ -302,7 +304,7 @@ int main(int argc, char* argv[]) {
       }
     }
     mqtt_unsubscribe_all();
-    printf("INFO: try to reconnect in %d secs...\n",RECONNECTION_PAUSE);
+    printf("INFO: try to reconnect mqtt broker in %d secs...\n",RECONNECTION_PAUSE);
     sleep(RECONNECTION_PAUSE);
   }
   mqtt_exit();  /* Verbindung zum Broker trennen. */ 
