@@ -3,34 +3,70 @@
 for MQTT Hyperdash V.1.02 (c) by Markus Hoffmann 
 (concept study from 2010)
 
+### Abstract
 
 Based on [rule engines](MQTT-rule-engine-howto.md) an automation concept can
-be describes which theoretically leads to a fully autonomous entity of machines, 
+be described which theoretically leads to a fully autonomous entity of machines, 
 all connected to each other via the MQTT framework.
 
-The rule engines allow to crate any level of 
-abstraction on the raw data and thus reduce the complexity of the individual
-signals as well as maintaining actual/measured states the subsystems are to 
-be in. A strong distinction between set-point- and actual-measured values is 
+The rule engines allow to crate any level of abstraction on the raw data and 
+thus reduce the complexity of the individual signals as well as maintaining 
+actual/measured states the subsystems are to be in. 
+A strong distinction between set-point- and actual-measured values is 
 essential here (actual value vs. target value).
  Both are supported by the 
 [MQTT-Hyperdash naming convention](MQTT-dashgen-naming-conventions.md).
 
-In particular, however, they are also suitable for generating status displays
+The framework is highly decentralized and allows for maximum autonomous
+control of large devices. Furthermore it can be expanded with the help of
+machine learning.
+We see applications in big facility operating systems, where expert knowledge 
+can be absorbed and more and more operation modes can be automatically
+established. Many sudden errors can also be reacted on and circumvented
+automatically. Finally it teaches the designers of all subsystems where
+additional sensors need to be implemented or installed, and where and when
+manual intervention is necessary.
+
+### Introduction
+
+Thinking of modern machine learning concepts, like artificial neural 
+networks and "deep learning", we think that they can be applied only if there is 
+a suitable interface to the device which presents the data and the 
+automation control in a more standardized manner, so that the leaning 
+techniques can be plugged onto the system. The neuronal networks always operate 
+on input values and produce output values, which have to integrate with the 
+system to be automated. And there is currently no generic way to do this.
+
+The automation concept consists of following ingredients:
+* a decentralized parameter database, 
+* rule engines, 
+* actual value vs. target value distinction,
+* state transition heuristics, 
+* path-length calculations, and
+* machine learning extensions. 
+
+Most of these building blocks are well established in other fields. 
+We combine them to form a maximal autonomous automation framework for large
+devices with an unmanageable abundance of measured values and state parameters.
+
+
+###############################
+
+In particular, rule engines are also suitable for generating status displays
 for a higher-level system from a set of other, more subordinate status
 parameters: e.g. the state "The power supply is switched on and ready" can be
 generated from a series of individual messages from the individual power supply
 units and current or power measurements. A well-designed system also allows you
-to identify a number of fault conditions yourself. For this purpose, the
+to identify a number of fault conditions by itself. For this purpose, the
 hardware usually already provides error bits that can be evaluated accordingly.
+(These error bits are therefor also of the class "measured values".)
 
 A total status for a subsystem or even the entire area can be derived from the
 sum reports (with the help of the rule machines). This is an essential task of
-the control systems and helps the surgeon to get an overview before having to
+the control systems and helps the human operator to get an overview before having to
 deal with all details and individual messages for troubleshooting, for example.
-
 The prerequisite here, however, is that each individual component down to the
-hardware level must also generate adequate control signals which permit such a
+hardware level must also generate adequate signals which permit such a
 complete determination of the state. The criteria for the design of (new)
 hardware components must be aligned accordingly.
 
@@ -55,18 +91,21 @@ functionality, the error state can be left again for a normal operating state.
 
 If this is not guaranteed, the system comes into a state where manual
 intervention (if necessary with a screwdriver or programming tool) is
-unavoidable. This stands in the way of (complete) automation of the overall
+unavoidable. 
+
+This stands in the way of (complete) automation of the overall
 system. For this reason, as much expert knowledge as possible about
 troubleshooting, conditioning, operational sequences, etc. must be made
 available as a functionality. This happens on the lowest level (near the
 hardware) and on all levels above, up to the highest level, where ideally only
-one switch chooses between the states "On" and "Off".
+one switch chooses between the states "on" and "off". So every system must be
+designed and improved such that it is as complete as possible.
 
 In order to achieve this full automation, not only rules must be created that
 reliably recognize all states, but also regulations/procedures to achieve
-desired states (so-called "intentions"). These are usually instructions to the
-subsystems, which occur in a specific order and vary depending on the state of
-the system that has already been reached. 
+desired states. Wee will call these procedures "intentions". These are
+usually instructions to the subsystems, which occur in a specific order and vary
+depending on the state of the system that has already been reached.
 
 The abundance of instructions for all components of the overall system to
 achieve a normal operating state can quickly become confusing and ultimately
@@ -85,9 +124,7 @@ With the appropriate formulation of the individual tasks, a large part of the
 compositions can already be done dynamically and therefore automatically. This
 goal is to be achieved by the concept presented here.
 
-#### Observables
-
-Observables are system parameters from which a state can be derived using a rule
+__Observables__ are system parameters from which a state can be derived using a rule
 or a set of rules. This process is also called quantization of the
 multidimensional and continuous real state space.
 
@@ -102,10 +139,10 @@ enable statements to be made about the condition of the device to be checked.
 
 Expressions of desire of the operator, e.g. an entered numerical value, could
 also be regarded as an observable (looking at the human as a "device"), but this
-is not particularly useful in this concept.
+is not particularly useful in this concept. Instead we will refer to the desire of
+the operator as an intention.
 
-
-#### States 
+### States and State detection
 
 A (complete) set of n states is defined for each system (e.g. "on", "off" and
 "broken"). For this set, a status parameter (integer) is kept ready in the
@@ -133,7 +170,22 @@ themselves (i.e. represent a partition of the entire state space), e.g. "On" and
 one of the records may overlap. Each set of states must be reflected in its own
 parameter.
 
-#### State changes and Transitions
+One interesting application of artificial intelligence can be seen here. A
+state detection can of course be performed as well with black-box algorithms,
+e.g. neuronal networks. Such algorithms which perform a "classification" 
+have been proven to be useful in image detection and the author sees no reason
+why they would not be as well useful for state detection using all observables
+as inputs for the AI-algorithm. If no classic algorithm can be created for the
+state detection of a system and instead there are many training data available for
+training of a neuronal network, this can be a way to follow. 
+
+However, for automation this approach has limitations, because from black-box
+state detection it would still not be clear how to target a systems state. 
+There is no generic way to derive procedures (intentions), if it is not clear
+how the state detection works. But this might become subject to research topics.
+
+
+#### State Changes and Transitions
 
 A change of state can happen on its own, e.g. by the failure of a system, by
 reaching a temperature threshold or by the expiry of a preheating time or by
@@ -219,11 +271,10 @@ this are also more complicated, since they must contain knowledge of how it
 works and an expectation of the likely behavior of the system (usually from a
 model or a (physical) theory). However, since these models can only access
 quantized information that is disturbed by the measurement accuracy, they have
-to make certain assumptions that are not guaranteed to, but probably must, apply.
-There are therefore "good" and "bad" procedures, in the sense that the former
-are more likely to achieve the desired goal. This is the reason for the
+to make certain assumptions that are not guaranteed to, but probably must,
+apply. There are therefore "good" and "bad" procedures, in the sense that the
+former are more likely to achieve the desired goal. This is the reason for the
 particular difficulty in automation.
-
 
 #### Implementing Intentions
 
@@ -232,17 +283,18 @@ Following belongs to an "intention":
 1. two corresponding parameters:
    a) the detected state (actual state) and corresponding
    b) the desired state (target state),
-2. a representation of the transition matrix with entries about internal actions, combinations of intentions and prohibited transitions,
+2. a representation of the transition matrix with entries about internal 
+   actions, combinations of intentions and prohibited transitions,
 3. a table with heuristic evaluation factors ("lengths"),
-4. optionally one or more rules and
+4. optionally one or more rules R and
 5. optionally one or more internal promotions with associated ratings.
 
 <img src="images/intention.png">
 Figure: How an intention works in the automation framework.
 
-A rule that contains the two parameters as trigger parameters in its input
-quantity (and optionally any number of others) is triggered whenever either the
-current detected state changes or the target state changes. The rule selects a
+A rule R using the two parameters as trigger inputs (and optionally any
+number of others) is triggered whenever either the current detected state
+changes or the target state changes. The rule selects a
 transition from the set of the maximum n*(n-1) possible transitions which are
 arranged in a transition matrix. This is based on another rule for evaluating
 the cheapest or shortest of all possible paths. These paths consist of a chain of
@@ -253,7 +305,15 @@ next step is carried out until the goal is reached, in which case nothing is
 done. If the target cannot be reached by this way, something is fundamentally
 wrong and need to be (manually) fixed. This can be easily detected by a 
 permanent discrepancy between the actual and current state parameters which 
-could flag a warning.
+could flag a warning. However, if state
+detection as well as length calculation work correctly, the faulty path would
+have marked itself with an infinite length so that it would not have been
+entered. Instead the intention would have detected this as a "There is no
+route to destination" error, which of course would need to be (manually) fixed
+as well.
+
+Now lets look more closely to the individual actions to be performed. There are
+two basic types of actions, called __internal__ and __external__.
 
 An action can either be carried out within the system, e.g. if the system is
 directly connected to the hardware, or it is defined by a number of other
@@ -282,19 +342,18 @@ Suppose a system that is in the "ON" state is to change to the "OFF" state.
 Assume there are two ways to do this. First, it can change directly to the off
 state, and secondly it can go to the standby state and then to the off state.
 The last route is obviously longer and therefore the direct route should be
-followed. 
+followed.
 
-Or another example: Should several systems intentionally go to other
-states, the evaluation of this transition depends on how many systems are
-already in the desired state.
-Thus, for the transition of an exemplary system from the "not ready" state to 
-the "all ready" state, all 300 subsystems must be in the "ready" state. 
-However, the "length" of this route is certainly dependent on the number of 
-subsystems that are already in the desired state.
+Or another example: Should several systems intentionally go to other states, the
+evaluation of this transition depends on how many systems are already in the
+desired state. Thus, for the transition of an exemplary system from the "not
+ready" state to the "all ready" state, all 300 subsystems must be in the "ready"
+state. However, the "length" of this route is certainly dependent on the number
+of subsystems that are already in the desired state.
 
-Rules must therefore be found to evaluate these actions. The following approach
-is suggested here:
+Rules must therefore be found to evaluate these actions. 
 
+### action heuristics
 
 1. Internal actions get a heuristically found evaluation factor ("length"),
 whereby a length of 0 means that the action does not need to be carried out 
@@ -333,10 +392,11 @@ already been reached do not make any contribution, in this case the length
 calculation for the individual system will deliver l_i = 0. If a prohibited
 action is involved, the overall action is also prohibited, namely if w>=1.
 
-In this way, "lengths" (recursive) can be calculated for all transitions.
+In this way, "lengths" can be calculated (recursively) for all transitions.
 
-The path with the smallest overall length is then the cheapest. So the intention
-triggers a transition, which represents a step in this direction.
+The path with the smallest overall length is then the cheapest and most optimal.
+So the intention triggers a transition, which represents a step in this
+direction.
 
 #### Mixed Actions
 
@@ -392,59 +452,62 @@ shortest path heading the target state.
 
 (Why it is better not to use sequences).
 
+We want to outline how one can not use sequences but achieve the same result. 
 
 The implementation of procedures in so-called sequences, i.e. chronologically
 ordered instructions, which are processed sequentially (i.e. one after the
 other), seems to be more suitable and easier to implement at least for some
 tasks than the definition of many extra states with corresponding dependencies.
 
-A well designed implementation of a sequence must always take into account the 
-risk that certain instructions from the sequence are not executed correctly. 
-After each step in the
-sequence, you should actually first carefully check whether the desired action
-was carried out without errors. If not, the sequence is usually not allowed to
-continue and would either have to be terminated or to run in one of a number of
-branches that take account of the error that occurred and, if possible, return
-to the actual sequence. It is hardly possible to catch all possible errors in
-this way, so the sequence will very likely miss an error, and the machine will
-not end up in the achieved state, but instead in an uncontrolled other state
-(because, for example, the sequence simply continued even though an error
-occurred in a sub-step that was overlooked). In order to find out in which one, a
-complex error analysis procedure is required.
+However, a well designed implementation of a sequence must always take into
+account the risk that certain instructions from the sequence are not executed
+correctly. After each step in the sequence, one must actually first carefully
+check whether the desired action was carried out without errors. If not, the
+sequence is usually not allowed to continue and would either have to be
+terminated or to run in one of a number of branches that take account of the
+error that occurred and, if possible, return to the actual sequence. It is
+hardly possible to catch all possible errors in this way, so the sequence will
+very likely miss an error, and the machine will not end up in the achieved
+state, but instead in an uncontrolled other state (because, for example, the
+sequence simply continued even though an error occurred in a sub-step that was
+overlooked). In order to find out in which one, a complex error analysis 
+procedure is required.
 
-In short: For small and reliable steps, a sequence can make sense in terms of 
-simplicity, clarity and quick implementation.
+In short: For small and reliable steps, a sequence can make sense in terms of
+simplicity, clarity and quick implementation. Larger sequences would not allow
+good automation. 
 
-For example, in the way they can appear in the definition
-of rules and intentions. In the case of the rules,
-however, they should mainly be used to implement
-algorithms, i.e. pure computing processes, where only one
-step should be calculated in iterative processes.
-Sequences in rule definitions should therefore not be used
-to query and set parameters outside those agreed in the
-set of input and output parameters, although this is not
-explicitly prohibited, and in some cases can make sense.
-For intentions, the consideration only applies to the
-"internal" actions anyway, since by definition all others
-cannot be sequences, but may trigger additional rules and
-intentions. In the case of the internal actions, it must
-therefore also be ensured that a possible success or
-failure of the sequence can later be detected on the basis
-of suitable measured states. In this case the internal
-actions can be seen as "fire and forget" sequences.
-
+Small mini-sequences make sense, for example, in the way they can appear in the
+definition of rules and intentions. In the case of the rules, however, they
+should mainly be used to implement algorithms, i.e. pure computing processes,
+where only one step should be calculated in iterative processes. The
+mini-sequence must logically be atomic in a way, that their execution can appear
+in no time and that no intermediate (error-) states can occur, nor that any
+waiting, polling or blocking may occur. Sequences in rule definitions should
+therefore not be used to query and set parameters outside those agreed in the
+set of input and output parameters, although this is not explicitly prohibited,
+and in some cases can make sense. For intentions, the consideration only applies
+to the "internal" actions anyway, since by definition all others cannot be
+sequenced, but may trigger additional rules and intentions. In the case of the
+internal actions, it must therefore also be ensured that a possible success or
+failure of the sequence can later be detected on the basis of suitable measured
+states. In this case the internal actions can be seen as "fire and forget"
+sequences.
 
 Relatively quickly, however, a sequence becomes susceptible to incomplete
 implementation and the resulting uncontrolled changes in state, which, after a
-certain level of complexity (which is reached quite quickly), becomes uncontrollable
-and therefore unreliable. This is contrary to the desired robustness.
+certain level of complexity (which is reached quite quickly), becomes
+uncontrollable and therefore unreliable. This is contrary to the desired
+robustness.
 
-This concept is therefore intended to limit the use of sequences to an absolutely
-necessary extent and only allow them where the instructions can be safely executed
-or where there is (yet) no diagnosis for the detection of errors anyway.
-
-In all other cases, the use of sequences (i.e. actions that cannot be triggered at
-the same time where the order is important) should therefore be avoided.
+This concept is therefore intended to limit the use of sequences to an
+absolutely necessary extent and only allow them where the instructions can be
+safely executed or where there is (yet) no diagnosis for the detection of errors
+anyway.
+In all other cases, the use of sequences should therefore be avoided. Instead 
+a chain of carefully designed intermediate states should be implemented. The 
+sequence can then be broken up in individual intentions which under normal 
+conditions perform actions one after another visiting all intermediate states.
 
 A consistent implementation using the intentions and rules automatically checks the
 statuses achieved and finds its way independently. The sequence of actions to be
@@ -469,44 +532,55 @@ targeted manner. It is only suitable for diagnosis.
 
 ### Avoiding contradictions in the rule machinery
 
+What will happen if design errors are (accidentally) build into the system? It
+is often very difficult to predict all global consequences on local design
+changes. Even if a new subsystem is integrated that could lead to unforeseen
+behavior. So it is unavoidable to eventually introduce contradictions in the
+rule and intention machinery. We will see that robustness against such 
+faults is inherently already in the concept. You will get that for free.
+
 An interesting feature of the automation concept presented here is that
-contradictions automatically prohibit themselves. That is, states that are involved
-in such contradictions cannot be reached automatically.
+contradictions automatically prohibit themselves. That is, states that are
+involved in such contradictions cannot be reached automatically.
 
-However, this does not mean that no contradictions can be constructed. For example,
-two rules can form a cycle that causes the parameters involved to oscillate and thus
-show unstable behavior. Great care must therefore always be taken when cycles are
-used in the regulations.
+However, this does not mean that no contradictions can be constructed. For
+example, two rules can form a cycle that causes the parameters involved to
+oscillate and thus show unstable behavior. Great care must therefore always be
+taken when cycles are used in the regulations.
 
-Contradictions in intentions can also be expressed in another form: e.g. an action
-of another intention can demand a state, which in turn leads to the former intention
-changing, because in turn a different state is required by the former.
+Contradictions in intentions can also be expressed in another form: e.g. an
+action of another intention can demand a state, which in turn leads to the
+former intention changing, because in turn a different state is required by the
+former.
 
-This can also form cycles. Cycles of this type, however, are already noticeable in
-the autonomous length calculation and lead to the lengths of the paths concerned
-becoming longer and longer and diverging in an iterative step. Eventually a maximum
-length is reached where the process stops. However, maximum length means that this
-path becomes a forbidden path. In this way, it is possible that all paths that lead
-to conflicting states are prohibited. These problems are then exposed through a
-permanent discrepancy between target and actual states of some intentions, where the
-problem can then be easily localized and hopefully remedied.
+This can also form cycles. Cycles of this type, however, are already noticeable
+in the autonomous length calculation and lead to the lengths of the paths
+concerned becoming longer and longer and diverging in an iterative step.
+Eventually a maximum length is reached where the process stops. However, maximum
+length means that this path becomes a forbidden path. In this way, it is
+possible that all paths that lead to conflicting states are prohibited. These
+problems are then exposed through a permanent discrepancy between target and
+actual states of some intentions, where the problem can then be easily localized
+and hopefully remedied. Debugging will be easy.
 
 ### Consequences
 
-From the described automation concept there are some (quite desirable) implications
-which should be considered:
+From the described automation concept there are some (quite desirable)
+implications which should be considered:
 
-1. Non-converging (unstable) cycles in the set of rules eliminate themselves since
-their length adds up to infinity, and these paths are then prohibited.
+1. Non-converging (unstable) cycles in the set of rules eliminate themselves
+since their length adds up to infinity, and these paths are then prohibited.
 
-2. Distance computing will consume a great deal of computing power, since every 
-   change in the state of the subordinate systems, if it leads to a change in 
-   length there, triggers the recalculation of the distance matrices of all 
-   superordinate systems.
-   But since everything happens in parallel, the load for a single computer is low.
-
+2. Distance computing will consume a great deal of computing power, since
+every change in the state of the subordinate systems, if it leads to a change in
+length there, triggers the recalculation of the distance matrices of all
+super-ordinate systems. But since everything happens in parallel, the load for
+each single computer is low.
 
 ### A path finder
+
+One more thought on the algorithm, which picks the shortest path in an
+intention.
 
 The shortest path is to be found from a series of possible paths from an initial
 state A to a final state B.
@@ -529,8 +603,8 @@ The same applies to directed, not strongly connected graphs. These requirements
 apply to our problem.
 
 The algorithm works as follows: The next best node with the shortest path is
-successively included in a result set and removed from the set of nodes still to be
-processed.
+successively included in a result set and removed from the set of nodes still to
+be processed.
 
 Route planners are a prominent example where this algorithm can be used. The graph 
 here represents the road network that connects different points. We are looking 
@@ -538,8 +612,22 @@ for the shortest route between two points. Dijkstra's algorithm is
 also used on the Internet as a routing algorithm in OSPF (Open Shortest Path First, 
 is a term used in computer network technology).
 
-An alternative algorithm for finding the shortest paths, which is based on 
+An alternative algorithm for finding the shortest paths, which is based on
 Bellman's principle of optimality, is the Floyd Warshall algorithm. 
 The principle of optimality states that if the shortest path leads from A to C 
 via B, the partial path A B must also be the shortest path from A to B.
-   
+
+### Conclusion
+
+The described concept for a full automation can be used to automate a big 
+and complex machine in a maximal way.
+
+A lot of design decisions would have to be
+made, like parameter name conventions, probably a scripting language to
+describe rules and intentions in a convenient fashion, so that after a very
+short learning time nearly everybody involved into the system can participate
+and add new procedures rules and intentions into the framework. 
+
+The concept leaved enough room to also include black-box-algorithms found in
+modern AI. It unifies the whole environment so that -- for the first time -- a
+full automation looks possible.
