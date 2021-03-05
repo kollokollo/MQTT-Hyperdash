@@ -174,7 +174,7 @@ you can simply do a
  sudo make install
 </pre>
 
-## Test run
+### Test run
 
 Open a terminal and do a 
 
@@ -185,14 +185,19 @@ hyperdash main.dash &
 have fun....
 
 
-### Download
+## Download
 
-There is an (inofficial) binary distribution of MQTT-Hyperdash and the 
-paho c library (.deb files) on sourceforge. But it is highly recommended 
-to compile the most recent version from sources (see above). 
+There is an (inofficial) binary distribution of MQTT-Hyperdash and the paho c
+library (.deb files) for 32bit linux, 64bit linux, Raspberry Pi and an alpha
+version for MS WINDOWS on codeberg in the releases section.  But it is highly
+recommended  to compile the most recent version from sources (see above). 
+
+<a href="https://codeberg.org/kollo/MQTT-Hyperdash/">
+    <img alt="Get it on Codeberg" src="https://get-it-on.codeberg.org/get-it-on-blue-on-white.png" height="60">
+</a>
 
 
-### Screenshots
+## Screenshots
 
 <div style="display:flex;">
 <img alt="App image" src="screenshots/sysmeasure.png" width="30%">
