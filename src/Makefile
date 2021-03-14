@@ -335,6 +335,15 @@ deb :	$(BINDIST) doc-pak
 	mv $(DEBNAME)_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
 
 
+
+# excecute the Dockerfile and extract the debian package and the User Manual
+docker: docker/Dockerfile
+	cd docker;sudo docker build . -t kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE)
+	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE) tcsh -c "ls -al;df;cp /*.deb /*.pdf /dockerfilevolume/"
+#	cd docker;sudo docker run --net=host --env="DISPLAY" -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE)
+
+
+
 # Auto dependency stuff (from info make)
 %.d: %.c
 	$(CC) -MM -MT $(@:.d=.o) -MT $@ $(CPPFLAGS) $< -o $@
