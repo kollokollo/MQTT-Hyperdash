@@ -1,0 +1,13 @@
+mqtt-hyperdash (1.03-14) unstable; urgency=low
+
+  * fixed possible bufferoverrun
+
+ -- Markus Hoffmann <kollo@users.sourceforge.net>  Sun, 26 May 2020 16:03:00 +0200
+
+x11basic (1.01-2) unstable; urgency=low
+
+  * Fixed manpage typo.
+
+ -- Markus Hoffmann <kollo@users.sourceforge.net>  Sat, 10 May 2020 16:03:26 +0200
+
+# For older changelog entries, run 'apt-get changelog x11basic'

@@ -253,7 +253,7 @@ install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics hddashgen dash
 	install -m 644 mqtt2serial.1 $(MANDIR)/man1/
 	install -m 644 mqtt-list-topics.1 $(MANDIR)/man1/
 	install -d $(DATADIR)/hyperdash
-	install -m 644 create_tree.sh $(DATADIR)/hyperdash/
+	install -m 755 create_tree.sh $(DATADIR)/hyperdash/
 	install -m 775 -d $(DATADIR)/hyperdash/bitmaps
 	install -m 644 $(BITMAPS) $(DATADIR)/hyperdash/bitmaps/
 	install -m 775 -d $(DATADIR)/hyperdash/icons

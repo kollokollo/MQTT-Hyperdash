@@ -1,1 +1,6 @@
-A universal MQTT Dashboard.
+universal MQTT dashboard and rule machinery.
+
+This is a fast and efficient dashboard (GUI) for the MQTT framework. It uses
+the SDL library for graphics rendering, the paho library for communication and
+the gtk2 framework for user input. The dashboard runs on linux, 
+but a port to other operating systems should be easy. 
