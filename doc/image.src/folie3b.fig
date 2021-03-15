@@ -1,0 +1,36 @@
+#FIG 3.2
+Landscape
+Center
+Metric
+A4      
+180.70
+Single
+-2
+1200 2
+6 585 1080 5490 1485
+4 0 0 50 0 22 12 0.0000 4 135 4905 585 1215 xxxx use it. It is scalable but a full automation and\001
+4 0 0 50 0 22 12 0.0000 4 180 2910 585 1440 exception handling is actually impossible.\001
+-6
+2 1 0 1 4 7 50 0 -1 0.000 0 0 -1 0 0 2
+	 585 585 1890 585
+2 1 0 1 4 7 50 0 -1 0.000 0 0 -1 0 0 2
+	 585 630 1890 630
+2 1 0 2 4 7 50 0 -1 0.000 0 0 -1 0 0 2
+	 4095 1260 4365 1260
+2 1 0 2 4 7 50 0 -1 0.000 0 0 -1 0 0 2
+	 1800 1935 2340 1935
+2 1 0 2 4 7 50 0 -1 0.000 0 0 -1 0 0 2
+	 1935 2385 2475 2385
+4 0 4 50 0 22 12 0.0000 4 165 840 585 990 rank growth\001
+4 0 0 50 0 22 12 0.0000 4 180 5145 585 1890 Istead a bunch of human operators is needed to keep the machine running\001
+4 0 0 50 0 22 12 0.0000 4 180 5490 585 2340 Also a large pool of human experts  is necessary to track exeptional conditions.\001
+4 0 0 50 0 22 12 0.0000 4 165 3090 585 3240 This is the best way we have at the moment. \001
+4 0 0 50 0 22 12 0.0000 4 135 240 585 3690 But\001
+4 0 28 50 0 22 38 0.0000 4 405 4080 1395 3780 can we do better ?\001
+4 0 0 50 0 22 20 0.0000 4 210 1305 585 540 comments:\001
+4 0 6 51 0 10 60 0.0000 4 645 330 360 3015 !\001
+4 0 0 50 0 10 60 0.0000 4 645 330 270 2970 !\001
+4 0 0 50 0 22 12 0.0000 4 180 5790 585 2790 Operator error is one of the most frequent sources for reduced machine availability.\001
+4 0 16 50 0 14 12 0.0000 4 150 4200 900 4050 *** pushing to the performance limit ***\001
+4 0 0 50 0 22 12 0.0000 4 180 4485 1530 990 is a "good" concept. It works and many existing accelerators like\001
+4 0 0 50 0 22 12 0.0000 4 180 4170 585 2115 and for otimization of all parameters and for error detection.\001
