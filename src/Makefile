@@ -1,4 +1,4 @@
-# Makefile for MQTT-Hyperdash (c) Markus Hoffmann V.1.02
+# Makefile for MQTT-Hyperdash (c) Markus Hoffmann V.1.03
 
 # This file is part of MQTT-Hyperdash, the universal MQTT Dashboard
 # ======================================================================
@@ -22,7 +22,7 @@ MANDIR=${datarootdir}/man
 
 LIBNO=1.03
 
-RELEASE=14
+RELEASE=15
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -123,7 +123,7 @@ BITMAPS= ../bitmaps/alarmRing ../bitmaps/bombe_gross  ../bitmaps/Hygrometer \
 	 ../bitmaps/SmallTriagDwn ../bitmaps/TickLeft ../bitmaps/TickRight \
 	 ../bitmaps/Sun ../bitmaps/default
 
-MANPAGES= hddashgen.1  hyperdash.1  mqtt-list-topics.1 dashdesign.1
+MANPAGES= hddashgen.1  hyperdash.1  mqtt-list-topics.1 dashdesign.1 sysmeasure.1
 
 # Image files
 
@@ -252,6 +252,7 @@ install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics hddashgen dash
 	install -m 644 dashdesign.1 $(MANDIR)/man1/
 	install -m 644 mqtt2serial.1 $(MANDIR)/man1/
 	install -m 644 mqtt-list-topics.1 $(MANDIR)/man1/
+	install -m 644 sysmeasure.1 $(MANDIR)/man1/
 	install -d $(DATADIR)/hyperdash
 	install -m 755 create_tree.sh $(DATADIR)/hyperdash/
 	install -m 775 -d $(DATADIR)/hyperdash/bitmaps
@@ -274,6 +275,7 @@ uninstall :
 	rm -f $(MANDIR)/man1/dashdesign.1
 	rm -f $(MANDIR)/man1/mqtt2serial.1
 	rm -f $(MANDIR)/man1/mqtt-list-topics.1
+	rm -f $(MANDIR)/man1/sysmeasure.1
 	rm -rf $(DATADIR)/hyperdash/bitmaps
 	rm -rf $(DATADIR)/hyperdash/icons
 	rm -rf $(DATADIR)/hyperdash/dashboards
@@ -315,8 +317,8 @@ DEBDOC=	../doc/ACKNOWLEGEMENTS ../doc/AUTHORS \
 doc-pak: $(DEBDOC)
 	mkdir -p $@
 	cp $(DEBDOC) $@/
-#	cp Debian/changelog.Debian $@/
-#	gzip -9 $@/changelog.Debian
+	cp Debian/changelog.Debian $@/
+	gzip -9 $@/changelog.Debian
 	cp Debian/copyright $@/
 
 DEBNAME= mqtt-hyperdash

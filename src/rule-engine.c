@@ -139,6 +139,11 @@ void default_measure_loop();
 /************* include the rule definition **************************/
 #include RULE
 /********************************************************************/
+/* Configuration variables */
+
+char *broker_url=BROKER;
+char *broker_user=USER;
+char *broker_passwd=PASSWD;
 
 int num_rules=sizeof(rules)/sizeof(RULEDEF);
 
@@ -241,11 +246,14 @@ static void usage() {
   printf(
     "\nUsage: %s [-hvq] ---\t%s ruel engine.\n\n"
     "  -h --help\t\t---\tusage\n"
+    "  --broker <url>\t---\tdefine the broker url used [%s]\n"
+    "  --user <user>\t\t---\tdefine the username used [%s]\n"
+    "  --user <passwd>\t---\tdefine the password used [%s]\n"
     "  --persist\t\t---\tbe persistent even when connection is impossible\t\n"
     "  --prefix <prefix>\t---\tset topic prefix\t\n"
     "  -v\t\t\t---\tbe more verbose\n"
     "  -q\t\t\t---\tbe more quiet\n"
-    ,CLIENT,CLIENT);
+    ,CLIENT,CLIENT,broker_url,broker_user,broker_passwd);
 }
 static void kommandozeile(int anzahl, char *argumente[]) {
   int count,quitflag=0;
@@ -255,10 +263,13 @@ static void kommandozeile(int anzahl, char *argumente[]) {
       usage();
       quitflag=1;
     } 
-    else if(!strcmp(argumente[count],"--persist"))   do_persist=1; 
-    else if(!strcmp(argumente[count],"--prefix"))    topic_prefix=argumente[++count];
-    else if(!strcmp(argumente[count],"-v"))	     verbose++;
-    else if(!strcmp(argumente[count],"-q"))	     verbose--;
+    else if(!strcmp(argumente[count],"--broker"))   broker_url=argumente[++count];
+    else if(!strcmp(argumente[count],"--user"))     broker_user=argumente[++count];
+    else if(!strcmp(argumente[count],"--passwd"))   broker_passwd=argumente[++count];
+    else if(!strcmp(argumente[count],"--persist"))  do_persist=1; 
+    else if(!strcmp(argumente[count],"--prefix"))   topic_prefix=argumente[++count];
+    else if(!strcmp(argumente[count],"-v"))	    verbose++;
+    else if(!strcmp(argumente[count],"-q"))	    verbose--;
     else if(*(argumente[count])=='-') ; /* do nothing, these could be options for the rule itself */
     else {
       /* do nothing, these could be options for rule itself */
@@ -304,7 +315,7 @@ int main(int argc, char* argv[]) {
   }
   while(1) {
     again:
-    rc=mqtt_broker(BROKER,USER,PASSWD,CLIENT);  /* connect to mqtt broker */
+    rc=mqtt_broker(broker_url,broker_user,broker_passwd,CLIENT);  /* connect to mqtt broker */
     if(rc==-1) {
       printf("MQTT Error: Could not connect to the MQTT broker %s.\n",BROKER);
       if(!has_been_connected) {

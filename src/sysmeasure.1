@@ -1,0 +1,87 @@
+.TH SYSMEASURE 1 04-Jan-2020 "Version 1.00" "MQTT Hyperdash"
+.SH NAME
+sysmeasure \- System performance measure MQTT ruel engine.
+.B sysmeasure
+.RI "[ " options " ] "
+
+.SH DESCRIPTION
+
+sysmeasure periodically gathers performace measures (e.g. load, disk usage) 
+and publishes them as MQTT topcs. 
+
+.SH OPTIONS
+.TP
+.BR \-q
+Be quiet and print less debug information. 
+.TP
+.BR \-v
+Be more verbose and print debug information. 
+.TP
+.BR \-\-broker " " \fIurl\fR
+specify the broker url. By default "tcp://localhost:1883" is used. 
+.TP
+.BR \-\-user " " \fIusername\fR
+specify a username for the broker.
+.TP
+.BR \-\-passwd " " \fIpasswd\fR
+specify a password for the broker. 
+.TP
+.BR \-\-prefix " " \fIprefix\fR
+specify a prefix to all TOPICs on the serial line.
+.TP
+.BR \-\-persist 
+always try to reconnect on connection losses.
+.TP
+.BR \-\-json 
+expand JSON properties. This is the default.
+.TP
+.BR \-\-nojson 
+do not expand JSON properties. 
+.TP
+.BR \-h ", " \-\-help
+print a short help and exit.
+.PP
+For detailed help and description of the MQTT principle take a 
+look at the README file coming with the package. 
+
+
+.SH EXAMPLES
+.nf
+sysmeasure --broker tcp://localhost:1883 --prefix "LOCAL" --persist
+.fi
+
+
+.SH VERSION
+Page was created for V.1.03
+
+.SH BUG REPORTS       
+
+If you find a bug in the MQTT Hyperdash software, you should report it. But
+first, you should make sure that it really is a bug, and that it appears in
+the latest version of the MQTT-Hyperdash package that you have.
+
+Once you have determined that a bug actually exists, mail a bug report to
+kollo@users.sourceforge.net. If you have a fix, you are welcome to mail that
+as well! Suggestions may be mailed to the bug tracking system.
+
+Comments and bug reports concerning this manual page should be directed to
+kollo@users.sourceforge.net.
+
+.SH AUTHOR
+Markus Hoffmann <kollo@users.sourceforge.net>
+
+.SH COPYRIGHT
+Copyright (C) 2019-2021 Markus Hoffmann 
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software 
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+.SH SEE ALSO
+mosquitto(1), mosquitto_pub(1), mosquitto_sub(1), hyperdash(1), mqtt-list-topics(1)
+
