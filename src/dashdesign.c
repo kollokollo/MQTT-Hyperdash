@@ -760,7 +760,24 @@ static gboolean on_leave(GtkWidget *darea, GdkEventCrossing *event) {
   gdk_window_set_cursor(window->window,dc);
   return(TRUE);
 }
+
+
+
+
+#ifdef WINDOWS
+#include <windows.h>
+int WINAPI  WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+    PSTR lpCmdLine, INT nCmdShow) {
+int argc=0;
+char **argv= (char **)CommandLineToArgvW(GetCommandLineW(), &argc);
+ if( NULL == argv)
+   {
+      wprintf(L"CommandLineToArgvW failed\n");
+      return 0;
+   }
+#else
 int main(int argc, char *argv[]) {
+#endif
   GtkWidget *menu_bar;
   GtkWidget *scrollarea;
   GtkWidget *vbox;

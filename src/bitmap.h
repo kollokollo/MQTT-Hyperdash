@@ -1,4 +1,4 @@
-/* BITMAP.H (c) Markus Hoffmann  */
+/* bitmap.h  (c) Markus Hoffmann*/
 
 /* This file is part of MQTT-Hyperdash, the MQTT Dashboard 
  * ============================================================

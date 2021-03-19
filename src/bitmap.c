@@ -6,11 +6,12 @@
  * COPYING for details
  */
 
-
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 #include "basics.h"
 #ifdef WINDOWS
   #include <windows.h>

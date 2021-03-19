@@ -11,9 +11,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
-#ifndef WINDOWS
 #include <gtk/gtk.h>
-#endif
 #include "config.h"
 #include "basics.h"
 #include "graphics.h"
@@ -119,10 +117,8 @@ int main(int anzahl, char *argumente[]) {
 #endif
   DASH *maindash;
   WINDOW *mainwindow;
-#ifndef WINDOWS
   gdk_threads_init();
   gtk_init (&anzahl, &argumente);
-#endif
   hyperdash_set_defaults();
     kommandozeile(anzahl, argumente);    /* process command line */
     if(!exist(ifilename)) {

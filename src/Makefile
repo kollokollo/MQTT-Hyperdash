@@ -18,11 +18,14 @@ BINDIR=${exec_prefix}/bin
 DATADIR=${datarootdir}
 ICONDIR=$(DATADIR)/icons/hicolor/scalable/apps
 DESKTOPDIR=$(DATADIR)/applications
+LIBDIR=${exec_prefix}/lib
 MANDIR=${datarootdir}/man
 
-LIBNO=1.03
-
-RELEASE=15
+NAME=		MQTT-Hyperdash
+DEBNAME=	mqtt-hyperdash
+LIBNO=		1.03
+RELEASE=	16
+YEAR=		2021
 
 # Register variables (-ffixed-reg) -Wall
 REGS=-fno-omit-frame-pointer  
@@ -32,7 +35,15 @@ OPT=-O3
 
 # Additional header file paths
 INC= 
-WININC=-I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/mqtt -I./WINDOWS/include/GMP
+WININC= -I./WINDOWS -I./WINDOWS/include -I./WINDOWS/include/mqtt -I./WINDOWS/include/GMP \
+	-I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 \
+	-I./WINDOWS/include/glib-2.0 \
+	-I./WINDOWS/include/gtk-2.0 \
+	-I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 \
+	-I/usr/include/harfbuzz -I/usr/include/pixman-1 -I/usr/include/gdk-pixbuf-2.0
+
+#    see:     `pkg-config --cflags gtk+-2.0`
+
 
 # defines for special flavours
 
@@ -40,11 +51,19 @@ DEF=
 
 # Compiler
 #CC=gcc  $(REGS)
-CC=gcc -Wall -g
+CC=gcc -Wall
+CCSHARED=gcc  -fPIC -shared -Wl,-Bsymbolic-functions 
 
 # Cross-Compiler fuer Windows-Excecutable
 
-WINCC=i686-w64-mingw32-gcc
+WINCC=i686-w64-mingw32-gcc -std=c99
+
+# Cross-Compiler fuer ATARI ST TOS
+TOSCC=m68k-atari-mint-gcc -std=c99
+
+# Cross-Compiler fuer ARM-Linux-Excecutable
+
+ARMCC=arm-linux-gcc 
 
 # Preprocessor
 CPP=gcc -E
@@ -56,6 +75,7 @@ CFLAGS= -g -O2 $(INC) $(DEF) $(OPT) $(REGS) `pkg-config --cflags gtk+-2.0`
 
 LIBOBJS=  hyperdash.o mqtt.o lodepng.o file.o util.o graphics.o \
           bitmap.o input.o input_value_dialog.o elements.o subscribe.o
+LIBCSRC=  $(LIBOBJS:.o=.c)
 
 MAINOBJS= main.o $(LIBOBJS)
 
@@ -130,91 +150,112 @@ MANPAGES= hddashgen.1  hyperdash.1  mqtt-list-topics.1 dashdesign.1 sysmeasure.1
 ICONS=   ../icons/MQTT-Hyperdash-logo.png  ../icons/README \
          ../icons/dashtree.png ../icons/default.png
 
+EXE=	hyperdash mqtt-list-topics dashdesign sysmeasure hddashgen dashdesign mqtt2serial
 
-DIST= ../README.md ../CONTRIBUTING.md ../doc/MQTT-Hyperdash.txt ../COPYING \
-	../doc/ACKNOWLEGEMENTS \
-	../doc/AUTHORS  \
-	../doc/MQTT-rule-engine-howto.md \
-	../doc/MQTT-Hyperdash-file-format.md \
-	../doc/MQTT-dashgen-naming-conventions.md \
-	../doc/MQTT-dashdesign-user-manual.md \
-	../doc/MQTT-Hyperdash-payload-conventions.md \
-	../doc/MQTT-Hyperdash.txt \
-      $(HSRC) $(CSRC) $(CSRC_EXTRA) $(RULESRC) MQTT-Hyperdash.iss \
+DOC=	../doc/MQTT-Hyperdash.txt ../doc/MQTT-rule-engine-howto.md ../doc/MQTT-Hyperdash-file-format.md \
+	../doc/MQTT-dashgen-naming-conventions.md ../doc/MQTT-dashdesign-user-manual.md \
+	../doc/MQTT-Hyperdash-payload-conventions.md ../doc/ACKNOWLEGEMENTS ../doc/AUTHORS
+
+
+DIST= ../README.md ../CONTRIBUTING.md ../COPYING \
+	$(DOC) $(HSRC) $(CSRC) $(CSRC_EXTRA) $(RULESRC) MQTT-Hyperdash.iss.in \
         Makefile create_tree.sh \
         hyperdash.desktop  \
         $(BITMAPS) $(ICONS) $(EXAMPLES) $(MANPAGES)
 
+WINEXE= hyperdash.exe mqtt-list-topics.exe hddashgen.exe mqtt2serial.exe dashdesign.exe
 
-WINDIST=WINDOWS/lib/SDL.dll \
-        WINDOWS/lib/README-SDL.txt \
-	hyperdash.exe  \
-	mqtt-list-topics.exe  \
-        WINDOWS/readme-windows.txt \
-	WINDOWS/hyperdash.ico  WINDOWS/demo.dash \
-	WINDOWS/dash.ico ../COPYING ../RELEASE_NOTES INTRO
+DLL=	WINDOWS/lib/SDL.dll WINDOWS/lib/libfreetype-6.dll \
+	WINDOWS/lib/paho-mqtt3c.dll WINDOWS/lib/SDL_ttf.dll \
+	WINDOWS/lib/zlib1.dll \
+	WINDOWS/lib/libgdk-win32-2.0-0.dll \
+	WINDOWS/lib/libgtk-win32-2.0-0.dll \
+	WINDOWS/lib/libatk-1.0-0.dll \
+	WINDOWS/lib/libgdk_pixbuf-2.0-0.dll \
+	WINDOWS/lib/libgobject-2.0-0.dll \
+	WINDOWS/lib/libpangowin32-1.0-0.dll \
+	WINDOWS/lib/libcairo-2.dll \
+	WINDOWS/lib/libpng16-16.dll \
+	WINDOWS/lib/libffi-6.dll \
+	WINDOWS/lib/libgio-2.0-0.dll \
+	WINDOWS/lib/libiconv-2.dll \
+	WINDOWS/lib/libglib-2.0-0.dll \
+	WINDOWS/lib/libpango-1.0-0.dll
 
-DIST2=$(DIST)
+DLLTXT= WINDOWS/lib/README-SDL.txt \
+	WINDOWS/lib/LICENSE.freetype.txt \
+	WINDOWS/lib/LICENSE-SDL_ttf.txt \
+	WINDOWS/lib/LICENSE.zlib.txt \
+	WINDOWS/lib/README-paho.txt \
+	WINDOWS/lib/README-SDL_gfx.txt
 
-DIR=MQTT-Hyperdash-$(LIBNO)
-DIR2=MQTT-Hyperdash-src-$(LIBNO)
-DIR3=MQTT-Hyperdash-bin-$(LIBNO)
-DIR33=$(DIR)-bin
+WINDOC= WINDOWS/readme-windows.txt INTRO ../COPYING ../RELEASE_NOTES 
+
+
+WINDIST=$(DLL) $(DLLTXT) $(WINEXE) $(WINDOC) \
+	WINDOWS/hyperdash.ico  WINDOWS/demo.dash ../dashboards/main.dash \
+	WINDOWS/dash.ico 
+
+DIR=$(NAME)-$(LIBNO)
+DIR2=$(NAME)-src-$(LIBNO)
+DIR3=$(NAME)-bin-$(LIBNO)
 
 LINKFLAGS = 
 WINLINKFLAGS = -L./WINDOWS/lib 
+WINLIBS=	-lm -lgdi32 -lkernel32 -luser32 -lole32 -luuid -lwsock32 \
+		-lpaho-mqtt3c \
+		-lSDL  -lSDL_ttf -lzlib1 -lfreetype-6 \
+		-lgtk-win32-2.0-0 -lgdk-win32-2.0-0 \
+		-lpangocairo-1.0-0 -latk-1.0-0 -lcairo-2 \
+		-lgdk_pixbuf-2.0-0 \
+		-lgio-2.0-0 -lpango-1.0-0 -lgobject-2.0-0 -lglib-2.0-0 
+		
+		
+# -lfontconfig -lfreetype -lpangoft2-1.0 -lharfbuzz 
 
 LIBS = -lm -lpthread -lpaho-mqtt3c -lSDL -lSDL_gfx -lSDL_ttf -lX11 `pkg-config --libs gtk+-2.0`
 
-MYWINLIBS = WINDOWS/lib/libgfx.lib 
+STATICWINLIBS = WINDOWS/lib/libSDL_gfx.a
 
-BINDIST = hyperdash mqtt-list-topics sysmeasure hddashgen dashdesign mqtt2serial
+BINDIST = ../COPYING $(EXE)
 
-all :    hyperdash mqtt-list-topics sysmeasure hddashgen dashdesign mqtt2serial
+all :    $(EXE)
 
-configure : configure.in
-	autoconf
-#Makefile : Makefile.in
-#	./configure --prefix=/usr
-
-# config.h: config.h.in
-	./configure --prefix=/usr
  
 # Make the excecutable
 
-hyperdash :  $(MAINOBJS)
-	$(CC) -L. $(LINKFLAGS) -o $@ $(MAINOBJS) $(LIBS)
+hyperdash:  $(MAINOBJS)
+	$(CC) -L. $(LINKFLAGS) -o $@ $+ $(LIBS)
 
 # Make the exe for MS WINDOWS
 
-hyperdash.exe: $(CSRC) $(MYWINLIBS)
-	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  $(CSRC) \
-	-o $@ $(MYWINLIBS)  -lpaho-mqtt3c  -lSDL -lSDL_ttf
+hyperdash.exe: $(CSRC) WINDOWS/fnmatch.c $(STATICWINLIBS) WINDOWS/lib/SDL.dll WINDOWS/lib/SDL_ttf.dll
+	$(WINCC) $(WININC) $(WINLINKFLAGS) -DWINDOWS -o $@ $(CSRC) WINDOWS/fnmatch.c $(STATICWINLIBS) $(WINLIBS)
 
 
 dashdesign :  dashdesign.o menu.o element_groups.o $(LIBOBJS)
-	$(CC) -L. $(LINKFLAGS) -o $@ dashdesign.o menu.o element_groups.o \
-	$(LIBOBJS) $(LIBS)
+	$(CC) -L. $(LINKFLAGS) -o $@ $+ $(LIBS)
 
+dashdesign.exe: dashdesign.c menu.c element_groups.c $(LIBCSRC) WINDOWS/fnmatch.c $(STATICWINLIBS) WINDOWS/lib/SDL.dll WINDOWS/lib/SDL_ttf.dll
+	$(WINCC) $(WININC) $(WINLINKFLAGS) -DWINDOWS -o $@ dashdesign.c menu.c element_groups.c WINDOWS/fnmatch.c $(LIBCSRC) $(STATICWINLIBS) $(WINLIBS)
 
-hddashgen : hddashgen.c file.o hddashgen.h file.h
-	$(CC) hddashgen.c file.o -o $@ -lm 
+hddashgen : hddashgen.c file.o
+	$(CC) -o $@ $+ -lm 
 
-hddashgen.exe: hddashgen.c file.c  hddashgen.h file.h WINDOWS/fnmatch.c WINDOWS/getline.c
-	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  \
-	-o $@ hddashgen.c file.c WINDOWS/fnmatch.c WINDOWS/getline.c -lm -lpaho-mqtt3c
+hddashgen.exe: hddashgen.c file.c  WINDOWS/fnmatch.c WINDOWS/getline.c
+	$(WINCC) $(WININC) $(WINLINKFLAGS) -DWINDOWS -o $@ $+ -lm -lpaho-mqtt3c
 
 mqtt2serial :  mqtt2serial.c mqtt.o subscribe.o util.o file.o serial.o
-	$(CC)  mqtt2serial.c mqtt.o subscribe.o util.o file.o serial.o \
-	-o $@ -lm -lpaho-mqtt3c 
+	$(CC) -o $@ $+ -lm -lpaho-mqtt3c 
 
-mqtt-list-topics :  mqtt-list-topics.c mqtt.o subscribe.o util.o
-	$(CC)  mqtt-list-topics.c mqtt.o subscribe.o util.o \
-	-o $@ -lm -lpaho-mqtt3c 
+mqtt2serial.exe: mqtt2serial.c mqtt.c subscribe.c util.c file.c serial.c
+	$(WINCC) $(WININC) $(WINLINKFLAGS) -DWINDOWS -o $@ $+ -lm -lpaho-mqtt3c
+
+mqtt-list-topics:  mqtt-list-topics.c mqtt.o subscribe.o util.o
+	$(CC) -o $@ $+ -lm -lpaho-mqtt3c 
 
 mqtt-list-topics.exe: mqtt-list-topics.c mqtt.c subscribe.c util.c
-	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS  \
-	-o $@ mqtt-list-topics.c mqtt.c subscribe.c util.c -lm -lpaho-mqtt3c
+	$(WINCC) $(WININC)  $(WINLINKFLAGS) -DWINDOWS -o $@ $+ -lm -lpaho-mqtt3c
 
 rules:	demo sysmeasure syslogger commander
 
@@ -229,15 +270,14 @@ rules:	demo sysmeasure syslogger commander
 
 %.exe : %.rule rule-engine.c mqtt.c subscribe.c util.c
 	$(WINCC) $(WININC) $(WINLINKFLAGS) -DWINDOWS -DRULE=\"$<\" \
-	rule-engine.c mqtt.c subscribe.c  util.c \
-	-o $@ -lm -lpaho-mqtt3c
+	rule-engine.c mqtt.c subscribe.c util.c -o $@ -lm -lpaho-mqtt3c
 
 #
 # Installation sequences
 #
 
 
-install : hyperdash hyperdash.desktop sysmeasure mqtt-list-topics hddashgen dashdesign mqtt2serial $(MANPAGES) create_tree.sh
+install : $(EXE) hyperdash.desktop $(MANPAGES) create_tree.sh
 	install -m 644 hyperdash.desktop $(DESKTOPDIR)/
 	install -s -m 755 hyperdash $(BINDIR)/
 	install -s -m 755 mqtt-list-topics $(BINDIR)/
@@ -285,16 +325,14 @@ clean :
 	backup-*.tgz *.d
 	rm -rf doc-pak
 moreclean : clean
-	rm -f hyperdash sysmeasure hddashgen mqtt-list-topics
+	rm -f $(EXE) $(WINEXE)
 
 distclean : moreclean
 	rm -f Makefilex config.cache config.status config.log config.h \
-	MQTT-Hyperdash-examples-$(LIBNO).zip \
-	hyperdash.exe hddashgen.exe \
 	rm -rf autom4te.cache
 
 $(DIR).tar.gz : dist
-dist :	$(DIST2)
+dist :	$(DIST)
 	rm -rf /tmp/$(DIR)
 	mkdir /tmp/$(DIR)
 	(tar cf - $(DIST))|(cd /tmp/$(DIR); tar xpf -)
@@ -320,8 +358,6 @@ doc-pak: $(DEBDOC)
 	cp Debian/changelog.Debian $@/
 	gzip -9 $@/changelog.Debian
 	cp Debian/copyright $@/
-
-DEBNAME= mqtt-hyperdash
 
 deb :	$(BINDIST) doc-pak
 	sudo checkinstall -D --pkgname $(DEBNAME) --pkgversion $(LIBNO) \
@@ -364,6 +400,23 @@ WINDOWS/lib/SDL.dll:
 	mv WINDOWS/tmp/README-SDL.txt WINDOWS/lib/
 	mv WINDOWS/tmp/SDL.dll WINDOWS/lib/
 
+# get the DSL_gfx sources and compile a static library for mingw
+
+WINDOWS/lib/libSDL_gfx.a:
+	mkdir -p WINDOWS/tmp
+	cd WINDOWS/tmp;wget www.ferzkopp.net/Software/SDL_gfx-2.0/SDL_gfx-2.0.26.tar.gz
+	cd WINDOWS/tmp;tar xzfv SDL_gfx-2.0.26.tar.gz
+	mv WINDOWS/tmp/SDL_gfx-2.0.26.tar.gz WINDOWS/contrib/
+	cd WINDOWS/tmp/SDL_gfx-2.0.26/;configure  --host=i686-w64-mingw32
+	sed -i "s/CC = gcc/CC = i686-w64-mingw32-gcc -std=c99/g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	sed -i "s/prefix=c:\/dev/prefix=..\/..\//g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	sed -i "s/-march=athlon-xp -mmmx -msse -m3dnow//g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	sed -i "s/=SDL_gfx.dll/=/g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	sed -i "s/SDL_imageFilter.o SDL_rotozoom.o/SDL_imageFilter.o SDL_rotozoom.o SDL_gfxBlitFunc.o/g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
+	cd WINDOWS/tmp/SDL_gfx-2.0.26/;make -f Makefile.mingw
+	mv WINDOWS/tmp/SDL_gfx-2.0.26/README WINDOWS/lib/README-SDL_gfx.txt
+	mv WINDOWS/tmp/SDL_gfx-2.0.26/libSDL_gfx.a WINDOWS/lib/
+
 WINDOWS/lib/SDL_ttf.dll WINDOWS/lib/libfreetype-6.dll:
 	mkdir -p WINDOWS/tmp
 	cd WINDOWS/tmp;wget https://www.libsdl.org/projects/SDL_ttf/release/SDL_ttf-2.0.11-win32.zip 
@@ -378,8 +431,8 @@ WINDOWS/lib/SDL_ttf.dll WINDOWS/lib/libfreetype-6.dll:
 
 # Make a simple zip file distribution for WINDOWS
 
-winzip: MQTT-Hyperdash-$(LIBNO)-$(RELEASE)-win.zip
-MQTT-Hyperdash-$(LIBNO)-$(RELEASE)-win.zip: $(WINDIST)
+winzip: $(NAME)-$(LIBNO)-$(RELEASE)-win.zip
+$(NAME)-$(LIBNO)-$(RELEASE)-win.zip: $(WINDIST)
 	zip -j -D  -o $@ $(WINDIST)
 
 # Make the setup.exe installation program for WINDOWS
@@ -389,7 +442,7 @@ windows: $(WINDIST) MQTT-Hyperdash.iss
 
 # Auto dependency stuff (from info make)
 %.d: %.c
-	$(CC) -MM -MT $(@:.d=.o) -MT $@ $(CPPFLAGS) $< -o $@
+	$(CC) -DDEPEND -MM -MT $(@:.d=.o) -MT $@ $(CPPFLAGS) $< -o $@
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),distclean)
 -include $(DEPSRC:.c=.d)

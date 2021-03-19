@@ -12,9 +12,7 @@
 #include <stdint.h>
 #include <fnmatch.h>
 
-#ifndef WINDOWS
 #include <gtk/gtk.h>
-#endif
 
 #include "basics.h"
 #include "graphics.h"
@@ -30,7 +28,6 @@
  */
 
 static int re_button=0;
-#ifndef WINDOWS
 static void on_button_clicked (GtkWidget *widget, gpointer data) {
   re_button=(int)(((char *)data)[0]-'0');
 }
@@ -43,13 +40,10 @@ static gboolean delete_event(GtkWidget *widget,GdkEvent *event,gpointer data) {
    * type dialogs. */
   return FALSE;
 }
-
 static void destroy(GtkWidget *widget, gpointer data ) {
-  gtk_main_quit ();
+  gtk_main_quit();
 }
-#endif
 int message_dialog(char *title,char *text, int anzbut) {
-#ifndef WINDOWS
   gdk_threads_enter();
   GtkWidget *window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
   GtkWidget *button,*button2,*textarea;
@@ -81,10 +75,8 @@ int message_dialog(char *title,char *text, int anzbut) {
   gtk_widget_show_all(window);
   gtk_main();
   gdk_threads_leave();
-#endif
   return(re_button);
 }
-
 
 /**********************************************************
  **  File select dialog                                  **
@@ -95,7 +87,6 @@ int message_dialog(char *title,char *text, int anzbut) {
 static volatile int fileselect_return;
 static char fileselect_name[256];
 
-#ifndef WINDOWS
 /* Get the selected filename and print it to the console */
 static void file_ok_sel (GtkWidget *w, GtkFileSelection *fs) {
   strncpy(fileselect_name,gtk_file_selection_get_filename (GTK_FILE_SELECTION (fs)),sizeof(fileselect_name));
@@ -103,14 +94,12 @@ static void file_ok_sel (GtkWidget *w, GtkFileSelection *fs) {
   gtk_main_quit();
 }
 
-#endif
+
 
 int fileselect_dialog(char *filename, const char *path, const char *mask) {
   char buf[256];
   snprintf(buf,sizeof(buf),"%s/%s",path,filename);
   fileselect_return=0;
-
-#ifndef WINDOWS
 
 /* Create a new file selection widget */
   gdk_threads_enter();
@@ -140,11 +129,10 @@ int fileselect_dialog(char *filename, const char *path, const char *mask) {
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(filew),buf);
     gtk_file_selection_hide_fileop_buttons(GTK_FILE_SELECTION(filew));
 
-    gtk_widget_show_all (filew);
+    gtk_widget_show_all(filew);
     fileselect_return=0;
     gtk_main ();
     gdk_threads_leave();
-#endif
     if(fileselect_return>0) {
       strcpy(filename,fileselect_name);
     }
@@ -221,10 +209,8 @@ static GtkWidget *create_view_and_model() {
   return view;
 }
 
-
 int listselect_return=0;
 char listselect_result[256];
-
 
 static void on_listselOK(GtkWidget *widget, gpointer data) {
   printf("Listselect: OK button clicked.\n");
@@ -263,7 +249,6 @@ void view_onRowActivated(GtkTreeView *treeview,
      gtk_main_quit();
   }
 }
-
 
 
 int listselect_dialog(char *topic) {
@@ -315,7 +300,6 @@ int listselect_dialog(char *topic) {
  **********************************************************
  */
 
-
 GdkColor color;
 GdkColor ncolor;
 GtkWidget *colw=NULL;
@@ -324,7 +308,6 @@ static void color_changed_cb(GtkWidget *widget,GtkColorSelection *colorsel) {
   GdkColor ncolor;
   gtk_color_selection_get_current_color (colorsel, &ncolor);
 }
-
 int colorselect_dialog(const char *title,char *gc) {
   int ret=0;
   unsigned int fgc=(unsigned int)myatof(gc);
@@ -459,10 +442,6 @@ static void on_colorbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
 }
 
 
-
-
-
-
 static void on_iconbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
   PVAL *val=(PVAL *)data;
   printf("Browsebutton: \n");
@@ -505,8 +484,6 @@ static void on_bitmapbrowsebutton_clicked(GtkWidget *widget, gpointer data) {
 }
 
 
-
-
 /*  Add buttons to 
          FGB, BGC, AGC to open a color picker 
 	 BITMAP, ICON, DASH to open a fileselector
@@ -517,7 +494,6 @@ int property_dialog(char *elline) {
   char aa[64];
   char b[256*4];
   anzpval=0;
-#ifndef WINDOWS
   gdk_threads_enter();
   GtkWidget *window;
   GtkWidget *button,*button2;
@@ -615,6 +591,5 @@ int property_dialog(char *elline) {
     }
     return(1);
   }
-  #endif
   return(0);
 }

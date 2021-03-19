@@ -82,8 +82,8 @@ RUN cp -R /MQTT-Hyperdash/src/Debian/Outputs/*.deb /
 # Make Version for WINDOWS
 #
 # TODO:
-#RUN cd MQTT-Hyperdash/src;make windows
-#RUN cp -R MQTT-Hyperdash/src/Inno-Output/*.exe /
+RUN cd MQTT-Hyperdash/src;make windows
+RUN cp -R MQTT-Hyperdash/src/Inno-Output/*.exe /
 
 
 WORKDIR /work

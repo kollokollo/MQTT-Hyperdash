@@ -1,15 +1,17 @@
-/* GRAPHICS.C (c) Markus Hoffmann  */
+
+/* graphics.c      graphics-Routinen (c) Markus Hoffmann    */
 
 /* This file is part of MQTT-Hyperdash, the MQTT Dashboard 
  * ============================================================
  * MQTT-Hyperdash is free software and comes with NO WARRANTY - read the file
  * COPYING for details
  */
- 
-#include <stdio.h>
+
 #include <stdlib.h>
-#include <string.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 #include "basics.h"
 #include "graphics.h"
 #include "bitmap.h"
@@ -21,6 +23,8 @@
 #ifndef WINDOWS
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#else
+#include <windows.h>
 #endif
 
 static int init_sdl() {
@@ -30,13 +34,19 @@ static int init_sdl() {
   XInitThreads();
 #endif
 //  if(SDL_Init(SDL_INIT_VIDEO) < 0 ) return -1;
-  if(SDL_Init(SDL_INIT_EVERYTHING) < 0 ) return -1;
-  
+  if(SDL_Init(SDL_INIT_EVERYTHING)<0) {
+    perror("SDL_Init failed.");
+    return -1;
+  }
   /* Initialize SDL_ttf  */
-    if(TTF_Init()==-1) return -1;
+  if(TTF_Init()==-1) {
+    perror("SDL_TTF_Init failed.");
+    return -1;
+  }
     
   /* Enable Unicode translation */
   SDL_EnableUNICODE(1);
+
   done=1;
   return(0);
 }

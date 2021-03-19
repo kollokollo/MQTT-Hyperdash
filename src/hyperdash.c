@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <math.h>
+
 #include <locale.h> 
 #include "config.h"
 #include "basics.h"
@@ -24,6 +25,16 @@
 #include "input.h"
 
 #ifdef WINDOWS
+#define locale_t _locale_t
+#define LC_NUMERIC_MASK LC_NUMERIC
+#define LC_GLOBAL_LOCALE 0
+
+#define freelocale _free_locale
+
+#define uselocale(a) NULL
+#define duplocale(a) NULL
+#define newlocale(a,b,c) NULL
+
 char icondir[256]="icons";
 char bitmapdir[256]="bitmaps";
 char fontdir[256]="C:/Windows/Fonts";

@@ -61,7 +61,9 @@ mosquitto_sub -h localhost -t "ARDUINO/#" -v
 #include <unistd.h>
 #if defined WINDOWS
   #define EX_OK		  0	/* successful termination */
+  #define EX_IOERR	 74	/* i/o error */
   #define EX_UNAVAILABLE 69	/* service unavailable */
+  #define fsync(a)        ;
 #else
   #include <sysexits.h>
 #endif

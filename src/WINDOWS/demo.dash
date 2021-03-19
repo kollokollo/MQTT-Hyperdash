@@ -1,0 +1,115 @@
+# Demo Dashboard (MQTT Hyperdash) for the home automation
+# I have sensors an my power meter, my gas meter and my water meter.
+#
+# Global settings and default values
+#
+BROKER: URL="tcp://gaspower:1883"
+PANEL:  TITLE="Home Power" W=420 H=300 FGC=$ffffffff BGC=$000040ff
+#
+# Static drawing
+#
+TEXT:   X=10 Y=5 H=40 FGC=$ffffFFFF TEXT="Home Resource Consumption" \
+        FONT="Arial" FONTSIZE=22
+#FRAME:  X=50 Y=15 W=254 H=40 
+
+#LINE:   X=0 Y=0 X2=32 Y2=32 FGC=$ffffffff
+#LINE:   X=32 Y=0 X2=0 Y2=32 FGC=$ff0000ff
+
+TOPICSTRING: X=320 Y=32 W=100 H=10 TOPIC=HOME/ENVIRONMENT/PRESSURE \
+        FGC=$ffff00ff BGC=$40ff
+
+
+TOPICNUMBER: X=10 Y=112 W=100 H=10 TOPIC=HOME/ELECTRICITY/COUNTER FORMAT="######.# kWh" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=8  Y=110 W=103 H=13 REVERT=1
+
+TOPICNUMBER: X=130 Y=112 W=90 H=10 TOPIC=HOME/GAS/COUNTER FORMAT="#####.# m3" FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=128 Y=110 W=93 H=13 REVERT=1
+
+TOPICNUMBER: X=250 Y=112 W=90 H=10 TOPIC=HOME/WASSER/COUNTER FORMAT="####.### m3"  FGC=$ffff00ff BGC=$772222ff
+FRAME:       X=248 Y=110 W=93 H=13 REVERT=1
+
+BOX:    X=5 Y=140 W=240 H=70 FGC=$8800FF
+
+TEXT:        X=10  Y=232 H=16 FGC=$ffffFFFF TEXT="Status:" FONT="Arial_Bold" FONTSIZE=16
+TOPICSTRING: X=90 Y=232 W=200 H=16 TOPIC=HOME/ELECTRICITY/STATUS FGC=$ffff00ff BGC=$00ff
+FRAME:       X=88 Y=230 W=204 H=18 REVERT=1
+
+TEXT:        X=10  Y=150 FGC=$ffffFFFF TEXT="Electricity:"
+TOPICNUMBER: X=110 Y=150 W=80 TOPIC=HOME/ELECTRICITY/POWER FORMAT="  #### W" BGC=$44ff FGC=$ffff00ff
+
+TEXT:        X=10  Y=170 FGC=$ffffFFFF TEXT="Gas:"
+TOPICNUMBER: X=110 Y=170 W=80  TOPIC=HOME/GAS/POWER FORMAT="####.# l/h" BGC=$44ff FGC=$ffff00ff
+
+TEXT:        X=10  Y=190 FGC=$ffffFFFF TEXT="Water:"
+TOPICNUMBER: X=110 Y=190 W=80  TOPIC=HOME/WASSER/POWER FORMAT="####.# l/h" BGC=$44ff FGC=$ffff00ff
+
+
+DASH:         x=220 y=260 w=80 h=25 DASH="main"
+PBOX:         x=220 y=260 w=80 h=25 BGC=$444444ff 
+TEXT:         x=230 y=260 w=80 h=25 TEXT="home" FGC=$ffffffff FONT="Arial"
+FRAMETOGGLE:  x=220 y=260 w=80 h=25
+
+
+
+PBOX:  x=330 y=260 w=80 h=25 BGC=$444444ff 
+DASH:  x=330 y=260 w=80 h=25 DASH="sonnenschein"
+TEXT:  x=340 y=260 w=80 h=25 TEXT="-> Solar" FGC=$ffffffff FONT="Arial"
+FRAMETOGGLE: x=330 y=260 w=80 h=25 
+
+
+# 
+#
+
+
+TEXT: X=352  Y=220 FGC=$ffffFFFF TEXT="E  G  W"
+
+VMETER: x=350 y=100 w=20 h=120 MIN=0 MAX=3000 \
+      AGC=$555500ff BGC=$000040ff FGC=$ffffffff \
+      TOPIC=HOME/ELECTRICITY/POWER
+
+VMETER: x=374 y=100 w=20 h=120 MIN=0 MAX=1400 \
+      AGC=$555500ff BGC=$000040ff FGC=$ffffffff \
+      TOPIC=HOME/GAS/POWER
+
+VMETER: x=398 y=100 w=20 h=120 MIN=0 MAX=500 \
+      AGC=$555500ff BGC=$000040ff FGC=$ffffffff \
+      TOPIC=HOME/WASSER/POWER
+      
+METER: X=25 Y=60 W=80 H=80 TOPIC=HOME/ELECTRICITY/POWER MIN=0 MAX=2000 \
+            AMIN=180 AMAX=0 \
+            AGC=$808080ff FGC=$ffff00ff BGC=$40ff
+METER: X=140 Y=60 W=80 H=80 TOPIC=HOME/GAS/POWER MIN=0 MAX=1000 \
+            AMIN=180 AMAX=0 \
+            AGC=$808080ff FGC=$ffff00ff BGC=$40ff
+METER: X=260 Y=60 W=80 H=80 TOPIC=HOME/WASSER/POWER MIN=0 MAX=500 \
+            AMIN=180 AMAX=0 \
+            AGC=$808080ff FGC=$ffff00ff BGC=$40ff
+TEXT: X=10 Y=62 H=20 FONT="Arial" FONTSIZE=16 TEXT="E" FGC=$00ff00ff
+TEXT: X=130 Y=62 H=20 FONT="Arial" FONTSIZE=16 TEXT="G" FGC=$00ff00ff
+TEXT: X=250 Y=62 H=20 FONT="Arial" FONTSIZE=16 TEXT="W" FGC=$00ff00ff
+
+#
+# These Bitmap labels make animations, so that one can see, if the measument
+# devices are sill active and the connections is ok. I recommend this for all
+# intelligent sensors. If the animation stops, something is wrong.
+#
+
+
+BITMAPLABEL: x=345 y=75 BGC=$000040ff TOPIC=HOME/ELECTRICITY/ACTIVITY \
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff"
+
+
+BITMAPLABEL: x=369 y=75 BGC=$000040ff TOPIC=HOME/GAS/ACTIVITY \
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff"
+
+BITMAPLABEL: x=393 y=75 BGC=$000040ff TOPIC=HOME/WASSER/ACTIVITY \
+  BITMAP[0]="0|Disc1|$ffffffff" \
+  BITMAP[1]="1|Disc2|$ffffffff" \
+  BITMAP[2]="2|Disc3|$ffffffff" \
+  BITMAP[3]="3|Disc4|$ffffffff"

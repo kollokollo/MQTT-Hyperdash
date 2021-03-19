@@ -12,6 +12,19 @@
 #include <ctype.h>
 #include <math.h>
 #include <locale.h>
+#ifdef WINDOWS
+#define locale_t _locale_t
+#define freelocale _free_locale
+
+#define uselocale(a) NULL
+#define duplocale(a) NULL
+#define newlocale(a,b,c) NULL
+
+#define LC_NUMERIC_MASK LC_NUMERIC
+#define LC_GLOBAL_LOCALE 0
+
+#endif
+
 
 #include "config.h" 
  

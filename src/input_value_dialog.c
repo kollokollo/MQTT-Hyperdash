@@ -13,9 +13,7 @@
 #include <fnmatch.h>
 #include <pthread.h>
 
-#ifndef WINDOWS
 #include <gtk/gtk.h>
-#endif
 
 #include "basics.h"
 #include "graphics.h"
@@ -25,6 +23,7 @@
 #include "input_value_dialog.h"
 
 static int gtk_usage=0;
+
 
 typedef struct {
   ELEMENT *el;
@@ -105,7 +104,6 @@ static void destroy(GtkWidget *widget, gpointer data ) {
 //  if(--gtk_usage==0) gtk_main_quit();
   gtk_usage--;
 }
-
 static void on_cancel_clicked (GtkWidget *widget, gpointer data) {
   gtk_widget_hide(widget);
 }
@@ -161,7 +159,6 @@ static GtkWidget *create_input_dialog(char *info, char *def, int isnum,ELEMENT *
   g_signal_connect (button3, "clicked", G_CALLBACK (on_cancel_clicked), (gpointer) cb);
   g_signal_connect (button4, "clicked", G_CALLBACK (on_SAVE_clicked), (gpointer) cb);
   g_signal_connect (button5, "clicked", G_CALLBACK (on_RESTORE_clicked), (gpointer) cb);
-
   g_signal_connect_swapped(button, "clicked",G_CALLBACK(gtk_widget_destroy),window);
   g_signal_connect_swapped(button3,"clicked",G_CALLBACK(gtk_widget_destroy),window);
   gtk_container_add (GTK_CONTAINER (window), vbox);
@@ -188,6 +185,7 @@ static GtkWidget *create_input_dialog(char *info, char *def, int isnum,ELEMENT *
 
   return(window);
 }
+
 
 volatile int mainloop_running=0;
 
@@ -216,10 +214,15 @@ void topic_in_number_input(ELEMENT *el) {
   gdk_threads_leave();
   gtk_usage++;
   if(!mainloop_running) {
+#ifndef WINDOWS
     pthread_t thread;
     if(pthread_create(&thread, NULL, mainloop,NULL)) {
       fprintf(stderr, "Error creating thread\n");
     }
+#else
+  printf("ERROR: pthread not working!\n");
+  mainloop(NULL);
+#endif
   }
 }
 
@@ -232,10 +235,15 @@ void topic_in_string_input(ELEMENT *el) {
   gdk_threads_leave();
   gtk_usage++;
   if(!mainloop_running) {
+#ifndef WINDOWS
     pthread_t thread;
     if(pthread_create(&thread, NULL, mainloop,NULL)) {
       fprintf(stderr, "Error creating thread\n");
     }
+#else
+  printf("ERROR: pthread not working!\n");
+  mainloop(NULL);
+#endif
   }
 }
 

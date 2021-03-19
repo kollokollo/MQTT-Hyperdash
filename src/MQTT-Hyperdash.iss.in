@@ -1,0 +1,190 @@
+; File for Inno-Setup for MQTT-Hyperdash for WINDOWS  (c) by Markus Hoffmann
+; Innosetup kann mit wine benutzt werden.
+;
+;
+
+#define MyAppName "MQTT-Hyperdash"
+#define MyAppURL "https://codeberg.org/kollo/MQTT-Hyperdash"
+#define MyAppExeName "hyperdash.exe"
+#define MyAppVersion "@winversion@"
+#define MyAppRelease "@winrelease@"
+
+[Setup]
+; NOTE: The value of AppId uniquely identifies this application.
+; Do not use the same AppId value in installers for other applications.
+; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
+AppId={{4B22E38E-73C8-4199-8C9F-8E4B8A01A97C}
+AppName={#MyAppName}
+AppVerName={#MyAppName} V.{#MyAppVersion} 
+AppVersion={#MyAppVersion}-{#MyAppRelease}
+DefaultDirName={pf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}
+AppPublisherURL={#MyAppURL}
+
+
+; Since no icons will be created in "{group}", we don't need the wizard
+; to ask for a Start Menu folder name:
+; DisableProgramGroupPage=yes
+UninstallDisplayIcon={app}\hyperdash.ico
+
+OutputDir=Inno-Output
+AppCopyright=Copyright (C) 2019-@winyear@ Markus Hoffmann
+LicenseFile=../COPYING 
+InfoBeforeFile=../RELEASE_NOTES
+InfoAfterFile=INTRO
+OutputBaseFilename={#MyAppName}-{#MyAppVersion}-{#MyAppRelease}-setup
+
+
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
+
+
+[Files]
+Source: "hyperdash.exe"; DestDir: "{app}"
+Source: "dashdesign.exe"; DestDir: "{app}"
+Source: "hddashgen.exe"; DestDir: "{app}"
+Source: "mqtt-list-topics.exe"; DestDir: "{app}"
+Source: "mqtt2serial.exe"; DestDir: "{app}"
+
+Source: "WINDOWS/lib/SDL.dll";     DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/SDL_ttf.dll"; DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libfreetype-6.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/zlib1.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/paho-mqtt3c.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+
+
+Source: "WINDOWS/lib/libgdk-win32-2.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libgtk-win32-2.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+
+Source: "WINDOWS/lib/intl.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libatk-1.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libcairo-2.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libgdk_pixbuf-2.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libgio-2.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libglib-2.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libgobject-2.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libpangocairo-1.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libgmodule-2.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+
+Source: "WINDOWS/lib/libpng16-16.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libgcc_s_sjlj-1.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libiconv-2.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libffi-6.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libpangowin32-1.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+Source: "WINDOWS/lib/libpango-1.0-0.dll";   DestDir: "{sys}"; Flags: sharedfile onlyifdoesntexist  32bit
+
+Source: "WINDOWS/demo.dash"; DestName: "demo.dash"; DestDir: "{app}/dashboards"
+Source: "../dashboards/main.dash"; DestName: "main.dash"; DestDir: "{app}/dashboards"
+Source: "../dashboards/sysmeasure.dash"; DestName: "sysmeasure.dash"; DestDir: "{app}/dashboards"
+Source: "../dashboards/remote_tree.dash"; DestName: "remote_tree.dash"; DestDir: "{app}/dashboards"
+Source: "../dashboards/test.dash"; DestName: "test.dash"; DestDir: "{app}/dashboards"
+Source: "../dashboards/metertest.dash"; DestName: "metertest.dash"; DestDir: "{app}/dashboards"
+Source: "../dashboards/imagetest.dash"; DestName: "imagetest.dash"; DestDir: "{app}/dashboards"
+Source: "../dashboards/arduino.dash"; DestName: "arduino.dash"; DestDir: "{app}/dashboards"
+
+
+
+Source: "../dashboards/main.dash"; DestName: "main.dash"; DestDir: "{app}"
+
+Source: "../bitmaps/alarmRing";    DestName: "alarmRing";    DestDir: "{app}/bitmaps"
+Source: "../bitmaps/battery";      DestName: "battery";      DestDir: "{app}/bitmaps"
+Source: "../bitmaps/batterySmall"; DestName: "batterySmall"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/biene";        DestName: "biene";        DestDir: "{app}/bitmaps"
+Source: "../bitmaps/bombe";        DestName: "bombe";        DestDir: "{app}/bitmaps"
+Source: "../bitmaps/bombe_gross";  DestName: "bombe_gross";  DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Bulb";         DestName: "Bulb";         DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Circle";       DestName: "Circle";       DestDir: "{app}/bitmaps"
+Source: "../bitmaps/default";      DestName: "default";      DestDir: "{app}/bitmaps"
+Source: "../bitmaps/DownArrow";    DestName: "DownArrow";    DestDir: "{app}/bitmaps"
+Source: "../bitmaps/GridPlug";     DestName: "GridPlug";     DestDir: "{app}/bitmaps"
+Source: "../bitmaps/helfer";       DestName: "helfer";       DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Hygrometer";   DestName: "Hygrometer";   DestDir: "{app}/bitmaps"
+Source: "../bitmaps/P-meter";      DestName: "P-meter";      DestDir: "{app}/bitmaps"
+Source: "../bitmaps/PVModule";     DestName: "PVModule";     DestDir: "{app}/bitmaps"
+Source: "../bitmaps/RadiationSmall"; DestName: "RadiationSmall"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/RightArrow";   DestName: "RightArrow";   DestDir: "{app}/bitmaps"
+Source: "../bitmaps/schlange";     DestName: "schlange";     DestDir: "{app}/bitmaps"
+Source: "../bitmaps/SmallCircle";  DestName: "SmallCircle";  DestDir: "{app}/bitmaps"
+Source: "../bitmaps/SmallDonut";   DestName: "SmallDonut";   DestDir: "{app}/bitmaps"
+Source: "../bitmaps/SmallTriagDown"; DestName: "SmallTriagDown"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/SmallTriagDwn"; DestName: "SmallTriagDwn"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/SmallTriagUp"; DestName: "SmallTriagUp"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/smiley";       DestName: "smiley";       DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Snowflake";    DestName: "Snowflake";    DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Sun";          DestName: "Sun";          DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Thermometer";  DestName: "Thermometer";  DestDir: "{app}/bitmaps"
+Source: "../bitmaps/TickLeft";     DestName: "TickLeft";     DestDir: "{app}/bitmaps"
+Source: "../bitmaps/TickRight";    DestName: "TickRight";    DestDir: "{app}/bitmaps"
+Source: "../bitmaps/TrendNone";    DestName: "TrendNone";    DestDir: "{app}/bitmaps"
+Source: "../bitmaps/UpArrow";      DestName: "UpArrow";      DestDir: "{app}/bitmaps"
+Source: "../bitmaps/USB-Stick";    DestName: "USB-Stick";    DestDir: "{app}/bitmaps"
+Source: "../bitmaps/warning";      DestName: "warning";      DestDir: "{app}/bitmaps"
+Source: "../bitmaps/WarnTS";       DestName: "WarnTS";       DestDir: "{app}/bitmaps"
+
+;Source: "../bitmaps/"; DestName: ""; DestDir: "{app}/bitmaps"
+;Source: "../bitmaps/"; DestName: ""; DestDir: "{app}/bitmaps"
+;Source: "../bitmaps/"; DestName: ""; DestDir: "{app}/bitmaps"
+;Source: "../bitmaps/"; DestName: ""; DestDir: "{app}/bitmaps"
+
+
+Source: "../bitmaps/Disc1"; DestName: "Disc1"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Disc2"; DestName: "Disc2"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Disc3"; DestName: "Disc3"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Disc4"; DestName: "Disc4"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Battery0"; DestName: "Battery0"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Battery1"; DestName: "Battery1"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Battery2"; DestName: "Battery2"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Battery3"; DestName: "Battery3"; DestDir: "{app}/bitmaps"
+Source: "../bitmaps/Battery4"; DestName: "Battery4"; DestDir: "{app}/bitmaps"
+
+
+
+
+Source: "../icons/dashtree.png"; DestName: "dashtree.png"; DestDir: "{app}/icons"
+Source: "../icons/default.png"; DestName: "default.png"; DestDir: "{app}/icons"
+
+Source: "WINDOWS/readme-windows.txt"; DestDir: "{app}"; Flags: isreadme
+Source: "WINDOWS/hyperdash.ico"; DestDir: "{app}"
+Source: "WINDOWS/dash.ico"; DestDir: "{app}"
+Source: "WINDOWS/lib/README-SDL.txt"; DestDir: "{app}/contrib" ;  Flags: isreadme
+Source: "WINDOWS/lib/LICENSE.freetype.txt"; DestName: "LICENSE-FREETYPE.txt"; DestDir: "{app}/contrib"
+Source: "WINDOWS/lib/LICENSE.zlib.txt"; DestName: "LICENSE-ZLIB.txt"; DestDir: "{app}/contrib"
+Source: "WINDOWS/lib/LICENSE-SDL_ttf.txt"; DestName: "LICENSE-SDL_TTF.txt"; DestDir: "{app}/contrib"
+
+
+[Icons]
+Name: "{group}\MQTT-Hyperdash"; Filename: "{app}\{#MyAppExeName}" ; IconFilename: "{app}\hyperdash.ico"
+Name: "{commondesktop}\MQTT-Hyperdash"; Filename: "{app}\{#MyAppExeName}" ; IconFilename: "{app}\hyperdash.ico"
+Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
+Name: "{group}\Demo"; Filename: "{app}\examples\demo.dash" 
+
+[Registry]
+Root: HKCR; Subkey: ".dash"; ValueType: string; ValueName: ""; ValueData: "{#MyAppName}"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: ".dash\ShellNew"; ValueType: string; ValueName: "NullFile"; ValueData: ""; Flags: uninsdeletevalue
+
+;Local: HKCR; Subkey: "SOFTWARE\\{#MyAppName}"; ValueType: string; ValueName: "path"; ValueData: "{app}\"; Flags: uninsdeletevalue
+;Local: HKCR; Subkey: "SOFTWARE\\{#MyAppName}"; ValueType: string; ValueName: "librarypath"; ValueData: "{app}\lib\"; Flags: uninsdeletevalue
+;Local: HKCR; Subkey: "SOFTWARE\\{#MyAppName}"; ValueType: string; ValueName: "font"; ValueData: "swiss13"; Flags: uninsdeletevalue
+;Local: HKCR; Subkey: "SOFTWARE\\{#MyAppName}"; ValueType: string; ValueName: "geometry"; ValueData: "+10+10"; Flags: uninsdeletevalue
+;Local: HKCR; Subkey: "SOFTWARE\\{#MyAppName}"; ValueType: string; ValueName: "version"; ValueData: "{MyAppVersion}"; Flags: uninsdeletevalue
+
+Root: HKCR; Subkey: "{#MyAppName}"; ValueType: string; ValueName: ""; ValueData: "MQTT Hyperdashboard"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "{#MyAppName}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\dash.ico,0"
+Root: HKCR; Subkey: "{#MyAppName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"" ""%2"" ""%3""" 
+Root: HKCR; Subkey: "{#MyAppName}\shell\New"; ValueType: string; ValueName: ""; ValueData: "&Edit" 
+Root: HKCR; Subkey: "{#MyAppName}\shell\New\command"; ValueType: string; ValueName: ""; ValueData: "{sys}\Notepad.exe" 
+Root: HKCR; Subkey: "{#MyAppName}\shell\ViewDocu"; ValueType: string; ValueName: ""; ValueData: "&View docu" 
+Root: HKCR; Subkey: "{#MyAppName}\shell\ViewDocu\command"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName} ""-doc_%1""" 
+
+[Run]
+Filename: "{app}\hyperdash.exe"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
