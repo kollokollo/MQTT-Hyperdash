@@ -344,7 +344,48 @@ docker: docker/Dockerfile
 	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE) tcsh -c "ls -al;df;cp /*.deb /*.pdf /dockerfilevolume/"
 #	cd docker;sudo docker run --net=host --env="DISPLAY" -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE)
 
+# Make the Windows distribution in form of a .zip file including an installer
+# this is depreciated. Better use Inno-Setup to create a self installing
+# .exe file
 
+MQTT-Hyperdash.iss: MQTT-Hyperdash.iss.in
+	cp $< $@
+	sed -i "s/@winversion@/$(LIBNO)/g" $@ 
+	sed -i "s/@winrelease@/$(RELEASE)/g" $@ 
+	sed -i "s/@winyear@/$(YEAR)/g" $@ 
+
+# Make prerequisites for the WINDOWS build
+# get the official WINDOWS binary for libSDL
+WINDOWS/lib/SDL.dll:
+	mkdir -p WINDOWS/tmp
+	cd WINDOWS/tmp;wget https://www.libsdl.org/release/SDL-1.2.15-win32.zip
+	cd WINDOWS/tmp;unzip SDL-1.2.15-win32.zip
+	mkdir -p WINDOWS/lib
+	mv WINDOWS/tmp/README-SDL.txt WINDOWS/lib/
+	mv WINDOWS/tmp/SDL.dll WINDOWS/lib/
+
+WINDOWS/lib/SDL_ttf.dll WINDOWS/lib/libfreetype-6.dll:
+	mkdir -p WINDOWS/tmp
+	cd WINDOWS/tmp;wget https://www.libsdl.org/projects/SDL_ttf/release/SDL_ttf-2.0.11-win32.zip 
+	cd WINDOWS/tmp;unzip SDL_ttf-2.0.11-win32.zip
+	mkdir -p WINDOWS/lib
+	mv WINDOWS/tmp/LICENSE.zlib.txt     WINDOWS/lib/
+	mv WINDOWS/tmp/LICENSE.freetype.txt WINDOWS/lib/
+	mv WINDOWS/tmp/SDL_ttf.dll          WINDOWS/lib/
+	mv WINDOWS/tmp/zlib1.dll            WINDOWS/lib/
+	mv WINDOWS/tmp/libfreetype-6.dll    WINDOWS/lib/
+	mv WINDOWS/tmp/README.txt           WINDOWS/lib/LICENSE-SDL_ttf.txt
+
+# Make a simple zip file distribution for WINDOWS
+
+winzip: MQTT-Hyperdash-$(LIBNO)-$(RELEASE)-win.zip
+MQTT-Hyperdash-$(LIBNO)-$(RELEASE)-win.zip: $(WINDIST)
+	zip -j -D  -o $@ $(WINDIST)
+
+# Make the setup.exe installation program for WINDOWS
+
+windows: $(WINDIST) MQTT-Hyperdash.iss
+	WINDOWS/contrib/iscc MQTT-Hyperdash.iss
 
 # Auto dependency stuff (from info make)
 %.d: %.c
