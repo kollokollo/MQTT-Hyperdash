@@ -87,8 +87,13 @@ void i_broker(ELEMENT *el,char *pars) {
                                    "%s\n\nUser=%s\n\nTry again?\n",
 				   el->filename,el->text);
       if(message_dialog("MQTT Hyperdash Error",buffer,2)==1) {
-       rc=mqtt_broker(el->filename,el->text,el->format,NULL);
-      } else rc=0;
+	printf("OK, try again.\n");
+        rc=mqtt_broker(el->filename,el->text,el->format,NULL);
+      } else {
+        rc=0; 
+	mqtt_isconnected=1;  /* Fake it */
+	printf("OK, will not try to connect again.\n");
+      }
     }
   }
 }
