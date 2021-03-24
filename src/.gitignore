@@ -15,7 +15,6 @@ sysmeasure-public
 *.ttp
 *.prg
 *.a
-*.lib
 doc-pak
 MQTT-Hyperdash.iss
 docker/wineblob.tar.gz
@@ -26,7 +25,6 @@ commander
 lademanager
 battery
 Debian/Outputs
-*.dll
 WINDOWS/tmp/
 WINDOWS/lib/LICENSE.freetype.txt
 WINDOWS/lib/LICENSE.zlib.txt
