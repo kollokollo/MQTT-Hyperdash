@@ -377,7 +377,7 @@ deb :	$(BINDIST) doc-pak
 # excecute the Dockerfile and extract the debian package and the User Manual
 docker: docker/Dockerfile
 	cd docker;sudo docker build . -t kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE)
-	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE) tcsh -c "ls -al;df;cp /*.deb /*.pdf /dockerfilevolume/"
+	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE) tcsh -c "ls -al;df;cp /*.deb /*.pdf /*.exe /dockerfilevolume/"
 #	cd docker;sudo docker run --net=host --env="DISPLAY" -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE)
 
 # Make the Windows distribution in form of a .zip file including an installer
@@ -402,12 +402,12 @@ WINDOWS/lib/SDL.dll:
 
 # get the DSL_gfx sources and compile a static library for mingw
 
-WINDOWS/lib/libSDL_gfx.a:
+WINDOWS/lib/libSDL_gfx.a WINDOWS/lib/README-SDL_gfx.txt:
 	mkdir -p WINDOWS/tmp
 	cd WINDOWS/tmp;wget www.ferzkopp.net/Software/SDL_gfx-2.0/SDL_gfx-2.0.26.tar.gz
 	cd WINDOWS/tmp;tar xzfv SDL_gfx-2.0.26.tar.gz
 	mv WINDOWS/tmp/SDL_gfx-2.0.26.tar.gz WINDOWS/contrib/
-	cd WINDOWS/tmp/SDL_gfx-2.0.26/;configure  --host=i686-w64-mingw32
+	cd WINDOWS/tmp/SDL_gfx-2.0.26/;./configure  --host=i686-w64-mingw32
 	sed -i "s/CC = gcc/CC = i686-w64-mingw32-gcc -std=c99/g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
 	sed -i "s/prefix=c:\/dev/prefix=..\/..\//g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 
 	sed -i "s/-march=athlon-xp -mmmx -msse -m3dnow//g" WINDOWS/tmp/SDL_gfx-2.0.26/Makefile.mingw 

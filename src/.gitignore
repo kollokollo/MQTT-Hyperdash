@@ -50,3 +50,4 @@ docker/*.deb
 Inno-Output
 Debian/Outputs
 
+MQTT-Hyperdash-1.03-*-win.zip
