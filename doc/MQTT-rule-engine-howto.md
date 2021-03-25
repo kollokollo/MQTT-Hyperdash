@@ -32,7 +32,7 @@ which can execute one or more individual rules.
 With multiple rule engines running even on different computers using the same
 broker, one can implement a full automation control, which would create the
 Internet of Things. 
-(See also: [MQTT Hyperdash automation concept](MQTT-Hyperdash-automation-concept.md))
+(See also: [MQTT Hyperdash automation concept](MQTT-Hyperdash-automation-concept.asciidoc))
 
 All rules together form a rule network, or a rule graph.
 

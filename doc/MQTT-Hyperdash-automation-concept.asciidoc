@@ -1,11 +1,22 @@
-## Automation 
+= MQTT-Hyperdash Automation Concept
+Markus Hoffmann
+:docversion: 1.00
+:docyear: 2018
+:homepage: https://codeberg.org/kollo/MQTT-Hyperdash
+:toc:
+:sectnums:
+:stem: latexmath
+:figure-caption!:
+
+
+Automation 
 
 for MQTT Hyperdash V.1.02 (c) by Markus Hoffmann 
 (concept study from 2010)
 
-### Abstract
+== Abstract
 
-Based on [rule engines](MQTT-rule-engine-howto.md) an automation concept can
+Based on link:MQTT-rule-engine-howto.md[rule engines] an automation concept can
 be described which theoretically leads to a fully autonomous entity of machines, 
 all connected to each other via the MQTT framework.
 
@@ -15,7 +26,7 @@ actual/measured states the subsystems are to be in.
 A strong distinction between set-point- and actual-measured values is 
 essential here (actual value vs. target value).
  Both are supported by the 
-[MQTT-Hyperdash naming convention](MQTT-dashgen-naming-conventions.md).
+link:MQTT-dashgen-naming-conventions.md[MQTT-Hyperdash naming convention].
 
 The framework is highly decentralized and allows for maximum autonomous
 control of large devices. Furthermore it can be expanded with the help of
@@ -27,7 +38,7 @@ automatically. Finally it teaches the designers of all subsystems where
 additional sensors need to be implemented or installed, and where and when
 manual intervention is necessary.
 
-### Introduction
+== Introduction
 
 Thinking of modern machine learning concepts, like artificial neural 
 networks and "deep learning", we think that they can be applied only if there is 
@@ -38,6 +49,7 @@ on input values and produce output values, which have to integrate with the
 system to be automated. And there is currently no generic way to do this.
 
 The automation concept consists of following ingredients:
+
 * a decentralized parameter database, 
 * rule engines, 
 * actual value vs. target value distinction,
@@ -49,8 +61,38 @@ Most of these building blocks are well established in other fields.
 We combine them to form a maximal autonomous automation framework for large
 devices with an unmanageable abundance of measured values and state parameters.
 
+The concept allows for the (human) expert knowledge on operating each subsystem 
+as well as the systems on each level to be absorbed. Furthermore it would be 
+possible to improve this knowledge on a long term with machine 
+learning techniques. 
 
 ###############################
+
+
+== Automation
+
+The automation concept presented here is using __two distinct directions__ for
+data or information flow. One direction is meant to reduce the data complexity
+from raw data to higher levels and the other direction (which moves the system
+into desired states) makes the system autonomous. 
+
+== reducing complexity
+
+Rule engines allow to create any level of abstraction on the (measured) raw 
+data. They can reduce the complexity of the individual signals. Usually 
+additional parameters are created to form a next level of abstraction. There can
+be more hierarchical ordered abstraction layers. They can be stacked on top of
+each other (and so further reduce the complexity of the raw data) or more
+organized horizontally to perform different views to the same data. This not
+only allows to derive more physical values. But also to maintain and detect virtual states the machine
+or its subsystems are in, usually by aggregating measurements and error bits of
+the hardware into more general classifications. In the end, the complexity is
+reduced in every layer of abstraction so that at the end (on top) only very few
+but very meaningful states and main values show up.
+
+A strong distinction between set-point- and actual-measured values is essential
+here (actual value vs. target value), see above. Both must be supported by a
+sort of parameter naming convention or the like.
 
 In particular, rule engines are also suitable for generating status displays
 for a higher-level system from a set of other, more subordinate status
@@ -70,31 +112,76 @@ hardware level must also generate adequate signals which permit such a
 complete determination of the state. The criteria for the design of (new)
 hardware components must be aligned accordingly.
 
-In addition to the pure state detection, there must also be a way to change the
-state of a system in a targeted manner (e.g. switching on a previously switched
-off power supply or switching on an entire subsystem including its
-conditioning).
+Aggregating and reducing complexity with abstraction levels (middle layers) is
+already standard in many control systems. Automation needs this, 
+but it is not really new, and it is not sufficient for real and full 
+automation. We are going to focus on the missing parts in the following chapters.
 
-So, directed rule engines alone cannot map the processes and algorithms to
-really automate the  system. Therefor we have to introduce another extended
-class of rules, called "Intentions". Intentions can be implemented as rule
-engines with some additional special state parameters. However we want to look
-at them from a different perspective at first.
+== inverse complexity
 
-### "Intentions" for process automation
+Pure state detection (based on measured values) can be realized the way
+described above. But there must also be a way to change the state of a system in
+a targeted manner (e.g. switching on a previously switched off power supply or
+switching on an entire subsystem including its conditioning). This is the other
+direction, where we need to derive wished subsystem target states from a more
+global wanted overall target state. In contrast to the path of measured values,
+from many raw values to fewer aggregated values, in this direction the
+complexity naturally increases. Also there is no unique way to achieve a state,
+many sub-configurations would be possible. The task here is therefore to choose
+the most optimal sub-configuration for a given overall state. 
 
-A "complete system" provides the functionality to reach every state in a
-targeted manner. This cannot be realized in practice. However, it is
-practicable that all relevant operating states can be reached, and at least for
-a number of "errors" or "exceptions" which occur outside the normal
-functionality, the error state can be left again for a normal operating state.
+On a hardware level this means, that the hardware makes sure that a set-point
+value is achieved and a target state is reached (like "on" and "current
+applied").
 
-If this is not guaranteed, the system comes into a state where manual
-intervention (if necessary with a screwdriver or programming tool) is
-unavoidable. 
+Oh higher levels, rule engines make sure that a more global state is broken 
+down into lower level subsystem states. Here also only set-point parameters would
+be involved. Breaking down states can be a really difficult tasks. It can happen,
+that there are many ways to achieve a higher level state and many configurations
+of the underlying sub-systems. The process may involve dedicated sequences 
+decision trees and the like. Also waiting times and feedback loops may play a
+role. In general speaking, complexity increases. 
 
-This stands in the way of (complete) automation of the overall
-system. For this reason, as much expert knowledge as possible about
+Directed rule engines alone cannot map the processes and algorithms to really
+automate the system. Therefor we have to introduce another extended class of
+rules, called {\bf Intentions}. Intentions can be implemented as rule engines
+with some additional special state parameters. However we want to look at them
+from a different perspective at first. Since this is the new part of the
+presented automation concept we will go in more detail here for the rest of this
+paper. 
+
+== Intentions for process automation
+
+Lets define the terms __state__, __complete system__, 
+__exception__,  __intention__, and __observable__:
+
+A __state__ is an indicator which represents the status of a system. The state
+can be a (integer) number stem:[s\in \mathbb{N}_0 ; 0\le s < n] which uniquely
+identifies the systems status. stem:[n] is the number of distinct states the system
+can be in. The complete set of states of a system form a partition. A state can
+be computationally represented by a parameter which gives the number
+corresponding to the state. We assume that every system has a mechanism (using rule engines)
+to measure its current state. In the simplest manner it could be "on", "off",
+"standby", "error", represented by stem:[s \in \{0,1,2,3\}]. But more useful states
+like "on and current value on operation boundaries" can also be thought of.
+
+A __complete system__ provides not only the functionality to detect the state it is in, but also
+the functionality to reach every state in a
+targeted manner. We think of that there is a set-point parameter which can be set to 
+the state the system should be in. And the complete system will be able to perform
+actions to really achieve the target state.
+
+Of course this cannot be realized in practice, because there might be external
+conditions which force the system to go into an error state instead of the
+desired (e.g. "on"-) state. However, it is practicable that all relevant
+operating states can be reached under normal conditions. And that there are
+functions which allows the system to recover from error states. If the system
+reaches an error state which itself cannot come out of, this would be called an
+__exception__. Practically that would mean, the system indicates that it is
+broken and that a manual/human intervention is needed to recover.
+
+It is worth noting that this stands in the way of (complete) automation of the
+overall system. For this reason, as much expert knowledge as possible about
 troubleshooting, conditioning, operational sequences, etc. must be made
 available as a functionality. This happens on the lowest level (near the
 hardware) and on all levels above, up to the highest level, where ideally only
@@ -142,19 +229,18 @@ also be regarded as an observable (looking at the human as a "device"), but this
 is not particularly useful in this concept. Instead we will refer to the desire of
 the operator as an intention.
 
-### States and State detection
+== States and State detection
 
 A (complete) set of n states is defined for each system (e.g. "on", "off" and
 "broken"). For this set, a status parameter (integer) is kept ready in the
 control system and a rule machine maps (starting from a series of observables)
-to this parameter (see Figure). This ensures that the actual status of the
+to this parameter (see Figure <<img-statedetection>>). This ensures that the actual status of the
 system - based on the respective status record - is known at all times.
 
-<img src="images/statedetection.png">
+[#img-statedetection]
+.State Detection
+image::images/statedetection.png[State Detection,caption="Actual states (A,B,C,...,F,...) are derived from observables (from the parameter database) using a set of rules. The observables can also include a history which is stored in the memory or is also available as a parameter in the parameter database. The state detection algorithm is triggered e.g. by a change of the value of any of its observables."]
 
-Figure: Actual states are derived from observables using a set of rules. The
-observables can also include a history which is stored in the memory or is also
-available as a parameter in the parameter database.
 
 Determining meaningful states is a non-trivial matter and is usually done by the
 person who developed the system or who knows it best. The states can be defined
@@ -202,15 +288,16 @@ should be the case if the system functions normally). This can be verified or
 falsified by observing the detected actual state, which correspond to the intended state.
 If they are different, action need to be taken.
 
+[#img-transitiontable]
+.Transition Table
+image::images/transitiontable.png[caption="Transition matrix from one state (initial) to another (final) and the various possible and impossible actions. The path to a desired final state can be found automatically."]
 
-<img src="images/transitiontable.png">
+Whether the condition is reached is not guaranteed (however, this
+should be the case if the system functions normally). This can be verified or
+falsified by observing the detected actual state, which correspond to the
+intended state. If they are different, action need to be taken.
 
-Figure: Transition matrix from one state (initial) to another (final) and the
-various possible and impossible actions. The path to a desired final state can
-be found automatically.
-
-
-The problem of automation can now be summed up quite simply, independently of
+The __problem of automation__ can now be summed up quite simply, independently of
 the complexity of the system and regardless of the number of subsystems
 involved:
 
@@ -238,22 +325,30 @@ the case with a system, the design of the system in question has to be rethought
 and a new measurement signal may have to be installed so that automatic operation
 (only then) becomes possible.
 
+### Evolution
+
 All in all, this process of continuous improvement, if resolved consistently,
 should ultimately lead to complete automation, with all of the knowledge about
 the operation of the individual components gradually being incorporated into the
 control system software framework (from which it can then be extracted, for
 example, for documentation purposes).
 
-What is important is a framework and a language in which the implementation can
-be carried out as easily as possible. As many people as possible should be able
-to contribute. A large part of the process should already take place
-automatically in a standardized way according to defined rules. The knowledge
-then only has to be poured into simple rules that only describe formalized
-transitions or actions. In their overall direction, these automatically allow
-the automation of the entire system. The detailed knowledge from the lower level
-subsystems  should not be needed for the higher hierarchical
-level.
+From the viewpoint of quality management (QM) and quality assurance the improvement, 
+fault recognition and repair, the standard formalism and process follow-up 
+could be applied here, too. At least the framework makes documentation and 
+error followup, fault statistics, etc. much simpler.
 
+What the author considers as important is a formal language (like a computer
+programming language, but specifically fitted to this particular automation
+concept without unnecessary overhead), in which the framework is defined. A
+language in which the implementation can be carried out as easily as possible.
+As many people as possible should be able to contribute. A large part of the
+process should already take place automatically in a standardized way according
+to defined rules (maybe according to QM standards). The knowledge then only has
+to be poured into simple formal rules that only describe formalized transitions
+or actions. In their overall direction, these automatically allow the automation
+of the entire system, but with local knowledge. The detailed knowledge from the
+lower level subsystems should not be needed for the higher hierarchical level.
 
 Rules and intentions are closely related. In fact, an action associated with an
 intention is intended to reverse the rule machine graph. If a rule is a pure
@@ -262,7 +357,12 @@ of the rules associated with state detection are only surjective (quantization)
 and are no longer injective. A clear reversal function cannot therefore be
 specified. However, control and regulation tasks can usually still be solved by
 iteration, in which case an (optimal) initial state is selected and found from
-all possible ones that lead to the same final state.
+all possible ones that lead to the same final state. The author sees
+optimization algorithms, statistical and heuristic algorithms play a central
+role here. This can not only be classical singular-value-decomposition reverse
+linear algebra functions but also -- where it makes sense, and if the system can
+be trained -- neuronal network algorithms and probably others evolving from AI.
+Important is that the presented framework is flexible enough to allow for both.
 
 If the directed graph of the rules projects upwards from the observables to a
 state, the chained intentions represent a reversal of the direction from top to
@@ -278,34 +378,90 @@ particular difficulty in automation.
 
 #### Implementing Intentions
 
+We will not stop here, but try to provide a way to implement intentions. There
+may be also other ways to achieve this, but we found a quite handy concept to do
+it, without introducing too many fancy new algorithms. Also it is important
+that one can understand, how it works. We define a framework in which
+intentions can be realized in a quite formal way, but without giving up the
+flexibility to later maybe also incorporate more modern AI-like algorithms. We
+are not going to use neurons or a neuronal network, and "machine learning" is
+done in a controlled manner which involves the human (expert) review. The main
+key parts are heuristics (defined by the human expert) and a generic path
+finding algorithm. You can imagine a street map (the heuristics) in which all
+possible ways are defined to go from one state (location) to another. The
+decision, which way to follow will be delegated to an automatism, the path
+finding algorithm, like the route calculation in an navigation device. The map
+can be continuously modified or extended, it contains all present knowledge about
+all systems and how to operate them. The information can come from either a
+human expert or an artificial intelligence. Note that, as with street maps, the 
+topology (connections and individual streets, as well as street conditions) can
+be changed locally, and it is not necessary to consider any other part of street
+system further away. This means the whole automation system can be worked on at
+different places even at once without much interference. This is one of the
+essential features of the concept, where otherwise a maintenance, improvement,
+repair etc. would hardly be possible. However, local changes may well have 
+global impacts. In the analogy of streets this would mean traffic jams, closed
+roads, and unreachable places.
+
 Following belongs to an "intention":
 
 1. two corresponding parameters:
-   a) the detected state (actual state) and corresponding
-   b) the desired state (target state),
+   a) the detected state (actual state) stem:[s_a] and corresponding
+   b) the desired state (target state) stem:[s_t],
 2. a representation of the transition matrix with entries about internal 
    actions, combinations of intentions and prohibited transitions,
 3. a table with heuristic evaluation factors ("lengths"),
-4. optionally one or more rules R and
+4. optionally one or more rules stem:[R] and
 5. optionally one or more internal promotions with associated ratings.
 
 <img src="images/intention.png">
 Figure: How an intention works in the automation framework.
 
-A rule R using the two parameters as trigger inputs (and optionally any
+A rule stem:[R] using the two state parameters as trigger inputs (and optionally any
 number of others) is triggered whenever either the current detected state
-changes or the target state changes. The rule selects a
-transition from the set of the maximum n*(n-1) possible transitions which are
-arranged in a transition matrix. This is based on another rule for evaluating
-the cheapest or shortest of all possible paths. These paths consist of a chain of
-transitions that should lead to the target state via any detour states. The
-first of these actions is then triggered and should now bring the system into a
-state that is closer to the target. Then the rule is triggered again and the
-next step is carried out until the goal is reached, in which case nothing is
-done. If the target cannot be reached by this way, something is fundamentally
-wrong and need to be (manually) fixed. This can be easily detected by a 
-permanent discrepancy between the actual and current state parameters which 
-could flag a warning. However, if state
+changes or the target state changes. The target state can be externally set and
+the detected state is the result of a state detection rule engine which
+permanently computes the systems state from observables. If the detected state
+is equal to the target state, nothing needs to be done. If the states are
+different, then the rule will try to perform an action which makes the system
+one step closer to the desired state. 
+
+To do this, the rule selects a transition
+from the set of the maximum stem:[n\times(n-1)] possible transitions which are
+arranged in a transition matrix. 
+This can be a direct transition from state
+s_a to s_t is an entry exist, or a first step from a chain of transactions
+arranged on a path from state s_a to s_t also visiting intermediate states.
+
+Typically there are always many options and therefor many ways from state s_a
+to s_t, but they are not equally optimal. So the best path has to be chosen
+from all possible. To do this, the rules takes weight factors (lengths) into
+account to calculate the lengths of all paths and then choose the shortest one.
+
+However, lengths of parts of the path can change, some paths may not be possible
+at the moment (length=stem:[\infty]) (due to errors in the subsystems) etc. The whole
+topology may be very dynamic.
+
+So the special rule for evaluating the cheapest or shortest paths needs to
+dynamically access the length information of all possible paths and this length
+information has to be permanently updated. 
+
+This sounds like a highly complex task, but keep in mind that the lengths are 
+normal observables, they can be computed with regular rule machines distributed
+over the whole system in no time. Each subsystem provides such measurement rules 
+that calculate the lengths from internal states and observables, maybe accessing 
+other lengths from their subsystem as well in a recursive manner. Complexity is 
+always dealt with locally. 
+
+We will briefly line out how this can be realized in practice later. First
+recapitulate: These paths consist of a chain of transitions that should lead to
+the target state via any detour states. The first of these actions is then
+triggered and should now bring the system into a state that is closer to the
+target. Then the rule is triggered again and the next step is carried out until
+the goal is reached, in which case nothing is done. If the target cannot be
+reached by this way, something is fundamentally wrong and need to be (manually)
+fixed. This can be easily detected by a permanent discrepancy between the actual
+and current state parameters which could flag a warning. However, if state
 detection as well as length calculation work correctly, the faulty path would
 have marked itself with an infinite length so that it would not have been
 entered. Instead the intention would have detected this as a "There is no
@@ -320,9 +476,9 @@ directly connected to the hardware, or it is defined by a number of other
 intentions that affect other (subordinate) systems. In the first case, the
 action executes a procedure that does something locally (i.e. on
 the computer where it runs, interfacing the connected hardware).
-
-In the latter case, it is sufficient to trigger certain other intentions
-(whereby the order should not matter, since the intentions are expressed almost
+We want to call these __internal actions__. 
+In the latter case, it is sufficient to trigger certain other
+intentions (whereby the order should not matter, since the intentions are expressed almost
 simultaneously). (Sequences have to be implemented in a different way, see
 a chapter below.) 
 
@@ -355,37 +511,35 @@ Rules must therefore be found to evaluate these actions.
 
 ### action heuristics
 
+We first look at the internal actions, because they only depend on local states
+(on the hardware), which can be evaluated locally or which are even constant and
+hard-coded into the system.
+
+The following approach is suggested here:
+
 1. Internal actions get a heuristically found evaluation factor ("length"),
-whereby a length of 0 means that the action does not need to be carried out 
-because the state has already been reached.
+whereby a length of 0 means that the action does not need to be carried out
+because the state has already been reached, but it will not harm at all to
+perform the action any number of times.
 
-A length of 1 means a normal step, e.g. a switching process with a duration of
-100 ms, or an action that leads to resource consumption (wear and tear due to
-switching or similar), in the sense of, switching may occur approx. 1 time per
-minute, without reducing the life of the part to less than the total life of the
-overall system.
-
-A length less than 1 means the step is shorter or faster than a "normal step".
-
-A length greater than 1 means that the action is more expensive, takes longer or
-cannot be carried out as often because it consumes more resources.
-
-An infinite length means that the action is prohibited and may not or must not
-be carried out. In practice, a high maximum value is used instead of infinity,
-e.g. 65000. Lengths greater than or equal to this value are then considered to
-be infinite. Length calculations that reach or exceed this value are canceled.
+* A length of 1 means a normal step, e.g. a switching process with a duration of 100 ms, or an action that leads to resource consumption (wear and tear due to switching or similar), in the sense of, switching may occur approx. 1 time per minute, without reducing the life of the part to less than the total life of the overall system. The reference for the unit step would be measured to the normal function, normal lifetime and normal resource consumption of this action, if performed once.
+* A length less than 1 means the step is shorter or faster than a "normal step". Or it is cheaper in means of resources.
+* A length greater than 1 means that the action is more expensive, takes longer or cannot be carried out as often because it consumes more resources.
+* An infinite length means that the action is prohibited and may not or must not be carried out. In practice, a high maximum value is used instead of infinity, e.g. 65000. Lengths greater than or equal to this value are then considered to be infinite. Length calculations that reach or exceed this value are canceled.
 
 2. The length of actions to be carried out in parallel is calculated according to:
 
+[stem] 
+++++ 
+l=w\sum_i l_i \quad,
+++++
 
-l = w * \sum_i l_i
-
-where l_i are the lengths of the individual actions and w is a positive weight 
-factor w>0, which takes into account the fact that the lengths of an overall 
-action need not necessarily be the sum of the lengths of the individual 
-actions, e.g. setting multiple bits of the same hardware cannot consume 
+where stem:[l_i] are the lengths of the individual actions and stem:[w] is a positive
+weight factor stem:[w>0], which takes into account the fact that the lengths of an
+overall action need not necessarily be the sum of the lengths of the individual
+actions, e.g. setting multiple bits of the same hardware cannot consume
 additional resources because it happens simultaneously or because the entire 
-register is always set anyway. In this case w = 1 / n.
+register is always set anyway. In this case stem:[w=\frac{1}{n}].
 
 Individual intentions that do not lead to any action because the state has
 already been reached do not make any contribution, in this case the length
@@ -394,63 +548,54 @@ action is involved, the overall action is also prohibited, namely if w>=1.
 
 In this way, "lengths" can be calculated (recursively) for all transitions.
 
+This includes also external actions. To access the individual lengths of
+external actions, the corresponding length matrix of the subsystems involved
+need to be evaluated. This requires that each (sub-)system publishes its current
+length matrix. Appropriate rule machinery must care about this.
+
 The path with the smallest overall length is then the cheapest and most optimal.
 So the intention triggers a transition, which represents a step in this
 direction.
 
-#### Mixed Actions
+For further reference we are going to introduce some more terms to address
+specific types if intentions:
 
-Not all intentions have exclusively internal actions or only external actions.
-The possible actions can also be mixed. For example, the Magnetic
-field of a magnet can only reach the "normal" state if 
-a) the power supply is in the "On" state and additionally 
-b) the set-point is set to a certain value. 
-The action which is to establish this state will therefore send an external
-intention "on" to the power supply unit and in addition set the e.g. current
-parameter "current set-point" (in relation to the intention "on") to a certain
-value, which counts as internal Action (of the intention "normal"). Note
-that the order of the two individual actions is not important.
+__Elementary intentions__ are those that are only defined through (or using) 
+internal actions and the distance/length matrix is fixed/constant and does not
+need to be calculated dynamically.
 
-The length of this action is then calculated from the length of the intention
-"On" plus one internal length for setting the set-point.
+__Sufficient intentions__ are those that are only defined through external 
+actions. They can be located anywhere in the system and need not be implemented
+and run on any specific hardware. In consequence the whole set of rules can be
+generated automatically. This includes: condition detection, distance matrix
+calculation and automatic path finding of the intention. The advantage is that
+only a few lines of formal description suffice for full implementation of these
+intentions which makes them simple to create, simple to maintain and easy to read
+and understand (for documentation purposes).
 
-Caution: Changing non-free parameters can trigger uncontrolled changes in status
-within other intentions. In this case, this action is not really internal.
+__Free parameters__ are those that are not in any rule for determining a 
+state that is part of an intention. Rules whose inputs only consist of free
+parameters produce free parameters as outputs. User inputs can also be free
+parameters, e.g. a temperature set-point.
 
-Therefore, this must be avoided (through careful planning) so that there are no
-contradictions in the rules and the automation becomes unstable.
+__Free states__ are those that are not part of an intention. A free state is 
+represented by a free (integer) parameter. You cannot get to a free state in a 
+targeted manner. It is only suitable for diagnosis.
 
-Definition: "Elementary intentions" are those that are only defined through
-internal actions. Here the distance matrix is fixed and does not need to be
-calculated dynamically.
+Common pitfalls the system designer has to be considered while designing
+intentions are: 
 
-Definition: "Sufficient intentions" are those that are only defined through
-external actions.
+* The order of the two individual actions (inside the same intention) must not matter.
+* Changing non-free parameters can trigger uncontrolled changes in status  within other intentions. In this case, this action is not internal, even if it looks like on the first place. Therefore, this must be avoided (through careful planning) so that there are no contradictions in the rules and the automation becomes unstable.
 
-Here the whole set of rules can be generated automatically. This includes:
-condition detection, distance matrix calculation and automatic path 
-finding of the intention.
+[#img-intention2]
+.Intention Framework
+image::images/intention2.png[caption="Intention with autonomous path length calculation: Rule R_2 always knows the path lengths from the current state to all possible other states that can be reached. In the form of a distance matrix, these are also made known to all other intentions as parameters. These in turn recalculate their lengths accordingly. Rule R_1 is used to determine the current status and rule R_3 monitors changes in the target state and in the actual state and if necessary, apply a step from the shortest path heading the target state."]
 
+The complete concept of the intention framework is illustrated in
+fig. <<img-intention2>>.
 
-
-
-<img src="images/intention2.png">
-
-Illustration: Intention with autonomous path length calculation: Rule R2 always
-knows the path lengths from the current state to all possible other states that
-can be reached. In the form of a distance matrix, these are also made known to
-all other intentions as parameters. These in turn recalculate their lengths accordingly.
-Rule R1 is used to determine the current status and rule R3 monitors changes in
-the target state and in the actual state and if necessary, apply a step from the
-shortest path heading the target state.
-
-
-
-
-
-### Intentions with autonomous path length calculations
-
-(Why it is better not to use sequences).
+== No sequences
 
 We want to outline how one can not use sequences but achieve the same result. 
 
@@ -517,18 +662,6 @@ action has actually been reached. Otherwise, another action is automatically
 triggered, which tries to correct the previous error and then continues normally in
 the chain of actions. The sequence then arises from the continuous path of the
 states.
-
-### Distinguishing: free and non-free states and parameters
-
-Definition: Free parameters are those that are not in any rule for determining a
-state that is part of an intention.
-
-Rules whose inputs only consist of free parameters produce free parameters as
-outputs. User inputs can also be free parameters, e.g. a temperature set-point.
-
-Definition: Free states are those that are not part of an intention. A free state is
-represented by a free (integer) parameter. You cannot get to a free state in a
-targeted manner. It is only suitable for diagnosis.
 
 ### Avoiding contradictions in the rule machinery
 
@@ -617,7 +750,7 @@ Bellman's principle of optimality, is the Floyd Warshall algorithm.
 The principle of optimality states that if the shortest path leads from A to C 
 via B, the partial path A B must also be the shortest path from A to B.
 
-### Conclusion
+== Conclusion
 
 The described concept for a full automation can be used to automate a big 
 and complex machine in a maximal way.
