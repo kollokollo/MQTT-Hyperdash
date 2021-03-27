@@ -94,23 +94,21 @@ RUN cd MQTT-Hyperdash/src;make;make install
 RUN cd MQTT-Hyperdash/src/;sed -i 's/sudo\ checkinstall/checkinstall/g' Makefile
 RUN cd MQTT-Hyperdash/src/;sed -i 's/sudo\ chown/chown/g' Makefile
 
-# Now make the debian package
+# Now make and install the debian package
 RUN cd MQTT-Hyperdash/src;make deb
 
+#
+# Prepare stuff for the WINDOWS Version
+#
+
+RUN cd MQTT-Hyperdash/src/;make WINDOWS/lib/SDL.dll
+RUN cd MQTT-Hyperdash/src/;make WINDOWS/lib/libSDL_gfx.a WINDOWS/lib/README-SDL_gfx.txt
+RUN cd MQTT-Hyperdash/src/;make WINDOWS/lib/SDL_ttf.dll WINDOWS/lib/libfreetype-6.dll
+RUN cd MQTT-Hyperdash/src/;make clean
 
 # copy the results in the root of the container
 RUN cp -R /paho.mqtt.c/Debian/Outputs/*.deb /
 RUN cp -R /MQTT-Hyperdash/src/Debian/Outputs/*.deb /
 
-
-
-#
-# Make Version for WINDOWS
-#
-# TODO:
-RUN cd MQTT-Hyperdash/src;make windows
-RUN cp -R MQTT-Hyperdash/src/Inno-Output/*.exe /
-
-
 WORKDIR /work
-CMD ["/bin/sh"]
+CMD ["/usr/bin/dashdesign"]

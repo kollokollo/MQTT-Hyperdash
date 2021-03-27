@@ -22,7 +22,7 @@ LIBDIR=${exec_prefix}/lib
 MANDIR=${datarootdir}/man
 
 NAME=		MQTT-Hyperdash
-DEBNAME=	mqtt-hyperdash
+DNAME=		mqtt-hyperdash
 LIBNO=		1.03
 RELEASE=	16
 YEAR=		2021
@@ -360,7 +360,7 @@ doc-pak: $(DEBDOC)
 	cp Debian/copyright $@/
 
 deb :	$(BINDIST) doc-pak
-	sudo checkinstall -D --pkgname $(DEBNAME) --pkgversion $(LIBNO) \
+	sudo checkinstall -D --pkgname $(DNAME) --pkgversion $(LIBNO) \
 	--pkgrelease $(RELEASE)  \
 	--maintainer "kollo@users.sourceforge.net" \
         --requires libsdl1.2debian,libsdl-gfx1.2-5,libsdl-ttf2.0-0 \
@@ -368,17 +368,55 @@ deb :	$(BINDIST) doc-pak
 	--pkggroup interpreters   \
 	--pkglicense GPL --strip=yes --stripso=yes --reset-uids 
 	rm -f backup-*.tgz
-	sudo chown 1000 $(DEBNAME)_$(LIBNO)-$(RELEASE)_*.deb
+	sudo chown 1000 $(DNAME)_$(LIBNO)-$(RELEASE)_*.deb
 	mkdir -p Debian/Outputs/
-	mv $(DEBNAME)_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
+	mv $(DNAME)_$(LIBNO)-$(RELEASE)_*.deb Debian/Outputs/
 
 
+####################################
+# excecute the Dockerfile 
+# and extract the debian package 
+# and the WINDOWS Version
+# of MQTT-Hyperdash
+####################################
+#
+# build the docker image (basically including the build environment)
+dockerimage-$(LIBNO)-$(RELEASE): docker/Dockerfile 
+	cd docker;sudo docker build . -t kollo/$(DNAME):$(LIBNO)-$(RELEASE)
+	touch $@
 
-# excecute the Dockerfile and extract the debian package and the User Manual
-docker: docker/Dockerfile
-	cd docker;sudo docker build . -t kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE)
-	cd docker;sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE) tcsh -c "ls -al;df;cp /*.deb /*.pdf /*.exe /dockerfilevolume/"
-#	cd docker;sudo docker run --net=host --env="DISPLAY" -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:$(LIBNO)-$(RELEASE)
+DOCKERRUNNER=cd docker;sudo docker run -ti -v`pwd`:/work/ kollo/$(DNAME):$(LIBNO)-$(RELEASE) 
+
+docker/isetup-5.5.8.exe: dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) cp /isetup-5.5.8.exe /work/
+	sudo chown 1000 $@
+
+# Get the debian package
+docker/$(DNAME)_$(LIBNO)-$(RELEASE)_amd64.deb:	dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) cp /$(DNAME)_$(LIBNO)-$(RELEASE)_amd64.deb /work/
+	sudo chown 1000 $@
+
+# Get the debian package of paho.c 
+docker/paho.mqtt.c_1.0-1_amd64.deb:	dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) cp /paho.mqtt.c_1.0-1_amd64.deb /work/
+	sudo chown 1000 $@
+
+# Make and get the WINDOWS Version
+docker/$(NAME)-$(LIBNO)-$(RELEASE)-setup.exe:	dockerimage-$(LIBNO)-$(RELEASE)
+	$(DOCKERRUNNER) tcsh -c "cd /MQTT-Hyperdash/src;make windows;cp Inno-Output/$(NAME)-$(LIBNO)-$(RELEASE)-setup.exe /work/"
+	sudo chown 1000 $@
+
+
+# excecute the Dockerfile and extract the debian packages and run it (this would start dashdesign)
+docker: docker/isetup-5.5.8.exe \
+	docker/$(DNAME)_$(LIBNO)-$(RELEASE)_amd64.deb \
+	docker/paho.mqtt.c_1.0-1_amd64.deb \
+	docker/$(NAME)-$(LIBNO)-$(RELEASE)-setup.exe
+	XAUTHORITY=$(xauth info | grep "Authority file" | awk '{ print $3 }')
+	echo $(XAUTHORITY)
+	cd docker;sudo docker run -ti -v`pwd`:/work/ --net=host -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
+	-v $(XAUTHORITY):/root/.Xauthority:ro kollo/$(DNAME):$(LIBNO)-$(RELEASE)
+	echo "done."
 
 # Make the Windows distribution in form of a .zip file including an installer
 # this is depreciated. Better use Inno-Setup to create a self installing

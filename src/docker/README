@@ -7,15 +7,21 @@ https://github.com/shakenfr/mqtt-hyperdash_docker/
 The docker file generates an installable .deb package of MQTT-Hyperdash as well as
 the User-Manul as .pdf
 
-
-Important docker commands:
--------------------------
+After a make docker you should find here:
 
 
+Dockerfile.Ubuntu.20.04          -- The Dockerfile to generate the docker image, based on Ubunut.20.04
+isetup-5.5.8.exe		 -- InnoSetup installer (not really needed)
+mqtt-hyperdash_1.03-16_amd64.deb -- The debian package for linux
+paho.mqtt.c_1.0-1_amd64.deb	 -- inofficial debian package of the paho.c library
+MQTT-Hyperdash-1.03-16-setup.exe -- InnoSetup installer of MQTT-Hyperdash for WINDOWS
 
-sudo docker build . -t kollo/mqtt-hyperdash:1.03
 
+You can run the docker container which would start dashdesign. Make sure to 
+connect the graphical display. I do it this way:
 
-# sudo docker images
-
-# sudo docker run -v dockerfilevolume -ti -v`pwd`:/dockerfilevolume/ kollo/mqtt-hyperdash:1.03 --net=host --env="DISPLAY"
+ 
+  XAUTHORITY=$(xauth info | grep "Authority file" | awk '{ print $3 }')
+  echo $(XAUTHORITY)
+  cd docker;sudo docker run -ti -v`pwd`:/work/ --net=host -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
+            -v $(XAUTHORITY):/root/.Xauthority:ro kollo/$(DNAME):$(LIBNO)-$(RELEASE)
